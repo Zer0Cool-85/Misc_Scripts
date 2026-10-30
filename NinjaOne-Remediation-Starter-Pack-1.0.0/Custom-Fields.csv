@@ -1,0 +1,21 @@
+﻿Label,Name,Type,DefinitionScope,AutomationPermission,TechnicianPermission,Purpose
+N1 - Reboot readiness - Status,n1RebootStatus,Text,Device,Read/Write,Read Only,Healthy | Remediated | Issue | Error | NotApplicable
+N1 - Reboot readiness - Details,n1RebootStatusDetails,Multi-line,Device,Read/Write,Read Only,"UTC check time, mode, summary, evidence, repair result"
+N1 - OS disk space and conservative cleanup - Status,n1DiskStatus,Text,Device,Read/Write,Read Only,Healthy | Remediated | Issue | Error | NotApplicable
+N1 - OS disk space and conservative cleanup - Details,n1DiskStatusDetails,Multi-line,Device,Read/Write,Read Only,"UTC check time, mode, summary, evidence, repair result"
+N1 - Intune Management Extension service - Status,n1ImeStatus,Text,Device,Read/Write,Read Only,Healthy | Remediated | Issue | Error | NotApplicable
+N1 - Intune Management Extension service - Details,n1ImeStatusDetails,Multi-line,Device,Read/Write,Read Only,"UTC check time, mode, summary, evidence, repair result"
+N1 - Required services - Status,n1ServicesStatus,Text,Device,Read/Write,Read Only,Healthy | Remediated | Issue | Error | NotApplicable
+N1 - Required services - Details,n1ServicesStatusDetails,Multi-line,Device,Read/Write,Read Only,"UTC check time, mode, summary, evidence, repair result"
+N1 - Windows Firewall profile enablement - Status,n1FirewallStatus,Text,Device,Read/Write,Read Only,Healthy | Remediated | Issue | Error | NotApplicable
+N1 - Windows Firewall profile enablement - Details,n1FirewallStatusDetails,Multi-line,Device,Read/Write,Read Only,"UTC check time, mode, summary, evidence, repair result"
+N1 - BitLocker OS drive protection - Status,n1BitLockerStatus,Text,Device,Read/Write,Read Only,Healthy | Remediated | Issue | Error | NotApplicable
+N1 - BitLocker OS drive protection - Details,n1BitLockerStatusDetails,Multi-line,Device,Read/Write,Read Only,"UTC check time, mode, summary, evidence, repair result"
+N1 - Windows Time service and sync state - Status,n1TimeStatus,Text,Device,Read/Write,Read Only,Healthy | Remediated | Issue | Error | NotApplicable
+N1 - Windows Time service and sync state - Details,n1TimeStatusDetails,Multi-line,Device,Read/Write,Read Only,"UTC check time, mode, summary, evidence, repair result"
+N1 - Fast Startup disabled baseline - Status,n1FastStartupStatus,Text,Device,Read/Write,Read Only,Healthy | Remediated | Issue | Error | NotApplicable
+N1 - Fast Startup disabled baseline - Details,n1FastStartupStatusDetails,Multi-line,Device,Read/Write,Read Only,"UTC check time, mode, summary, evidence, repair result"
+N1 - Windows component store health - Status,n1ImageStatus,Text,Device,Read/Write,Read Only,Healthy | Remediated | Issue | Error | NotApplicable
+N1 - Windows component store health - Details,n1ImageStatusDetails,Multi-line,Device,Read/Write,Read Only,"UTC check time, mode, summary, evidence, repair result"
+N1 - Local Administrators membership audit - Status,n1LocalAdminStatus,Text,Device,Read/Write,Read Only,Healthy | Remediated | Issue | Error | NotApplicable
+N1 - Local Administrators membership audit - Details,n1LocalAdminStatusDetails,Multi-line,Device,Read/Write,Read Only,"UTC check time, mode, summary, evidence, repair result"

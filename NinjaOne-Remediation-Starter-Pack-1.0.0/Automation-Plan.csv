@@ -1,0 +1,11 @@
+﻿File,Check,RunAs,Architecture,DetectParameters,RepairParameters,SuggestedCadence,SuggestedTimeoutSeconds
+N1-01-RebootReadiness.ps1,Reboot readiness,SYSTEM,64-bit,-Mode Detect -MaxUptimeDays 14,Report only,Every 4 hours,120
+N1-02-DiskSpace.ps1,OS disk space and conservative cleanup,SYSTEM,64-bit,-Mode Detect,-Mode Remediate,Daily,300
+N1-03-IntuneManagementExtension.ps1,Intune Management Extension service,SYSTEM,64-bit,-Mode Detect,-Mode Remediate,Every 4 hours,120
+N1-04-RequiredServices.ps1,Required services,SYSTEM,64-bit,"-Mode Detect -ServiceNamesCsv ""CSFalconService""","-Mode Remediate -ServiceNamesCsv ""CSFalconService"" -AllowServiceStart",Every 4 hours,900
+N1-05-FirewallProfiles.ps1,Windows Firewall profile enablement,SYSTEM,64-bit,-Mode Detect,-Mode Remediate -AllowEnableFirewall,Daily,120
+N1-06-BitLockerOSDrive.ps1,BitLocker OS drive protection,SYSTEM,64-bit,-Mode Detect,-Mode Remediate -AllowResumeBitLocker,Daily,120
+N1-07-WindowsTime.ps1,Windows Time service and sync state,SYSTEM,64-bit,-Mode Detect,-Mode Remediate,Daily,180
+N1-08-FastStartup.ps1,Fast Startup disabled baseline,SYSTEM,64-bit,-Mode Detect,-Mode Remediate,Daily,120
+N1-09-WindowsImageHealth.ps1,Windows component store health,SYSTEM,64-bit,-Mode Detect -ScanType Quick,-Mode Remediate -ScanType Full -AllowOnlineRepair,Quick daily; Full monthly maintenance,7200
+N1-10-LocalAdministrators.ps1,Local Administrators membership audit,SYSTEM,64-bit,-Mode Detect,Report only; set approved -AllowedSidsCsv values,Daily,120
