@@ -1,0 +1,489 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Post-enrollment Setup UI configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "SchemaVersion",
+    "SetupId",
+    "SetupVersion",
+    "Branding",
+    "Appearance",
+    "Text",
+    "Behavior",
+    "Steps"
+  ],
+  "properties": {
+    "SchemaVersion": {
+      "type": "integer",
+      "description": "Keep at 1 for this package format.",
+      "const": 1
+    },
+    "SetupId": {
+      "type": "string",
+      "description": "Stable package identity and state/mutex namespace. Letters, digits, dot, underscore, and hyphen; 1-80 characters.",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "maxLength": 80
+    },
+    "SetupVersion": {
+      "type": "string",
+      "description": "Change when you intentionally want a new setup revision. 1-40 safe characters.",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$",
+      "maxLength": 40
+    },
+    "Branding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CompanyName",
+        "WindowTitle",
+        "Heading",
+        "Message",
+        "LogoPath",
+        "BannerPath",
+        "BannerHeight",
+        "LogoMaxWidth",
+        "LogoMaxHeight"
+      ],
+      "properties": {
+        "CompanyName": {
+          "type": "string",
+          "description": "Displayed next to the optional logo; an empty string hides the company text."
+        },
+        "WindowTitle": {
+          "type": "string",
+          "description": "Native Windows title bar text."
+        },
+        "Heading": {
+          "type": "string",
+          "description": "Large welcome heading."
+        },
+        "Message": {
+          "type": "string",
+          "description": "Welcome text beneath the heading. Wraps automatically; keep it to a short paragraph."
+        },
+        "LogoPath": {
+          "type": "string",
+          "description": "Relative PNG/JPG/BMP path, e.g. Assets/company-logo.png. Empty hides the logo."
+        },
+        "BannerPath": {
+          "type": "string",
+          "description": "Relative PNG/JPG/BMP path. Empty hides the full-width banner."
+        },
+        "BannerHeight": {
+          "type": "integer",
+          "description": "Banner region height in WPF device-independent units; 40-240. Sets the available area, not a forced image height.",
+          "minimum": 40,
+          "maximum": 240
+        },
+        "LogoMaxWidth": {
+          "type": "integer",
+          "description": "Maximum logo width; 24-400. Aspect ratio is preserved.",
+          "minimum": 24,
+          "maximum": 400
+        },
+        "LogoMaxHeight": {
+          "type": "integer",
+          "description": "Maximum logo height; 24-120. Aspect ratio is preserved.",
+          "minimum": 24,
+          "maximum": 120
+        },
+        "BannerStretch": {
+          "type": "string",
+          "enum": [
+            "Uniform",
+            "UniformToFill",
+            "None",
+            "Fill"
+          ],
+          "default": "Uniform",
+          "description": "Optional. Controls image fitting. Uniform keeps the entire image and its aspect ratio; UniformToFill fills/crops; None keeps natural size; Fill may distort."
+        },
+        "BannerStretchDirection": {
+          "type": "string",
+          "enum": [
+            "DownOnly",
+            "Both",
+            "UpOnly"
+          ],
+          "default": "DownOnly",
+          "description": "Optional. DownOnly prevents enlargement; Both allows enlargement and shrinking; UpOnly allows enlargement only. Ignored for Stretch=None."
+        },
+        "IconPath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional package-relative ICO or PNG. Empty uses the built-in setup icon for the window, taskbar and Alt+Tab."
+        }
+      }
+    },
+    "Appearance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "Theme",
+        "AccentColor",
+        "SuccessColor",
+        "FailureColor",
+        "WarningColor",
+        "WindowWidth",
+        "WindowHeight",
+        "Topmost",
+        "ReduceMotion",
+        "ShowElapsedTime",
+        "ShowStepNumbers",
+        "FontFamily"
+      ],
+      "properties": {
+        "Theme": {
+          "type": "string",
+          "description": "Light or Dark. The Dark-Demo.json example includes brighter accent/status colors for dark backgrounds.",
+          "enum": [
+            "Light",
+            "Dark"
+          ]
+        },
+        "AccentColor": {
+          "type": "string",
+          "description": "Primary buttons, current-step spinner/border, and progress. Hex #RRGGBB.",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "SuccessColor": {
+          "type": "string",
+          "description": "Success status/checkmarks. Hex #RRGGBB.",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "FailureColor": {
+          "type": "string",
+          "description": "Failure status/crosses. Hex #RRGGBB.",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "WarningColor": {
+          "type": "string",
+          "description": "Warnings and restart reminder. Hex #RRGGBB.",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "WindowWidth": {
+          "type": "integer",
+          "description": "Preferred width; 640-1600. Clamped to available desktop work area.",
+          "minimum": 640,
+          "maximum": 1600
+        },
+        "WindowHeight": {
+          "type": "integer",
+          "description": "Preferred height; 520-1200. Clamped to available desktop work area; step list scrolls.",
+          "minimum": 520,
+          "maximum": 1200
+        },
+        "Topmost": {
+          "type": "boolean",
+          "description": "Keep the window above ordinary application windows."
+        },
+        "ReduceMotion": {
+          "type": "boolean",
+          "description": "Disable spinner rotation. The Running state and progress remain visible."
+        },
+        "ShowElapsedTime": {
+          "type": "boolean",
+          "description": "Show total elapsed time and per-step duration."
+        },
+        "ShowStepNumbers": {
+          "type": "boolean",
+          "description": "Show numbers in pending-step circles."
+        },
+        "FontFamily": {
+          "type": "string",
+          "description": "Installed Windows font family. Segoe UI is the default."
+        }
+      }
+    },
+    "Text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RunningHeading",
+        "RunningMessage",
+        "SuccessHeading",
+        "SuccessMessage",
+        "WarningHeading",
+        "WarningMessage",
+        "FailureHeading",
+        "FailureMessage",
+        "Footer",
+        "Support",
+        "RetryButton",
+        "CloseButton",
+        "CopyButton",
+        "DetailsLabel"
+      ],
+      "properties": {
+        "RunningHeading": {
+          "type": "string",
+          "description": "Status-panel heading while steps run."
+        },
+        "RunningMessage": {
+          "type": "string",
+          "description": "Status-panel supporting text while steps run."
+        },
+        "SuccessHeading": {
+          "type": "string",
+          "description": "Status-panel heading after all steps succeed."
+        },
+        "SuccessMessage": {
+          "type": "string",
+          "description": "Status-panel supporting text after all steps succeed."
+        },
+        "WarningHeading": {
+          "type": "string",
+          "description": "Heading when required steps succeeded but optional work failed/skipped."
+        },
+        "WarningMessage": {
+          "type": "string",
+          "description": "Supporting text for that optional-issue outcome."
+        },
+        "FailureHeading": {
+          "type": "string",
+          "description": "Heading when required work failed/skipped."
+        },
+        "FailureMessage": {
+          "type": "string",
+          "description": "Supporting text after failure."
+        },
+        "Footer": {
+          "type": "string",
+          "description": "Short instruction at the bottom of the window."
+        },
+        "Support": {
+          "type": "string",
+          "description": "Plain-text help/contact information. Does not launch an email client or browser."
+        },
+        "RetryButton": {
+          "type": "string",
+          "description": "Label for retrying failed/skipped steps."
+        },
+        "CloseButton": {
+          "type": "string",
+          "description": "Result-screen close button label."
+        },
+        "CopyButton": {
+          "type": "string",
+          "description": "Copy-diagnostics button label."
+        },
+        "DetailsLabel": {
+          "type": "string",
+          "description": "Footer diagnostics expander label."
+        },
+        "SelectionHeading": {
+          "type": "string",
+          "default": "Choose optional apps",
+          "description": "Optional text for the pre-install selection screen."
+        },
+        "SelectionMessage": {
+          "type": "string",
+          "default": "Select any extras you would like, then start setup. Required setup runs automatically.",
+          "description": "Optional text for the pre-install selection screen."
+        },
+        "StartButton": {
+          "type": "string",
+          "default": "Start setup",
+          "description": "Optional text for the pre-install selection screen."
+        },
+        "SelectionFooter": {
+          "type": "string",
+          "default": "Optional apps are unchecked by default.",
+          "description": "Optional text for the pre-install selection screen."
+        },
+        "SelectStepLabel": {
+          "type": "string",
+          "default": "Include this optional step",
+          "description": "Optional text for the pre-install selection screen."
+        }
+      }
+    },
+    "Behavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RequireSystemForLive",
+        "ResumeCompletedSteps",
+        "StopOnRequiredFailure",
+        "AllowRetry",
+        "AutoCloseSuccessSeconds",
+        "PollIntervalMilliseconds",
+        "StateDirectory"
+      ],
+      "properties": {
+        "RequireSystemForLive": {
+          "type": "boolean",
+          "description": "Default true. Live mode requires SID S-1-5-18. For a controlled local admin pilot you may set false in a separate config; this does not elevate the process."
+        },
+        "ResumeCompletedSteps": {
+          "type": "boolean",
+          "description": "Remember successful steps and skip matching work on later live runs."
+        },
+        "StopOnRequiredFailure": {
+          "type": "boolean",
+          "description": "True skips all remaining steps after a required failure. False continues independent work. Dependencies are always respected."
+        },
+        "AllowRetry": {
+          "type": "boolean",
+          "description": "Show Retry unfinished for failures/skips. Timeout/controller faults disable retry regardless of this value."
+        },
+        "AutoCloseSuccessSeconds": {
+          "type": "integer",
+          "description": "0 leaves the results open. Otherwise closes 1-3600 seconds after full success; does not auto-close warnings/failures.",
+          "minimum": 0,
+          "maximum": 3600
+        },
+        "PollIntervalMilliseconds": {
+          "type": "integer",
+          "description": "UI update interval, 200-2000 ms. Spinner animation uses WPF animation independently.",
+          "minimum": 200,
+          "maximum": 2000
+        },
+        "StateDirectory": {
+          "type": "string",
+          "description": "Absolute local directory after environment-variable expansion. SetupId is appended. Default uses ProgramData; do not use a network path."
+        },
+        "AllowInteractiveUserToReadLogs": {
+          "type": "boolean",
+          "default": true,
+          "description": "SYSTEM live runs: grant the interactive Explorer owner read-only access to this run folder. Completion-state file permissions stay restricted."
+        },
+        "LogReaderSids": {
+          "type": "array",
+          "default": [],
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^S-1-\\d+(?:-\\d+)+$"
+          },
+          "description": "Additional Windows user/group SIDs with read-only access to new run folders and folder-only parent navigation."
+        }
+      }
+    },
+    "Steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "Id",
+          "Enabled",
+          "Title",
+          "Description",
+          "Script",
+          "Parameters",
+          "TimeoutSeconds",
+          "SuccessExitCodes",
+          "RebootExitCodes",
+          "Required",
+          "DependsOn",
+          "DemoSeconds",
+          "DemoFailFirstAttempt"
+        ],
+        "properties": {
+          "Id": {
+            "type": "string",
+            "description": "Stable unique identifier; 1-40 letters/digits/underscores/hyphens. Also used in log filenames and DependsOn.",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_-]*$",
+            "maxLength": 40
+          },
+          "Enabled": {
+            "type": "boolean",
+            "description": "False omits the entry entirely. At least one step must be enabled."
+          },
+          "Title": {
+            "type": "string",
+            "description": "Main card label.",
+            "minLength": 1
+          },
+          "Description": {
+            "type": "string",
+            "description": "Supporting explanation. User-selectable steps add a Choose to install suffix; automatic non-required steps add Non-blocking."
+          },
+          "Script": {
+            "type": "string",
+            "description": "Package-relative .ps1 path; must exist for enabled steps."
+          },
+          "Parameters": {
+            "type": "object",
+            "description": "JSON object of named PowerShell parameters supplied to the script."
+          },
+          "TimeoutSeconds": {
+            "type": "integer",
+            "description": "Whole-step execution limit, 1-86400 seconds. Includes child installer waits.",
+            "minimum": 1,
+            "maximum": 86400
+          },
+          "SuccessExitCodes": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "integer"
+            },
+            "description": "Final worker exit codes considered successful. Default 0 and 3010.",
+            "minItems": 1
+          },
+          "RebootExitCodes": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "integer"
+            },
+            "description": "Successful codes indicating a reboot is required. Must also be listed in SuccessExitCodes."
+          },
+          "Required": {
+            "type": "boolean",
+            "description": "Controls whether failure blocks overall success. False alone still runs automatically. UserSelectable=true requires Required=false."
+          },
+          "DependsOn": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            },
+            "description": "Array of earlier enabled step IDs that must complete successfully before this step runs."
+          },
+          "DemoSeconds": {
+            "type": "integer",
+            "description": "Simulated step duration, 1-60 seconds. Ignored in live mode.",
+            "minimum": 1,
+            "maximum": 60
+          },
+          "DemoFailFirstAttempt": {
+            "type": "boolean",
+            "description": "Intentionally fail this demo step on its first attempt, then pass on retry. Ignored in live mode."
+          },
+          "UserSelectable": {
+            "type": "boolean",
+            "default": false,
+            "description": "Optional. True shows an unchecked opt-in choice before setup begins; requires Required=false. Enabled must also be true to offer it."
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "required": [
+                "UserSelectable"
+              ],
+              "properties": {
+                "UserSelectable": {
+                  "const": true
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "Required": {
+                  "const": false
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

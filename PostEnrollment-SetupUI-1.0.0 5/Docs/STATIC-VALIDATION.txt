@@ -1,0 +1,550 @@
+HOTFIX 9 STATIC VALIDATION — November 5, 2026
+
+PASS PowerShell grammar parse: Core/Invoke-SetupStep.ps1
+PASS UTF-8 BOM / CRLF: Core/Invoke-SetupStep.ps1
+PASS No scanned PS7-only operators: Core/Invoke-SetupStep.ps1
+PASS PowerShell grammar parse: Core/Setup.Common.ps1
+PASS UTF-8 BOM / CRLF: Core/Setup.Common.ps1
+PASS No scanned PS7-only operators: Core/Setup.Common.ps1
+PASS PowerShell grammar parse: EnterpriseSteps/Enterprise.Common.ps1
+PASS UTF-8 BOM / CRLF: EnterpriseSteps/Enterprise.Common.ps1
+PASS No scanned PS7-only operators: EnterpriseSteps/Enterprise.Common.ps1
+PASS PowerShell grammar parse: EnterpriseSteps/Invoke-UserAction.ps1
+PASS UTF-8 BOM / CRLF: EnterpriseSteps/Invoke-UserAction.ps1
+PASS No scanned PS7-only operators: EnterpriseSteps/Invoke-UserAction.ps1
+PASS PowerShell grammar parse: EnterpriseSteps/Step-DetectCompanyPortal.ps1
+PASS UTF-8 BOM / CRLF: EnterpriseSteps/Step-DetectCompanyPortal.ps1
+PASS No scanned PS7-only operators: EnterpriseSteps/Step-DetectCompanyPortal.ps1
+PASS PowerShell grammar parse: EnterpriseSteps/Step-InstallCompanyPortal.ps1
+PASS UTF-8 BOM / CRLF: EnterpriseSteps/Step-InstallCompanyPortal.ps1
+PASS No scanned PS7-only operators: EnterpriseSteps/Step-InstallCompanyPortal.ps1
+PASS PowerShell grammar parse: EnterpriseSteps/Step-InstallMsi.ps1
+PASS UTF-8 BOM / CRLF: EnterpriseSteps/Step-InstallMsi.ps1
+PASS No scanned PS7-only operators: EnterpriseSteps/Step-InstallMsi.ps1
+PASS PowerShell grammar parse: EnterpriseSteps/Step-InstallNotepad.ps1
+PASS UTF-8 BOM / CRLF: EnterpriseSteps/Step-InstallNotepad.ps1
+PASS No scanned PS7-only operators: EnterpriseSteps/Step-InstallNotepad.ps1
+PASS PowerShell grammar parse: EnterpriseSteps/Step-RemovePreinstalledOfficeOneDrive.ps1
+PASS UTF-8 BOM / CRLF: EnterpriseSteps/Step-RemovePreinstalledOfficeOneDrive.ps1
+PASS No scanned PS7-only operators: EnterpriseSteps/Step-RemovePreinstalledOfficeOneDrive.ps1
+PASS PowerShell grammar parse: EnterpriseSteps/Test-EnterpriseConfiguration.ps1
+PASS UTF-8 BOM / CRLF: EnterpriseSteps/Test-EnterpriseConfiguration.ps1
+PASS No scanned PS7-only operators: EnterpriseSteps/Test-EnterpriseConfiguration.ps1
+PASS PowerShell grammar parse: Examples/Step-InstallMsi.ps1
+PASS UTF-8 BOM / CRLF: Examples/Step-InstallMsi.ps1
+PASS No scanned PS7-only operators: Examples/Step-InstallMsi.ps1
+PASS PowerShell grammar parse: Examples/Step-SetMachineSetting.ps1
+PASS UTF-8 BOM / CRLF: Examples/Step-SetMachineSetting.ps1
+PASS No scanned PS7-only operators: Examples/Step-SetMachineSetting.ps1
+PASS PowerShell grammar parse: Start-DeviceSetup.ps1
+PASS UTF-8 BOM / CRLF: Start-DeviceSetup.ps1
+PASS No scanned PS7-only operators: Start-DeviceSetup.ps1
+PASS PowerShell grammar parse: Steps/Step-01.ps1
+PASS UTF-8 BOM / CRLF: Steps/Step-01.ps1
+PASS No scanned PS7-only operators: Steps/Step-01.ps1
+PASS PowerShell grammar parse: Steps/Step-02.ps1
+PASS UTF-8 BOM / CRLF: Steps/Step-02.ps1
+PASS No scanned PS7-only operators: Steps/Step-02.ps1
+PASS PowerShell grammar parse: Steps/Step-03.ps1
+PASS UTF-8 BOM / CRLF: Steps/Step-03.ps1
+PASS No scanned PS7-only operators: Steps/Step-03.ps1
+PASS PowerShell grammar parse: Steps/Step-04.ps1
+PASS UTF-8 BOM / CRLF: Steps/Step-04.ps1
+PASS No scanned PS7-only operators: Steps/Step-04.ps1
+PASS PowerShell grammar parse: Steps/Step-05.ps1
+PASS UTF-8 BOM / CRLF: Steps/Step-05.ps1
+PASS No scanned PS7-only operators: Steps/Step-05.ps1
+PASS PowerShell grammar parse: Steps/Step-06.ps1
+PASS UTF-8 BOM / CRLF: Steps/Step-06.ps1
+PASS No scanned PS7-only operators: Steps/Step-06.ps1
+PASS PowerShell grammar parse: Steps/Step-07.ps1
+PASS UTF-8 BOM / CRLF: Steps/Step-07.ps1
+PASS No scanned PS7-only operators: Steps/Step-07.ps1
+PASS PowerShell grammar parse: Steps/Step-08.ps1
+PASS UTF-8 BOM / CRLF: Steps/Step-08.ps1
+PASS No scanned PS7-only operators: Steps/Step-08.ps1
+PASS PowerShell grammar parse: Steps/Step-09.ps1
+PASS UTF-8 BOM / CRLF: Steps/Step-09.ps1
+PASS No scanned PS7-only operators: Steps/Step-09.ps1
+PASS PowerShell grammar parse: Steps/Step-10.ps1
+PASS UTF-8 BOM / CRLF: Steps/Step-10.ps1
+PASS No scanned PS7-only operators: Steps/Step-10.ps1
+PASS PowerShell grammar parse: Tests/Invoke-EnterpriseHelperTests.ps1
+PASS UTF-8 BOM / CRLF: Tests/Invoke-EnterpriseHelperTests.ps1
+PASS No scanned PS7-only operators: Tests/Invoke-EnterpriseHelperTests.ps1
+PASS PowerShell grammar parse: Tests/Invoke-LogAccessTests.ps1
+PASS UTF-8 BOM / CRLF: Tests/Invoke-LogAccessTests.ps1
+PASS No scanned PS7-only operators: Tests/Invoke-LogAccessTests.ps1
+PASS PowerShell grammar parse: Tests/Invoke-SmokeTests.ps1
+PASS UTF-8 BOM / CRLF: Tests/Invoke-SmokeTests.ps1
+PASS No scanned PS7-only operators: Tests/Invoke-SmokeTests.ps1
+PASS PowerShell grammar parse: Tests/Invoke-WinGetFallbackTests.ps1
+PASS UTF-8 BOM / CRLF: Tests/Invoke-WinGetFallbackTests.ps1
+PASS No scanned PS7-only operators: Tests/Invoke-WinGetFallbackTests.ps1
+PASS PowerShell grammar parse: Tools/Grant-SetupLogReadAccess.ps1
+PASS UTF-8 BOM / CRLF: Tools/Grant-SetupLogReadAccess.ps1
+PASS No scanned PS7-only operators: Tools/Grant-SetupLogReadAccess.ps1
+PASS C# grammar parse: UI/StepViewModel.cs
+PASS C# grammar parse: UI/TaskbarIdentity.cs
+PASS JSON schema: All10-Demo.json
+PASS Enabled step limit: All10-Demo.json
+PASS Unique step ID: All10-Demo.json / step01
+PASS Reboot codes are success codes: All10-Demo.json / step01
+PASS Enabled script resolves: All10-Demo.json / step01
+PASS Parameters declared by script: All10-Demo.json / step01
+PASS Dependencies enabled and earlier: All10-Demo.json / step01
+PASS Automatic steps have automatic prerequisites: All10-Demo.json / step01
+PASS Unique step ID: All10-Demo.json / step02
+PASS Reboot codes are success codes: All10-Demo.json / step02
+PASS Enabled script resolves: All10-Demo.json / step02
+PASS Parameters declared by script: All10-Demo.json / step02
+PASS Dependencies enabled and earlier: All10-Demo.json / step02
+PASS Automatic steps have automatic prerequisites: All10-Demo.json / step02
+PASS Unique step ID: All10-Demo.json / step03
+PASS Reboot codes are success codes: All10-Demo.json / step03
+PASS Enabled script resolves: All10-Demo.json / step03
+PASS Parameters declared by script: All10-Demo.json / step03
+PASS Dependencies enabled and earlier: All10-Demo.json / step03
+PASS Automatic steps have automatic prerequisites: All10-Demo.json / step03
+PASS Unique step ID: All10-Demo.json / step04
+PASS Reboot codes are success codes: All10-Demo.json / step04
+PASS Enabled script resolves: All10-Demo.json / step04
+PASS Parameters declared by script: All10-Demo.json / step04
+PASS Dependencies enabled and earlier: All10-Demo.json / step04
+PASS Automatic steps have automatic prerequisites: All10-Demo.json / step04
+PASS Unique step ID: All10-Demo.json / step05
+PASS Reboot codes are success codes: All10-Demo.json / step05
+PASS Enabled script resolves: All10-Demo.json / step05
+PASS Parameters declared by script: All10-Demo.json / step05
+PASS Dependencies enabled and earlier: All10-Demo.json / step05
+PASS Automatic steps have automatic prerequisites: All10-Demo.json / step05
+PASS Unique step ID: All10-Demo.json / step06
+PASS Reboot codes are success codes: All10-Demo.json / step06
+PASS Enabled script resolves: All10-Demo.json / step06
+PASS Parameters declared by script: All10-Demo.json / step06
+PASS Dependencies enabled and earlier: All10-Demo.json / step06
+PASS Automatic steps have automatic prerequisites: All10-Demo.json / step06
+PASS Unique step ID: All10-Demo.json / step07
+PASS Reboot codes are success codes: All10-Demo.json / step07
+PASS Enabled script resolves: All10-Demo.json / step07
+PASS Parameters declared by script: All10-Demo.json / step07
+PASS Dependencies enabled and earlier: All10-Demo.json / step07
+PASS Automatic steps have automatic prerequisites: All10-Demo.json / step07
+PASS Unique step ID: All10-Demo.json / step08
+PASS Reboot codes are success codes: All10-Demo.json / step08
+PASS Enabled script resolves: All10-Demo.json / step08
+PASS Parameters declared by script: All10-Demo.json / step08
+PASS Dependencies enabled and earlier: All10-Demo.json / step08
+PASS Automatic steps have automatic prerequisites: All10-Demo.json / step08
+PASS Unique step ID: All10-Demo.json / step09
+PASS Reboot codes are success codes: All10-Demo.json / step09
+PASS Enabled script resolves: All10-Demo.json / step09
+PASS Parameters declared by script: All10-Demo.json / step09
+PASS Dependencies enabled and earlier: All10-Demo.json / step09
+PASS Automatic steps have automatic prerequisites: All10-Demo.json / step09
+PASS Unique step ID: All10-Demo.json / step10
+PASS Reboot codes are success codes: All10-Demo.json / step10
+PASS Enabled script resolves: All10-Demo.json / step10
+PASS Parameters declared by script: All10-Demo.json / step10
+PASS Dependencies enabled and earlier: All10-Demo.json / step10
+PASS Automatic steps have automatic prerequisites: All10-Demo.json / step10
+PASS JSON schema: Dark-Demo.json
+PASS Enabled step limit: Dark-Demo.json
+PASS Unique step ID: Dark-Demo.json / step01
+PASS Reboot codes are success codes: Dark-Demo.json / step01
+PASS Enabled script resolves: Dark-Demo.json / step01
+PASS Parameters declared by script: Dark-Demo.json / step01
+PASS Dependencies enabled and earlier: Dark-Demo.json / step01
+PASS Automatic steps have automatic prerequisites: Dark-Demo.json / step01
+PASS Unique step ID: Dark-Demo.json / step02
+PASS Reboot codes are success codes: Dark-Demo.json / step02
+PASS Enabled script resolves: Dark-Demo.json / step02
+PASS Parameters declared by script: Dark-Demo.json / step02
+PASS Dependencies enabled and earlier: Dark-Demo.json / step02
+PASS Automatic steps have automatic prerequisites: Dark-Demo.json / step02
+PASS Unique step ID: Dark-Demo.json / step03
+PASS Reboot codes are success codes: Dark-Demo.json / step03
+PASS Enabled script resolves: Dark-Demo.json / step03
+PASS Parameters declared by script: Dark-Demo.json / step03
+PASS Dependencies enabled and earlier: Dark-Demo.json / step03
+PASS Automatic steps have automatic prerequisites: Dark-Demo.json / step03
+PASS Unique step ID: Dark-Demo.json / step04
+PASS Reboot codes are success codes: Dark-Demo.json / step04
+PASS Enabled script resolves: Dark-Demo.json / step04
+PASS Parameters declared by script: Dark-Demo.json / step04
+PASS Dependencies enabled and earlier: Dark-Demo.json / step04
+PASS Automatic steps have automatic prerequisites: Dark-Demo.json / step04
+PASS Unique step ID: Dark-Demo.json / step05
+PASS Reboot codes are success codes: Dark-Demo.json / step05
+PASS Enabled script resolves: Dark-Demo.json / step05
+PASS Parameters declared by script: Dark-Demo.json / step05
+PASS Dependencies enabled and earlier: Dark-Demo.json / step05
+PASS Automatic steps have automatic prerequisites: Dark-Demo.json / step05
+PASS Unique step ID: Dark-Demo.json / step06
+PASS Reboot codes are success codes: Dark-Demo.json / step06
+PASS Enabled script resolves: Dark-Demo.json / step06
+PASS Parameters declared by script: Dark-Demo.json / step06
+PASS Dependencies enabled and earlier: Dark-Demo.json / step06
+PASS Automatic steps have automatic prerequisites: Dark-Demo.json / step06
+PASS Unique step ID: Dark-Demo.json / step07
+PASS Reboot codes are success codes: Dark-Demo.json / step07
+PASS Enabled script resolves: Dark-Demo.json / step07
+PASS Parameters declared by script: Dark-Demo.json / step07
+PASS Dependencies enabled and earlier: Dark-Demo.json / step07
+PASS Automatic steps have automatic prerequisites: Dark-Demo.json / step07
+PASS Unique step ID: Dark-Demo.json / step08
+PASS Reboot codes are success codes: Dark-Demo.json / step08
+PASS Unique step ID: Dark-Demo.json / step09
+PASS Reboot codes are success codes: Dark-Demo.json / step09
+PASS Unique step ID: Dark-Demo.json / step10
+PASS Reboot codes are success codes: Dark-Demo.json / step10
+PASS JSON schema: Enterprise-Example.json
+PASS Enabled step limit: Enterprise-Example.json
+PASS Unique step ID: Enterprise-Example.json / cleanup
+PASS Reboot codes are success codes: Enterprise-Example.json / cleanup
+PASS Enabled script resolves: Enterprise-Example.json / cleanup
+PASS Parameters declared by script: Enterprise-Example.json / cleanup
+PASS Dependencies enabled and earlier: Enterprise-Example.json / cleanup
+PASS Automatic steps have automatic prerequisites: Enterprise-Example.json / cleanup
+PASS Unique step ID: Enterprise-Example.json / msi
+PASS Reboot codes are success codes: Enterprise-Example.json / msi
+PASS Enabled script resolves: Enterprise-Example.json / msi
+PASS Parameters declared by script: Enterprise-Example.json / msi
+PASS Dependencies enabled and earlier: Enterprise-Example.json / msi
+PASS Automatic steps have automatic prerequisites: Enterprise-Example.json / msi
+PASS Unique step ID: Enterprise-Example.json / portal_check
+PASS Reboot codes are success codes: Enterprise-Example.json / portal_check
+PASS Enabled script resolves: Enterprise-Example.json / portal_check
+PASS Parameters declared by script: Enterprise-Example.json / portal_check
+PASS Dependencies enabled and earlier: Enterprise-Example.json / portal_check
+PASS Automatic steps have automatic prerequisites: Enterprise-Example.json / portal_check
+PASS Unique step ID: Enterprise-Example.json / portal_install
+PASS Reboot codes are success codes: Enterprise-Example.json / portal_install
+PASS Enabled script resolves: Enterprise-Example.json / portal_install
+PASS Parameters declared by script: Enterprise-Example.json / portal_install
+PASS Dependencies enabled and earlier: Enterprise-Example.json / portal_install
+PASS Automatic steps have automatic prerequisites: Enterprise-Example.json / portal_install
+PASS WinGet timing bounds: Enterprise-Example.json / portal_install
+PASS Example budgets time for both install routes: Enterprise-Example.json / portal_install
+PASS Offline placeholder fields present: Enterprise-Example.json / portal_install
+PASS Unique step ID: Enterprise-Example.json / notepad
+PASS Reboot codes are success codes: Enterprise-Example.json / notepad
+PASS Enabled script resolves: Enterprise-Example.json / notepad
+PASS Parameters declared by script: Enterprise-Example.json / notepad
+PASS Dependencies enabled and earlier: Enterprise-Example.json / notepad
+PASS Automatic steps have automatic prerequisites: Enterprise-Example.json / notepad
+PASS WinGet timing bounds: Enterprise-Example.json / notepad
+PASS Example budgets time for both install routes: Enterprise-Example.json / notepad
+PASS Offline placeholder fields present: Enterprise-Example.json / notepad
+PASS JSON schema: Optional-Demo.json
+PASS Enabled step limit: Optional-Demo.json
+PASS Unique step ID: Optional-Demo.json / step01
+PASS Reboot codes are success codes: Optional-Demo.json / step01
+PASS Enabled script resolves: Optional-Demo.json / step01
+PASS Parameters declared by script: Optional-Demo.json / step01
+PASS Dependencies enabled and earlier: Optional-Demo.json / step01
+PASS Automatic steps have automatic prerequisites: Optional-Demo.json / step01
+PASS Unique step ID: Optional-Demo.json / step02
+PASS Reboot codes are success codes: Optional-Demo.json / step02
+PASS Unique step ID: Optional-Demo.json / step03
+PASS Reboot codes are success codes: Optional-Demo.json / step03
+PASS Unique step ID: Optional-Demo.json / step04
+PASS Reboot codes are success codes: Optional-Demo.json / step04
+PASS Unique step ID: Optional-Demo.json / step05
+PASS Reboot codes are success codes: Optional-Demo.json / step05
+PASS Unique step ID: Optional-Demo.json / step06
+PASS Reboot codes are success codes: Optional-Demo.json / step06
+PASS Enabled script resolves: Optional-Demo.json / step06
+PASS Parameters declared by script: Optional-Demo.json / step06
+PASS Dependencies enabled and earlier: Optional-Demo.json / step06
+PASS Automatic steps have automatic prerequisites: Optional-Demo.json / step06
+PASS Unique step ID: Optional-Demo.json / step07
+PASS Reboot codes are success codes: Optional-Demo.json / step07
+PASS Enabled script resolves: Optional-Demo.json / step07
+PASS Parameters declared by script: Optional-Demo.json / step07
+PASS Dependencies enabled and earlier: Optional-Demo.json / step07
+PASS Automatic steps have automatic prerequisites: Optional-Demo.json / step07
+PASS Unique step ID: Optional-Demo.json / step08
+PASS Reboot codes are success codes: Optional-Demo.json / step08
+PASS Unique step ID: Optional-Demo.json / step09
+PASS Reboot codes are success codes: Optional-Demo.json / step09
+PASS Unique step ID: Optional-Demo.json / step10
+PASS Reboot codes are success codes: Optional-Demo.json / step10
+PASS JSON schema: Portal-Detection-Test.json
+PASS Enabled step limit: Portal-Detection-Test.json
+PASS Unique step ID: Portal-Detection-Test.json / portal_check
+PASS Reboot codes are success codes: Portal-Detection-Test.json / portal_check
+PASS Enabled script resolves: Portal-Detection-Test.json / portal_check
+PASS Parameters declared by script: Portal-Detection-Test.json / portal_check
+PASS Dependencies enabled and earlier: Portal-Detection-Test.json / portal_check
+PASS Automatic steps have automatic prerequisites: Portal-Detection-Test.json / portal_check
+PASS JSON schema: Setup.json
+PASS Enabled step limit: Setup.json
+PASS Unique step ID: Setup.json / step01
+PASS Reboot codes are success codes: Setup.json / step01
+PASS Enabled script resolves: Setup.json / step01
+PASS Parameters declared by script: Setup.json / step01
+PASS Dependencies enabled and earlier: Setup.json / step01
+PASS Automatic steps have automatic prerequisites: Setup.json / step01
+PASS Unique step ID: Setup.json / step02
+PASS Reboot codes are success codes: Setup.json / step02
+PASS Enabled script resolves: Setup.json / step02
+PASS Parameters declared by script: Setup.json / step02
+PASS Dependencies enabled and earlier: Setup.json / step02
+PASS Automatic steps have automatic prerequisites: Setup.json / step02
+PASS Unique step ID: Setup.json / step03
+PASS Reboot codes are success codes: Setup.json / step03
+PASS Enabled script resolves: Setup.json / step03
+PASS Parameters declared by script: Setup.json / step03
+PASS Dependencies enabled and earlier: Setup.json / step03
+PASS Automatic steps have automatic prerequisites: Setup.json / step03
+PASS Unique step ID: Setup.json / step04
+PASS Reboot codes are success codes: Setup.json / step04
+PASS Enabled script resolves: Setup.json / step04
+PASS Parameters declared by script: Setup.json / step04
+PASS Dependencies enabled and earlier: Setup.json / step04
+PASS Automatic steps have automatic prerequisites: Setup.json / step04
+PASS Unique step ID: Setup.json / step05
+PASS Reboot codes are success codes: Setup.json / step05
+PASS Enabled script resolves: Setup.json / step05
+PASS Parameters declared by script: Setup.json / step05
+PASS Dependencies enabled and earlier: Setup.json / step05
+PASS Automatic steps have automatic prerequisites: Setup.json / step05
+PASS Unique step ID: Setup.json / step06
+PASS Reboot codes are success codes: Setup.json / step06
+PASS Enabled script resolves: Setup.json / step06
+PASS Parameters declared by script: Setup.json / step06
+PASS Dependencies enabled and earlier: Setup.json / step06
+PASS Automatic steps have automatic prerequisites: Setup.json / step06
+PASS Unique step ID: Setup.json / step07
+PASS Reboot codes are success codes: Setup.json / step07
+PASS Enabled script resolves: Setup.json / step07
+PASS Parameters declared by script: Setup.json / step07
+PASS Dependencies enabled and earlier: Setup.json / step07
+PASS Automatic steps have automatic prerequisites: Setup.json / step07
+PASS Unique step ID: Setup.json / step08
+PASS Reboot codes are success codes: Setup.json / step08
+PASS Unique step ID: Setup.json / step09
+PASS Reboot codes are success codes: Setup.json / step09
+PASS Unique step ID: Setup.json / step10
+PASS Reboot codes are success codes: Setup.json / step10
+PASS JSON schema: StoreApps-WinGet-Example.json
+PASS Enabled step limit: StoreApps-WinGet-Example.json
+PASS Unique step ID: StoreApps-WinGet-Example.json / portal_install
+PASS Reboot codes are success codes: StoreApps-WinGet-Example.json / portal_install
+PASS Enabled script resolves: StoreApps-WinGet-Example.json / portal_install
+PASS Parameters declared by script: StoreApps-WinGet-Example.json / portal_install
+PASS Dependencies enabled and earlier: StoreApps-WinGet-Example.json / portal_install
+PASS Automatic steps have automatic prerequisites: StoreApps-WinGet-Example.json / portal_install
+PASS WinGet timing bounds: StoreApps-WinGet-Example.json / portal_install
+PASS Example budgets time for both install routes: StoreApps-WinGet-Example.json / portal_install
+PASS Offline placeholder fields present: StoreApps-WinGet-Example.json / portal_install
+PASS Unique step ID: StoreApps-WinGet-Example.json / notepad
+PASS Reboot codes are success codes: StoreApps-WinGet-Example.json / notepad
+PASS Enabled script resolves: StoreApps-WinGet-Example.json / notepad
+PASS Parameters declared by script: StoreApps-WinGet-Example.json / notepad
+PASS Dependencies enabled and earlier: StoreApps-WinGet-Example.json / notepad
+PASS Automatic steps have automatic prerequisites: StoreApps-WinGet-Example.json / notepad
+PASS WinGet timing bounds: StoreApps-WinGet-Example.json / notepad
+PASS Example budgets time for both install routes: StoreApps-WinGet-Example.json / notepad
+PASS Offline placeholder fields present: StoreApps-WinGet-Example.json / notepad
+PASS XAML parses and named elements are unique
+PASS XAML model bindings resolve to C# properties
+PASS XAML trigger/storyboard targets resolve
+PASS Documentation link: Docs/CONFIGURATION.md -> HOTFIX8.md
+PASS Documentation link: Docs/CONFIGURATION.md -> HOTFIX4.md
+PASS Documentation link: Docs/DEPLOYMENT.md -> HOTFIX8.md
+PASS Documentation link: Docs/DEPLOYMENT.md -> HOTFIX4.md
+PASS Documentation link: Docs/ENTERPRISE-STEPS.md -> HOTFIX9.md
+PASS Documentation link: Docs/ENTERPRISE-STEPS.md -> HOTFIX7.md
+PASS Documentation link: Docs/ENTERPRISE-STEPS.md -> HOTFIX9.md
+PASS Documentation link: Docs/ENTERPRISE-STEPS.md -> ../Config/Enterprise-Example.json
+PASS Documentation link: Docs/ENTERPRISE-STEPS.md -> HOTFIX9.md
+PASS Documentation link: Docs/ENTERPRISE-STEPS.md -> HOTFIX9.md
+PASS Documentation link: Docs/HOTFIX9.md -> ENTERPRISE-STEPS.md
+PASS Documentation link: Docs/HOTFIX9.md -> ../Config/StoreApps-WinGet-Example.json
+PASS Documentation link: Docs/STEP-AUTHORING.md -> HOTFIX4.md
+PASS Documentation link: Docs/STEP-AUTHORING.md -> ENTERPRISE-STEPS.md
+PASS Documentation link: Docs/TESTING.md -> ENTERPRISE-STEPS.md
+PASS Documentation link: Docs/TESTING.md -> HOTFIX6.md
+PASS Documentation link: Docs/TESTING.md -> HOTFIX8.md
+PASS Documentation link: Docs/TESTING.md -> HOTFIX9.md
+PASS Documentation link: Payloads/README.md -> ../Docs/ENTERPRISE-STEPS.md
+PASS Documentation link: Payloads/README.md -> ../Docs/HOTFIX9.md
+PASS Documentation link: README.md -> Docs/HOTFIX9.md
+PASS Documentation link: README.md -> Docs/HOTFIX8.md
+PASS Documentation link: README.md -> Docs/HOTFIX7.md
+PASS Documentation link: README.md -> Docs/HOTFIX6.md
+PASS Documentation link: README.md -> Docs/ENTERPRISE-STEPS.md
+PASS Documentation link: README.md -> Docs/HOTFIX4.md
+PASS Documentation link: README.md -> Docs/DEPLOYMENT.md
+PASS Documentation link: README.md -> Docs/CONFIGURATION.md
+PASS Documentation link: README.md -> Docs/STEP-AUTHORING.md
+PASS Documentation link: README.md -> Docs/DEPLOYMENT.md
+PASS Documentation link: README.md -> Docs/TESTING.md
+PASS Documentation link: README.md -> Docs/ENTERPRISE-STEPS.md
+PASS Documentation link: README.md -> Docs/HOTFIX4.md
+PASS Documentation link: README.md -> Docs/Design-Preview.html
+PASS Offline guide anchor: #start
+PASS Offline guide anchor: #hotfix9
+PASS Offline guide anchor: #hotfix8
+PASS Offline guide anchor: #hotfix7
+PASS Offline guide anchor: #hotfix6
+PASS Offline guide anchor: #enterprise
+PASS Offline guide anchor: #hotfix4
+PASS Offline guide anchor: #config
+PASS Offline guide anchor: #steps
+PASS Offline guide anchor: #deployment
+PASS Offline guide anchor: #testing
+PASS Offline guide file link: Docs/Design-Preview.html
+PASS Offline guide anchor: #hotfix9
+PASS Offline guide anchor: #hotfix8
+PASS Offline guide anchor: #hotfix7
+PASS Offline guide anchor: #hotfix6
+PASS Offline guide anchor: #enterprise
+PASS Offline guide anchor: #hotfix4
+PASS Offline guide anchor: #deployment
+PASS Offline guide anchor: #config
+PASS Offline guide anchor: #steps
+PASS Offline guide anchor: #deployment
+PASS Offline guide anchor: #testing
+PASS Offline guide anchor: #enterprise
+PASS Offline guide anchor: #hotfix4
+PASS Offline guide file link: Docs/Design-Preview.html
+PASS Offline guide anchor: #enterprise
+PASS Offline guide file link: Config/StoreApps-WinGet-Example.json
+PASS Offline guide anchor: #hotfix9
+PASS Offline guide anchor: #hotfix7
+PASS Offline guide anchor: #hotfix9
+PASS Offline guide file link: Config/Enterprise-Example.json
+PASS Offline guide anchor: #hotfix9
+PASS Offline guide anchor: #hotfix9
+PASS Offline guide anchor: #hotfix8
+PASS Offline guide anchor: #hotfix4
+PASS Offline guide anchor: #hotfix4
+PASS Offline guide anchor: #enterprise
+PASS Offline guide anchor: #hotfix8
+PASS Offline guide anchor: #hotfix4
+PASS Offline guide anchor: #enterprise
+PASS Offline guide anchor: #hotfix6
+PASS Offline guide anchor: #hotfix8
+PASS Offline guide anchor: #hotfix9
+PASS Previous package file retained: Assets/README.md
+PASS Unrelated hotfix 8 file preserved exactly: Assets/README.md
+PASS Previous package file retained: Config/All10-Demo.json
+PASS Unrelated hotfix 8 file preserved exactly: Config/All10-Demo.json
+PASS Previous package file retained: Config/Dark-Demo.json
+PASS Unrelated hotfix 8 file preserved exactly: Config/Dark-Demo.json
+PASS Previous package file retained: Config/Enterprise-Example.json
+PASS Previous package file retained: Config/Optional-Demo.json
+PASS Unrelated hotfix 8 file preserved exactly: Config/Optional-Demo.json
+PASS Previous package file retained: Config/Portal-Detection-Test.json
+PASS Unrelated hotfix 8 file preserved exactly: Config/Portal-Detection-Test.json
+PASS Previous package file retained: Config/Setup.json
+PASS Unrelated hotfix 8 file preserved exactly: Config/Setup.json
+PASS Previous package file retained: Core/Invoke-SetupStep.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Core/Invoke-SetupStep.ps1
+PASS Previous package file retained: Core/Setup.Common.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Core/Setup.Common.ps1
+PASS Previous package file retained: Docs/CONFIGURATION.md
+PASS Unrelated hotfix 8 file preserved exactly: Docs/CONFIGURATION.md
+PASS Previous package file retained: Docs/DEPLOYMENT.md
+PASS Unrelated hotfix 8 file preserved exactly: Docs/DEPLOYMENT.md
+PASS Previous package file retained: Docs/Design-Preview.html
+PASS Unrelated hotfix 8 file preserved exactly: Docs/Design-Preview.html
+PASS Previous package file retained: Docs/ENTERPRISE-STEPS.md
+PASS Previous package file retained: Docs/HOTFIX4.md
+PASS Unrelated hotfix 8 file preserved exactly: Docs/HOTFIX4.md
+PASS Previous package file retained: Docs/HOTFIX6.md
+PASS Unrelated hotfix 8 file preserved exactly: Docs/HOTFIX6.md
+PASS Previous package file retained: Docs/HOTFIX7.md
+PASS Unrelated hotfix 8 file preserved exactly: Docs/HOTFIX7.md
+PASS Previous package file retained: Docs/HOTFIX8.md
+PASS Unrelated hotfix 8 file preserved exactly: Docs/HOTFIX8.md
+PASS Previous package file retained: Docs/STATIC-VALIDATION.txt
+PASS Previous package file retained: Docs/STEP-AUTHORING.md
+PASS Unrelated hotfix 8 file preserved exactly: Docs/STEP-AUTHORING.md
+PASS Previous package file retained: Docs/Setup.schema.json
+PASS Unrelated hotfix 8 file preserved exactly: Docs/Setup.schema.json
+PASS Previous package file retained: Docs/TESTING.md
+PASS Previous package file retained: EnterpriseSteps/Enterprise.Common.ps1
+PASS Previous package file retained: EnterpriseSteps/Invoke-UserAction.ps1
+PASS Previous package file retained: EnterpriseSteps/Step-DetectCompanyPortal.ps1
+PASS Unrelated hotfix 8 file preserved exactly: EnterpriseSteps/Step-DetectCompanyPortal.ps1
+PASS Previous package file retained: EnterpriseSteps/Step-InstallCompanyPortal.ps1
+PASS Previous package file retained: EnterpriseSteps/Step-InstallMsi.ps1
+PASS Unrelated hotfix 8 file preserved exactly: EnterpriseSteps/Step-InstallMsi.ps1
+PASS Previous package file retained: EnterpriseSteps/Step-InstallNotepad.ps1
+PASS Previous package file retained: EnterpriseSteps/Step-RemovePreinstalledOfficeOneDrive.ps1
+PASS Unrelated hotfix 8 file preserved exactly: EnterpriseSteps/Step-RemovePreinstalledOfficeOneDrive.ps1
+PASS Previous package file retained: EnterpriseSteps/Test-EnterpriseConfiguration.ps1
+PASS Previous package file retained: Examples/Step-InstallMsi.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Examples/Step-InstallMsi.ps1
+PASS Previous package file retained: Examples/Step-SetMachineSetting.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Examples/Step-SetMachineSetting.ps1
+PASS Previous package file retained: Payloads/README.md
+PASS Previous package file retained: README.md
+PASS Previous package file retained: Run-Demo.cmd
+PASS Unrelated hotfix 8 file preserved exactly: Run-Demo.cmd
+PASS Previous package file retained: Run-Enterprise-Demo.cmd
+PASS Unrelated hotfix 8 file preserved exactly: Run-Enterprise-Demo.cmd
+PASS Previous package file retained: Run-Live-ServiceUI.cmd
+PASS Unrelated hotfix 8 file preserved exactly: Run-Live-ServiceUI.cmd
+PASS Previous package file retained: SHA256SUMS.txt
+PASS Previous package file retained: START-HERE.html
+PASS Previous package file retained: Start-DeviceSetup.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Start-DeviceSetup.ps1
+PASS Previous package file retained: Steps/Step-01.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Steps/Step-01.ps1
+PASS Previous package file retained: Steps/Step-02.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Steps/Step-02.ps1
+PASS Previous package file retained: Steps/Step-03.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Steps/Step-03.ps1
+PASS Previous package file retained: Steps/Step-04.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Steps/Step-04.ps1
+PASS Previous package file retained: Steps/Step-05.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Steps/Step-05.ps1
+PASS Previous package file retained: Steps/Step-06.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Steps/Step-06.ps1
+PASS Previous package file retained: Steps/Step-07.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Steps/Step-07.ps1
+PASS Previous package file retained: Steps/Step-08.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Steps/Step-08.ps1
+PASS Previous package file retained: Steps/Step-09.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Steps/Step-09.ps1
+PASS Previous package file retained: Steps/Step-10.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Steps/Step-10.ps1
+PASS Previous package file retained: Tests/Invoke-EnterpriseHelperTests.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Tests/Invoke-EnterpriseHelperTests.ps1
+PASS Previous package file retained: Tests/Invoke-LogAccessTests.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Tests/Invoke-LogAccessTests.ps1
+PASS Previous package file retained: Tests/Invoke-SmokeTests.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Tests/Invoke-SmokeTests.ps1
+PASS Previous package file retained: Tools/Grant-SetupLogReadAccess.ps1
+PASS Unrelated hotfix 8 file preserved exactly: Tools/Grant-SetupLogReadAccess.ps1
+PASS Previous package file retained: Tools/README.md
+PASS Unrelated hotfix 8 file preserved exactly: Tools/README.md
+PASS Previous package file retained: UI/MainWindow.xaml
+PASS Unrelated hotfix 8 file preserved exactly: UI/MainWindow.xaml
+PASS Previous package file retained: UI/StepViewModel.cs
+PASS Unrelated hotfix 8 file preserved exactly: UI/StepViewModel.cs
+PASS Previous package file retained: UI/TaskbarIdentity.cs
+PASS Unrelated hotfix 8 file preserved exactly: UI/TaskbarIdentity.cs
+PASS Previous package file retained: Validate-Config.cmd
+PASS Unrelated hotfix 8 file preserved exactly: Validate-Config.cmd
+PASS Existing enterprise example setting preserved: SchemaVersion
+PASS Existing enterprise example setting preserved: SetupId
+PASS Existing enterprise example setting preserved: SetupVersion
+PASS Existing enterprise example setting preserved: Branding
+PASS Existing enterprise example setting preserved: Appearance
+PASS Existing enterprise example setting preserved: Text
+PASS Existing enterprise example setting preserved: Behavior
+PASS Unrelated enterprise step unchanged: cleanup
+PASS Unrelated enterprise step unchanged: msi
+PASS Unrelated enterprise step unchanged: portal_check
+PASS Only the three planned files added
+
+543 static checks passed.
+Grammar parsing uses tree-sitter; it is not the Windows PowerShell parser or a runtime execution.
+Windows PowerShell tests / WPF / ServiceUI / Task Scheduler / WinGet-msstore / live AppX and DISM: NOT EXECUTED (Linux authoring environment).
+Payload preflight is supplied for Windows; examples intentionally contain filenames to replace. No offline binaries/licenses are bundled.

@@ -1,0 +1,88 @@
+{
+  "SchemaVersion": 1,
+  "SetupId": "Company.PortalDetectionTest",
+  "SetupVersion": "1.0.0",
+  "Branding": {
+    "CompanyName": "YOUR COMPANY",
+    "WindowTitle": "Welcome | Device setup",
+    "Heading": "Welcome to your new PC",
+    "Message": "Please wait while we finish device setup. We are preparing your applications, access, and preferences.",
+    "LogoPath": "",
+    "BannerPath": "",
+    "BannerHeight": 110,
+    "BannerStretch": "Uniform",
+    "BannerStretchDirection": "DownOnly",
+    "LogoMaxWidth": 180,
+    "LogoMaxHeight": 48,
+    "IconPath": ""
+  },
+  "Appearance": {
+    "Theme": "Light",
+    "AccentColor": "#2563EB",
+    "SuccessColor": "#16815D",
+    "FailureColor": "#C53F4E",
+    "WarningColor": "#A86D0B",
+    "WindowWidth": 900,
+    "WindowHeight": 820,
+    "Topmost": true,
+    "ReduceMotion": false,
+    "ShowElapsedTime": true,
+    "ShowStepNumbers": true,
+    "FontFamily": "Segoe UI"
+  },
+  "Text": {
+    "RunningHeading": "Getting things ready",
+    "RunningMessage": "Your settings and applications are being prepared.",
+    "SuccessHeading": "Your PC is ready",
+    "SuccessMessage": "All included setup steps have finished. You can start using your device.",
+    "WarningHeading": "Ready, with a few things to review",
+    "WarningMessage": "Required setup is complete. An optional step needs attention.",
+    "FailureHeading": "A few things need attention",
+    "FailureMessage": "Review the highlighted steps, then retry or contact your IT service desk.",
+    "Footer": "Keep your device plugged in and connected.",
+    "Support": "Need help? Contact your IT service desk.",
+    "RetryButton": "Retry unfinished",
+    "CloseButton": "Done",
+    "CopyButton": "Copy details",
+    "DetailsLabel": "Setup details",
+    "SelectionHeading": "Choose optional apps",
+    "SelectionMessage": "Select any extras you would like, then start setup. Required setup runs automatically.",
+    "StartButton": "Start setup",
+    "SelectionFooter": "Optional apps are unchecked by default.",
+    "SelectStepLabel": "Include this optional step"
+  },
+  "Behavior": {
+    "RequireSystemForLive": true,
+    "ResumeCompletedSteps": false,
+    "StopOnRequiredFailure": true,
+    "AllowRetry": true,
+    "AutoCloseSuccessSeconds": 0,
+    "PollIntervalMilliseconds": 400,
+    "StateDirectory": "%ProgramData%/Company/PostEnrollmentSetupUI"
+  },
+  "Steps": [
+    {
+      "Id": "portal_check",
+      "Enabled": true,
+      "Title": "Check Company Portal",
+      "Description": "Check availability and record whether installation is needed.",
+      "Script": "EnterpriseSteps/Step-DetectCompanyPortal.ps1",
+      "Parameters": {
+        "RegistryPath": "HKLM:\\SOFTWARE\\Company\\PostEnrollmentSetup"
+      },
+      "TimeoutSeconds": 120,
+      "SuccessExitCodes": [
+        0,
+        3010
+      ],
+      "RebootExitCodes": [
+        3010
+      ],
+      "Required": true,
+      "DependsOn": [],
+      "DemoSeconds": 3,
+      "DemoFailFirstAttempt": false,
+      "UserSelectable": false
+    }
+  ]
+}
