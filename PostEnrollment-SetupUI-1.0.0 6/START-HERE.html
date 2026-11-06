@@ -1,0 +1,2771 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Post-enrollment Setup UI | Guide</title><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#f3f6fa;color:#17243b;font:15px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}header{padding:40px 48px;background:#14243e;color:#fff}header small{color:#9cbcff;letter-spacing:2px;font-weight:700}header h1{font-size:36px;margin:8px 0 5px}header p{color:#c5d2e4;margin:0}.shell{max-width:1440px;margin:auto;display:grid;grid-template-columns:210px minmax(0,1fr);gap:34px;padding:30px}nav{position:sticky;top:25px;align-self:start;display:flex;flex-direction:column;gap:8px}nav a{padding:9px 12px;color:#385171;text-decoration:none;font-weight:600;border-radius:8px}nav a:hover{background:#e4ecfa;color:#245edb}main{min-width:0}section{background:white;border:1px solid #e0e7f0;padding:30px 36px;margin-bottom:25px;border-radius:14px;scroll-margin-top:20px}h1{font-size:28px;line-height:1.2}h2{font-size:21px;margin-top:32px}h3{font-size:17px}a{color:#245edb}table{border-collapse:collapse;width:100%;font-size:13px;display:block;overflow-x:auto}th,td{padding:10px 12px;border-bottom:1px solid #e1e7ef;text-align:left;vertical-align:top}th{background:#edf3fc;font-weight:650}td:first-child{min-width:140px}pre{padding:18px;background:#15243c;color:#e2edff;border-radius:9px;overflow:auto;font-size:12px;line-height:1.65}pre code{background:transparent;padding:0;color:inherit}code{font-family:Consolas,ui-monospace,monospace;background:#edf2f9;border-radius:4px;padding:2px 4px;font-size:.9em;overflow-wrap:anywhere}li{margin:6px 0}.notice{background:#edf3ff;border-left:4px solid #2563eb;padding:12px 18px;border-radius:7px;margin:18px 0}img{max-width:100%}@media(max-width:850px){.shell{display:block;padding:16px}nav{position:static;flex-direction:row;flex-wrap:wrap;margin-bottom:18px}section{padding:22px}header{padding:28px}}@media print{nav{display:none}.shell{display:block;padding:0}header{background:white;color:black;padding:20px}section{border:none;padding:10px;break-before:page}pre{white-space:pre-wrap;color:black;background:#eee}a{color:inherit;text-decoration:none}}</style></head><body><header><small>IMPLEMENTATION GUIDE · VERSION 1.0.0 · CUMULATIVE HOTFIX 10</small><h1>A better welcome to a new PC.</h1><p>Brand the window. Define your steps. Keep your existing ServiceUI workflow.</p></header><div class="shell"><nav><a href="#start">Start here</a><a href="#hotfix10">First-logon setup</a><a href="#hotfix9">Store app fallback</a><a href="#hotfix8">File Explorer log access</a><a href="#hotfix7">Portal SID detection</a><a href="#hotfix6">IsSelected startup fix</a><a href="#enterprise">Enterprise step scripts</a><a href="#hotfix4">Optional apps &amp; icons</a><a href="#config">Configuration</a><a href="#steps">Writing steps</a><a href="#deployment">Deployment</a><a href="#testing">Testing</a><a href="Docs/Design-Preview.html">Design reference ↗</a></nav><main><section id="start"><h1>Post-enrollment Setup UI</h1>
+
+<p><strong>Version 1.0.0, cumulative hotfix 10 · Windows PowerShell 5.1 · WPF · Your existing SYSTEM + ServiceUI launch</strong></p>
+
+<p>A configurable, Fluent-inspired first-desktop setup window. Keep your current post-enrollment trigger and replace the popup with this front end. Add your PowerShell code to individual step files; the window handles progress, animation, status, and results.</p>
+
+<h2>Start here</h2>
+
+<p><strong>Hotfix 10:</strong> <a href="#hotfix10">Enterprise first-logon setup</a> adds a complete ten-card profile for broad one-time Office removal, manufacturer-specific cleanup, device naming, Google apps with verified update checks, BitLocker audit, neutral WinGet skips and a mandatory final restart. First run <strong>Run-FirstLogon-Demo.cmd</strong> for the visual preview; then use <strong>Run-Inventory-Live-ServiceUI.cmd</strong> on a test PC to see what the live profile would target. The original configurations retain reminder-only reboot behavior. Read the guide before using the new live launcher.</p>
+
+<p><strong>Hotfix 9:</strong> <a href="#hotfix9">WinGet first with offline fallback</a> adds <code>Mode: "WinGetThenOffline"</code> for Company Portal and Notepad. WinGet runs in a limited-user task; SYSTEM verifies the user registration and handles offline provisioning if needed. Replace the five enterprise files listed in the guide, retain your payload paths, and update Mode in your JSON. A two-app pilot config and mocked orchestration tests are included.</p>
+
+<p><strong>Hotfix 8:</strong> <a href="#hotfix8">File Explorer log access</a> grants the signed-in user read-only access to new live run folders by default. Completion-state files retain their protected permissions. From hotfix 7, replace Start-DeviceSetup.ps1 and Core/Setup.Common.ps1. A separate tool can grant read access to existing runs.</p>
+
+<p><strong>Hotfix 7:</strong> <a href="#hotfix7">Company Portal SID detection</a> now queries AllUsers and matches the interactive user's Installed registration, avoiding the direct AppX -User lookup. From hotfix 6, replace EnterpriseSteps/Enterprise.Common.ps1. A detection-only test config is included; use it with -Live through your SYSTEM + ServiceUI launcher.</p>
+
+<p><strong>Hotfix 6:</strong> fixes reuse of an older UI model in a persistent PowerShell session and identifies mismatched UI files before opening the window. See <a href="#hotfix6">IsSelected startup fix</a>. From hotfix 5, update Start-DeviceSetup.ps1 and Core/Setup.Common.ps1, and ensure UI/StepViewModel.cs and UI/MainWindow.xaml are from the same package. Keep your configuration and completed-step state.</p>
+
+<p><strong>New enterprise step pack:</strong> <a href="#enterprise">Five installation/cleanup scripts and integration guide</a>, <code>Config/Enterprise-Example.json</code>, <code>Run-Enterprise-Demo.cmd</code>, and Windows helper tests. From hotfix 4, copy EnterpriseSteps and update Core/Setup.Common.ps1 plus Start-DeviceSetup.ps1 for shared primary logging. Keep your existing customization. Installer payloads are supplied by you; the enterprise config contains clearly marked placeholders.</p>
+
+<p><strong>Updating from hotfix 3 or earlier:</strong> close the old window/PowerShell process and replace <strong>Start-DeviceSetup.ps1</strong>, <strong>Core/Setup.Common.ps1</strong>, <strong>UI/MainWindow.xaml</strong>, <strong>UI/StepViewModel.cs</strong>, and the new <strong>UI/TaskbarIdentity.cs</strong>. Merge any personal XAML edits into the new XAML. Keep your Config, Steps, Assets, and production launcher. New settings are optional, so old configurations keep their existing automatic-step behavior. No state reset or SetupVersion change is needed for this framework upgrade; execution fingerprints remain compatible. Update Tests/Invoke-SmokeTests.ps1 for the new checks and Run-Demo.cmd for a hidden-console demo launcher.</p>
+
+<p>Hotfix 4 adds unchecked user-selectable steps, remembered declines, a configurable window icon, and a dedicated taskbar identity. The banner now matches the window background for transparent artwork. It includes the earlier brush, JSON-save, and banner-sizing fixes. See <a href="#hotfix4">the hotfix 4 guide</a> for copy/paste configuration examples and upgrade details.</p>
+
+<ol>
+<li>Extract the entire ZIP to a local folder on a Windows test PC.</li>
+<li>Double-click <strong>Run-Demo.cmd</strong>. No administrator rights are needed. Select either optional extra (or leave both unchecked), then choose <strong>Start setup</strong>. No step begins before this choice is submitted.</li>
+<li>Watch the third step fail intentionally and the dependent fourth step become skipped. Expand its technical details, then choose <strong>Retry unfinished</strong>. The retry succeeds.</li>
+<li>Edit <strong>Config/Setup.json</strong> to change your company name, welcome text, theme, logo/banner paths, and step labels.</li>
+<li>Put your actual commands in <strong>Steps/Step-01.ps1</strong> through <strong>Step-10.ps1</strong>. Remove the placeholder <code>throw</code> in each step you implement.</li>
+<li>Disable unused entries with <code>"Enabled": false</code>. Reorder the JSON objects to change execution order.</li>
+<li>Run <strong>Validate-Config.cmd</strong>, then the Windows smoke tests in <strong>Tests/Invoke-SmokeTests.ps1</strong>.</li>
+<li>Pilot live execution using your existing SYSTEM + ServiceUI workflow with <strong>-Live</strong>. See <a href="#deployment">deployment instructions</a>.</li>
+</ol>
+
+<p><strong>Safe by default:</strong> launching Start-DeviceSetup.ps1 with no mode switch runs a simulation. Only <strong>-Live</strong> executes your step scripts. All ten supplied step scripts deliberately fail in live mode until you replace their placeholders. Demo mode never calls those scripts.</p>
+
+<h2>What is included</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Feature</th>
+  <th>Behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1-10 steps</td>
+  <td>Independent title, description, script, parameters, time limit, dependencies, and success codes</td>
+</tr>
+<tr>
+  <td>Modern appearance</td>
+  <td>Light/dark presets, rounded cards, accent color, readable typography, and status badges</td>
+</tr>
+<tr>
+  <td>Branding</td>
+  <td>Company name, welcome heading/message, optional logo, optional full-width banner, or both</td>
+</tr>
+<tr>
+  <td>Optional apps</td>
+  <td>Enabled + UserSelectable steps appear as unchecked choices before the run; users can select none</td>
+</tr>
+<tr>
+  <td>Window icon</td>
+  <td>Built-in setup icon or your ICO/PNG; separate taskbar grouping from ordinary PowerShell windows</td>
+</tr>
+<tr>
+  <td>Animated status</td>
+  <td>Spinning current-step indicator; completed checkmarks, failure crosses, and skipped markers</td>
+</tr>
+<tr>
+  <td>Progress</td>
+  <td>Overall steps-finished bar; optional per-step percentage and live message</td>
+</tr>
+<tr>
+  <td>Details</td>
+  <td>Expandable errors, elapsed times, run logs, and a copy-details button</td>
+</tr>
+<tr>
+  <td>Retry</td>
+  <td>Retry failed/skipped included steps; successful and unselected steps stay untouched</td>
+</tr>
+<tr>
+  <td>Resume</td>
+  <td>Remember successes and declined options per device, package ID, version, and execution fingerprint</td>
+</tr>
+<tr>
+  <td>Reliability</td>
+  <td>Separate worker process, responsive UI, time limits, duplicate-run prevention, and JSON results</td>
+</tr>
+<tr>
+  <td>Reboot reporting</td>
+  <td>Return 3010 by default; the new first-logon profile can explicitly schedule a mandatory restart</td>
+</tr>
+</tbody>
+</table>
+
+<p>This is custom WPF styled to resemble modern Windows. It is <strong>not WinUI 3 or PSADT</strong>, and it has no additional UI framework dependency.</p>
+
+<h2>Files you will usually edit</h2>
+
+<table>
+<thead>
+<tr>
+  <th>File</th>
+  <th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Config/Setup.json</td>
+  <td>Main configuration; 5 automatic steps, 2 enabled user-selectable steps, and 3 disabled slots</td>
+</tr>
+<tr>
+  <td>Steps/Step-01.ps1 ... Step-10.ps1</td>
+  <td>Your actual installation/configuration code</td>
+</tr>
+<tr>
+  <td>Assets/</td>
+  <td>Your branding images and optional ICO/PNG window icon</td>
+</tr>
+<tr>
+  <td>UI/MainWindow.xaml</td>
+  <td>Optional advanced layout/style changes</td>
+</tr>
+<tr>
+  <td>Run-Live-ServiceUI.cmd</td>
+  <td>Optional convenience launcher; customize your existing launcher instead if preferred</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Documentation</h2>
+
+<ul>
+<li><a href="#config">Configuration reference</a>: all settings and branding examples.</li>
+<li><a href="#steps">Writing steps</a>: success/failure rules, progress, parameters, installer examples.</li>
+<li><a href="#deployment">Deployment and first-logon integration</a>: ServiceUI, SYSTEM, Intune staging, state, and exit codes.</li>
+<li><a href="#testing">Testing and troubleshooting</a>: validation status, Windows checks, and common issues.</li>
+<li><a href="#enterprise">Enterprise steps guide</a>: MSI, Company Portal, Office/OneDrive cleanup, Notepad, deployment modes and recommended checks.</li>
+<li><a href="#hotfix4">Hotfix 4 guide</a>: optional installs, icons, upgrade instructions, and examples.</li>
+<li><a href="Docs/Design-Preview.html">Design preview</a>: HTML visual reference, <strong>not a Windows runtime screenshot</strong>.</li>
+<li><strong>START-HERE.html</strong>: offline, formatted copy of this documentation.</li>
+</ul>
+
+<h2>Quick commands</h2>
+
+<p>From an extracted package folder in Windows PowerShell:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c"># Safe simulation; no step scripts run.</span>
+<span class="n">powershell</span><span class="p">.</span><span class="n">exe</span> <span class="n">-NoProfile</span> <span class="n">-STA</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="p">.\</span><span class="nb">Start-DeviceSetup</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-Demo</span>
+
+<span class="c"># Dark theme example.</span>
+<span class="n">powershell</span><span class="p">.</span><span class="n">exe</span> <span class="n">-NoProfile</span> <span class="n">-STA</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="p">.\</span><span class="nb">Start-DeviceSetup</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-Demo</span> <span class="n">-ConfigPath</span> <span class="p">.\</span><span class="n">Config</span><span class="p">\</span><span class="n">Dark-Demo</span><span class="p">.</span><span class="n">json</span>
+
+<span class="c"># All 10 steps enabled, to inspect the scrolling layout.</span>
+<span class="n">powershell</span><span class="p">.</span><span class="n">exe</span> <span class="n">-NoProfile</span> <span class="n">-STA</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="p">.\</span><span class="nb">Start-DeviceSetup</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-Demo</span> <span class="n">-ConfigPath</span> <span class="p">.\</span><span class="n">Config</span><span class="p">\</span><span class="n">All10-Demo</span><span class="p">.</span><span class="n">json</span>
+
+<span class="c"># Short optional-app demo: prerequisites and retry, with no app installs.</span>
+<span class="n">powershell</span><span class="p">.</span><span class="n">exe</span> <span class="n">-NoProfile</span> <span class="n">-STA</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="p">.\</span><span class="nb">Start-DeviceSetup</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-Demo</span> <span class="n">-ConfigPath</span> <span class="p">.\</span><span class="n">Config</span><span class="p">\</span><span class="n">Optional-Demo</span><span class="p">.</span><span class="n">json</span>
+
+<span class="c"># Configuration-only check; no UI or steps.</span>
+<span class="n">powershell</span><span class="p">.</span><span class="n">exe</span> <span class="n">-NoProfile</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="p">.\</span><span class="nb">Start-DeviceSetup</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-ValidateOnly</span>
+
+<span class="c"># Windows tests; no app installs or ServiceUI invocation.</span>
+<span class="n">powershell</span><span class="p">.</span><span class="n">exe</span> <span class="n">-NoProfile</span> <span class="n">-STA</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="p">.\</span><span class="n">Tests</span><span class="p">\</span><span class="nb">Invoke-SmokeTests</span><span class="p">.</span><span class="n">ps1</span>
+</code></pre>
+</div>
+
+<p>The demo/config-check CMD launchers choose Sysnative when called from a 32-bit process. The live wrapper instead expects x64 ServiceUI, which launches 64-bit PowerShell through System32. Run-Demo.cmd and the live wrapper hide the PowerShell console. The direct commands above leave a console visible for debugging; add -WindowStyle Hidden when needed. Always launch the UI in its own powershell.exe process because the taskbar identity is process-wide. The underlying executable remains powershell.exe in Task Manager.</p>
+
+<h2>Scope and compatibility</h2>
+
+<ul>
+<li>Target: Windows 10/11 x64 with Windows PowerShell 5.1 and the Windows WPF/.NET Framework components.</li>
+<li>The UI requires an STA session. PowerShell 7 is intentionally rejected for the UI to keep one supported host/runtime target.</li>
+<li>Your ServiceUI launcher, first-logon scheduling, and enrollment/ESP readiness checks remain your responsibility.</li>
+<li>This is <strong>device-level</strong> completion tracking. HKCU, APPDATA, and USERPROFILE refer to SYSTEM in a SYSTEM-run step, not the signed-in user.</li>
+<li>ServiceUI.exe and application installers are not included.</li>
+<li>No network calls, telemetry, package downloads, or built-in application changes are performed by the framework. Your live step scripts determine those actions.</li>
+</ul>
+
+<h2>Verification status</h2>
+
+<p>Source parsing, configuration checks, XAML/XML structure, resource/element references, package links, and the HTML design reference are checked in the build environment. That environment is Linux, so <strong>Windows PowerShell execution, WPF rendering, ServiceUI session presentation, and real installers have not been run here</strong>. The included Windows smoke tests and pilot checklist cover those remaining checks.</p>
+</section><section id="hotfix10"><h1>Enterprise first-logon setup · hotfix 10</h1>
+
+<p>Use <a href="Config/Enterprise-FirstLogon.json">the ten-step profile</a> on <strong>new enrollments</strong>. It removes Office before licensed users install it from Company Portal, cleans the detected OEM's catalog entries, names the PC, prepares Google apps, checks encryption, patches applications, and requires a restart. The existing five-step example, default demo and Store-app pilot retain their previous configurations.</p>
+
+<p><strong>Start with <a href="Config/Enterprise-Inventory-Pilot.json">the inventory pilot</a>.</strong> It runs real detection and writes logs, without uninstalling, renaming, installing, changing encryption or restarting. It is useful on a representative Dell, Lenovo and HP before broadening the OEM list.</p>
+
+<h2>Run it</h2>
+
+<ol>
+<li>Extract hotfix 10 alongside hotfix 9. Keep your branding, custom scripts, approved payloads and existing x64 <code>Tools/ServiceUI.exe</code>. Use a local package folder writable only by SYSTEM/Administrators; allow the signed-in user read/execute as in the previous release.</li>
+<li>For a visual preview, run <code>Run-FirstLogon-Demo.cmd</code>. On Done, the required-restart notice is simulated. <strong>Demo never installs, removes, renames or reboots.</strong></li>
+<li>From your existing SYSTEM + ServiceUI desktop trigger, run <code>Run-Inventory-Live-ServiceUI.cmd</code>. Read <code>SetupUI.log</code>, <code>oem-Inventory.json</code> and <code>bitlocker-BitLocker.json</code>. Edit the name template in both profiles and the shared OEM catalog.</li>
+<li>Stage the prerequisites below and run the preflight. On a disposable first-enrollment test PC, use <code>Run-FirstLogon-Live-ServiceUI.cmd</code> from that same SYSTEM trigger. <strong>This profile really removes software and schedules a forced reboot.</strong></li>
+<li>Deploy only during first provisioning. Assign Office as <strong>Available</strong> in Company Portal to your licensed group. Remove overlapping Required Office deployments during this window. A local cleanup script cannot control tenant licensing or prevent a separate deployment from reinstalling a product.</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c"># Fresh x64 Windows PowerShell 5.1, from the package root:</span>
+<span class="p">.\</span><span class="nb">Start-DeviceSetup</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-ValidateOnly</span> <span class="n">-ConfigPath</span> <span class="p">.\</span><span class="n">Config</span><span class="p">\</span><span class="n">Enterprise-FirstLogon</span><span class="p">.</span><span class="n">json</span>
+<span class="p">.\</span><span class="n">EnterpriseSteps</span><span class="p">\</span><span class="nb">Test-EnterpriseConfiguration</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-ConfigPath</span> <span class="p">.\</span><span class="n">Config</span><span class="p">\</span><span class="n">Enterprise-FirstLogon</span><span class="p">.</span><span class="n">json</span>
+<span class="p">.\</span><span class="n">Tests</span><span class="p">\</span><span class="nb">Invoke-ProvisioningTests</span><span class="p">.</span><span class="n">ps1</span>
+<span class="p">.\</span><span class="n">Tests</span><span class="p">\</span><span class="nb">Invoke-EnterpriseWorkflowMocks</span><span class="p">.</span><span class="n">ps1</span>
+</code></pre>
+</div>
+
+<p><code>-ValidateOnly</code> checks config structure; the enterprise preflight also checks the payload paths you list. Placeholder payloads fail that second check until replaced. Neither command executes a provisioning step. Use the existing <code>Tests/Invoke-SmokeTests.ps1</code>, <code>Invoke-WinGetFallbackTests.ps1</code> and <code>Invoke-LogAccessTests.ps1</code> for the earlier behaviors.</p>
+
+<h2>The ten slots</h2>
+
+<table>
+<thead>
+<tr>
+  <th>#</th>
+  <th>Step ID</th>
+  <th>Full-profile behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>cleanup</td>
+  <td>All desktop Office versions detected, Store Office apps, and the separately configured OneDrive removal</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>oem</td>
+  <td>Manufacturer-specific cleanup using an exact list; incomplete matches produce a warning and IT detail</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>name</td>
+  <td>Stage the configured name; leave the actual restart to the controller</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>google</td>
+  <td>Install missing Chrome Stable and Drive for desktop machine-wide; check each app with Google Updater</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>portal_check</td>
+  <td>Check Company Portal for the signed-in user and record the HKLM flag</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>portal_install</td>
+  <td>WinGet first, staged offline fallback, then verify target-user registration</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td>notepad</td>
+  <td>Same online/offline and verification behavior for modern Notepad</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td>bitlocker</td>
+  <td>Read-only OS-volume audit; optionally enforce protection</td>
+</tr>
+<tr>
+  <td>9</td>
+  <td>updates</td>
+  <td>WinGet maintenance; incomplete or unavailable scans display <strong>Skipped</strong></td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>restart</td>
+  <td>Mark the final restart required; the controller schedules it after saving results</td>
+</tr>
+</tbody>
+</table>
+
+<p>The generic MSI installer is still included. To fit it in this profile, remove <code>portal_check</code> and clear <code>portal_install.DependsOn</code> before adding the MSI step. The Portal installer performs its own detection and registry update. Keep <code>restart</code> last. The ten-slot limit includes disabled entries.</p>
+
+<h2>Office: remove once, then respect the licensed install</h2>
+
+<p>Set <code>OfficeRemovalMode</code> to <code>AllOffice</code> in <code>Step-RemovePreinstalledOfficeOneDrive.ps1</code>'s JSON parameters. Old configurations without that mode retain <code>SelectedProducts</code> and their existing allowlist. In AllOffice mode:</p>
+
+<ul>
+<li>With detected Click-to-Run products and a staged Microsoft-signed Office Deployment Tool, setup runs ODT with <code>&lt;Remove All="TRUE"/&gt;</code>. This includes products and languages such as <strong>Visio and Project</strong>. Business editions are intentionally in scope.</li>
+<li>For detected older MSI Office or remaining desktop evidence, it runs Microsoft's signed <code>GetHelpCmd.exe -S OfficeScrubScenario -AcceptEula -OfficeVersion All</code>. The Get Help route can also handle detected desktop Office without ODT. Stage the <strong>entire extracted Get Help kit</strong>, not just its EXE, at <code>Payloads/GetHelp/</code>. Microsoft limits each Get Help build's lifetime; refresh it on the packaging workstation. Stage the current extracted ODT <code>setup.exe</code> at <code>Payloads/ODT/setup.exe</code> for the normal Click-to-Run route.</li>
+<li>The script inspects both machine uninstall views, Click-to-Run registrations and standard Office executable locations. It removes known Store packages, including Office Desktop, the Microsoft 365 hub, Store OneNote and new Outlook, from provisioning and existing registrations. It verifies remaining evidence. Unrecognized portable copies, browser shortcuts, arbitrary per-user desktop installs and obsolete products outside Microsoft's tool coverage are not guaranteed to be removed. Known residuals fail the step for review; no arbitrary uninstall string is executed.</li>
+<li><code>ForceCloseApps</code> defaults to false. Close open Office apps before retry. <code>RemoveOneDrive</code> is independent: the profile sets it to true; set false if you want to retain OneDrive. OneDrive removal retains the existing machine and interactive-user scope.</li>
+<li>After verification, the script records DWORD <code>AllDesktopOfficeRemoved=1</code> under <code>HKLM:\SOFTWARE\PostEnrollmentSetupUI\OfficeBaseline</code>. It honors this receipt on future runs, including after <code>-ResetState</code>, so a later licensed Portal install survives. A failed cleanup writes no receipt. <strong>A device upgraded from hotfix 9 has no such receipt:</strong> scope the new profile to fresh provisioning, not as a fleet-wide retrofit. The receipt is not entitlement enforcement and does not replace Intune detection.</li>
+</ul>
+
+<p>To inventory before changing anything, set <code>AuditOnly: true</code> and <code>OfficeRemovalMode: "AllOffice"</code>. Running the pilot does not create the receipt. The primary log records matches; the full route adds ODT configuration or Get Help stdout/stderr in the run folder.</p>
+
+<h2>Dell, Lenovo and HP cleanup</h2>
+
+<p><code>Step-RemoveOemApps.ps1</code> reads <code>Win32_ComputerSystem.Manufacturer</code> and uses only that vendor's entry in <a href="Catalogs/OemCleanup.json">OemCleanup.json</a>. Unknown manufacturers are a no-op. Set <code>Mode</code> to <code>Audit</code> or <code>Remove</code>. The report includes matched targets and additional vendor inventory to help refine the catalog.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Vendor</th>
+  <th>Examples in the starter list</th>
+  <th>Kept by the starter list</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Dell</td>
+  <td>Customer Connect, Digital Delivery, MyDell</td>
+  <td>Command Update, drivers, BIOS tools and SupportAssist</td>
+</tr>
+<tr>
+  <td>Lenovo</td>
+  <td>Lenovo Welcome and Lenovo Now</td>
+  <td>Commercial Vantage, System Update and hotkey utilities</td>
+</tr>
+<tr>
+  <td>HP</td>
+  <td>JumpStart, registration and QuickDrop</td>
+  <td>Image Assistant, diagnostics, hotkeys and security tools</td>
+</tr>
+</tbody>
+</table>
+
+<p>Edit exact AppX identities, desktop display names and trusted publisher names. No manufacturer-wide wildcard removal occurs. Review Digital Delivery before removal if you use it for purchased software. AppX removal covers both provisioned and registered instances. Recognized machine MSI entries use product-code uninstalls with logs and verification. EXE entries require a quoted quiet uninstall command, a supported silent switch, a vendor-signed uninstaller under Program Files, and a recognized executable name. Unrecognized commands remain installed and are logged for packaging; setup never guesses EXE switches. If any catalog match fails, the full example treats it as an optional warning, not a silent success.</p>
+
+<h2>Device naming</h2>
+
+<p>Set the <code>name</code> step's <code>Parameters</code>; the supplied <code>PC</code> prefix is an example, not an assumed company standard.</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"NameTemplate"</span><span class="p">:</span><span class="w"> </span><span class="s2">"{Prefix}-{Type}{Serial:7}"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Prefix"</span><span class="p">:</span><span class="w"> </span><span class="s2">"AC"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Site"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CLE"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"LaptopCode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"L"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"DesktopCode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"D"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"PreviewOnly"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>For a laptop with serial <code>PF-1A2B3C4D</code>, this produces <strong>AC-LA2B3C4D</strong>. Other examples: <code>{Site}-{Serial:7}</code> or <code>{Prefix}-{Hash:8}</code>. Supported tokens are <code>Prefix</code>, <code>Site</code>, <code>Type</code>, <code>Serial</code>, <code>Asset</code> and <code>Hash</code>, written in braces. <code>Serial:N</code> and <code>Asset:N</code> use the rightmost N normalized characters; <code>Hash:N</code> uses the first N hex characters of SHA-256 of the SMBIOS UUID (default eight). Include at least one device-specific token. Hardware placeholders, invalid characters, reserved/all-numeric names and names longer than 15 characters are rejected. The script never truncates the completed name to hide a collision.</p>
+
+<p>Preview first: a short serial tail or hash is <strong>not</strong> a tenant-wide uniqueness check. Select a convention that is unique in your inventory. The script checks the active and pending Windows names, skips an exact match and will not overwrite a conflicting pending rename. A real change calls <code>Rename-Computer</code> without an immediate restart and verifies the pending name. Designed for Entra-only/workgroup endpoints; it does not rename AD-domain PCs, edit Entra/Intune records, or change Autopilot profile settings. Avoid two competing naming owners.</p>
+
+<h2>Google: install and verify the update offer</h2>
+
+<p><code>Step-GoogleWorkspaceApps.ps1</code> takes <code>Apps: ["Chrome", "Drive"]</code>, or either one alone. It targets native x64 Windows. Missing machine installations use the evergreen Google-hosted enterprise Chrome MSI and Drive EXE; each installer must have a valid Google signature. Chrome installs quietly with no restart. Drive installs silently without starting the user's sign-in flow. Optional <code>ChromeMsiRelativePath</code> and <code>DriveExeRelativePath</code> use your staged copies; a live update check is still required. Existing installations go directly to that check.</p>
+
+<p>For <strong>each</strong> selected app, the script checks its machine Google Updater registration, asks Google Updater (the machine COM interface) for an update, applies an offer, then checks again. It requires an explicit <em>no update offered</em> result, a signed installed binary, and a matching registered version. Successful cards show the final versions. An unavailable updater, network/policy error, version mismatch or still-available update is logged and fails the step. <code>UpdateTimeoutSeconds</code> defaults to 600 per app. Allow additional UI time for installer downloads.</p>
+
+<p>“Current” means <strong>the version Google offers that device under its channel, rollout and enterprise policy</strong>. This does not override a version pin, prove every region has received a just-published build, switch a channel, sign anyone into Google, or replace ongoing Google updates. Include the Google Update path through your SYSTEM proxy in the pilot. Check policy and Google Updater logs on a failed offer; do not weaken signature checking.</p>
+
+<h2>WinGet: machine and user scope, without a red failure</h2>
+
+<p>The update step checks existing applications; it does not install an inventory of missing applications.</p>
+
+<ul>
+<li><strong>Machine:</strong> SYSTEM uses Microsoft's <code>Microsoft.WinGet.Client</code> module to enumerate updates from <code>MachineSource</code> (default <code>winget</code>) and apply them individually with <code>-Scope System -Mode Silent</code>. Failures on one app do not stop the other candidates. <code>ExcludeMachineIds</code> skips products with a different servicing owner; Chrome and Drive are excluded in the example. Set <code>RunMachineUpdates</code> false to omit this scope.</li>
+<li><strong>Signed-in user:</strong> the existing limited-user task runs <code>winget upgrade --all --scope user --silent</code> with noninteractive agreement/authentication options against the user's configured sources. It does not pass <code>--force</code>, <code>--include-unknown</code>, <code>--include-pinned</code> or <code>--allow-reboot</code>. The primary log links this attempt to the user's WinGet logs. The machine exclusion list does not change user pins. Set <code>RunUserUpdates</code> false to omit this scope.</li>
+<li><strong>Stage the machine module once</strong> from a packaging workstation with PowerShellGet and your approved PSGallery access: <code>.\Tools\Stage-WinGetClient.ps1</code>. Pass <code>-Version &lt;approved-version&gt;</code> to pin the staging operation. Include the resulting <code>Payloads/Modules</code> folder in your Intune package. An existing reviewed AllUsers installation under Program Files also works. Nothing downloads or installs a PowerShell module at first logon. The machine interface also needs a working Windows Package Manager service/API on the device. A missing module or blocked WinGet is a skip, not a bootstrap attempt.</li>
+<li>Set <code>Required: false</code> and <code>NonBlockingSkipExitCodes: [20001]</code> on this step. If an enabled scope is unavailable, times out or only partly completes, the card says <strong>Skipped</strong>, the run can still succeed, and IT gets the reason in <code>SetupUI.log</code>. Successful updates are retained. A scan with no applicable updates is a normal completion. The neutral skip is remembered on resume for the same step fingerprint and is never treated as a successful dependency. Leave other steps independent of it.</li>
+<li>The sample allows 900 seconds for the machine worker, 300 for user WinGet, and 1,800 total. Keep the UI timeout above both time budgets and task overhead. Ordinary maintenance failures are handled inside those budgets; an actual controller crash, lost completion state or outer worker timeout is still a setup fault. A timed-out client is not proof that servicing activity stopped.</li>
+</ul>
+
+<p>There is no promise that every installed program maps to a WinGet package or supports a silent upgrade. Programs outside WinGet, unavailable manifests, blocked sources and apps requiring different permissions remain for your normal patching tool.</p>
+
+<h2>BitLocker and one additional enterprise check</h2>
+
+<p><code>Step-CheckBitLocker.ps1</code> checks <strong>the Windows volume</strong>, not every attached drive. <code>Mode: "Audit"</code> reports volume status, protection status, method and encryption percentage in the card/log and writes <code>&lt;step-id&gt;-BitLocker.json</code>. It does not change encryption or read recovery passwords into the report. To make this a gate, change both <code>Mode</code> to <code>RequireProtected</code> and the step's <code>Required</code> to true. Fully encrypted with protection On passes; suspended protection does not. <code>AllowEncryptionInProgress: true</code> also accepts actively encrypting <strong>with protection On</strong>. Local encryption is not proof of recovery-key escrow; verify escrow centrally in Intune/Entra.</p>
+
+<p>A useful optional replacement for one slot is <code>EnterpriseSteps/Step-CheckRequiredServices.ps1</code>. For example, <code>{"ServiceNames":["CSFalconService"],"WaitSeconds":60}</code> checks that the CrowdStrike service is running if Falcon is required on that device. Add your actual agent service names as needed. It does not start services or substitute for sensor check-in or policy status in your security console.</p>
+
+<h2>Required restart and result handling</h2>
+
+<p>The full profile supplies this policy and the final required <code>Step-RequireRestart.ps1</code>:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"EnforceFinalRestart"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="nt">"RestartCountdownSeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">120</span>
+</code></pre>
+</div>
+
+<p>The final worker returns a reboot request; it <strong>never reboots its own host</strong>. After required work succeeds, the controller saves the run result, then schedules <code>shutdown.exe /r /f /t &lt;seconds&gt;</code>. A warning on a non-required step or a neutral WinGet skip does not block it. A required failure, controller fault, unsafe outer timeout, demo, or validation run does not schedule a restart. The live profile requires SYSTEM, persistent completion state, a reliable boot time and the last required restart card. Old profiles default to reminder/3010 only.</p>
+
+<p>The countdown starts <strong>at completion</strong>, not when the user eventually clicks Done. Done, the title-bar X and Alt+F4 show the same acknowledgment notice. No Later or Cancel choice postpones Windows. Leaving the notice open or closing the WPF process does not cancel the OS schedule. Windows forces running apps closed at the deadline; tell users to save work. Choose 30–900 seconds. This controls the setup UI, not the actions of a local administrator. Coordinate with any deployment owner that also restarts on exit 3010.</p>
+
+<p>A protected receipt records the boot identifier and deadline. A relaunch in the same boot does not extend a recorded countdown. Matching completed work after a new boot exits without another restart. If Windows rejects the schedule, the UI reports the error and offers <strong>Retry restart</strong>; no successful restart is claimed. For a fresh lab run use a VM snapshot or a clean enrollment. Do not clear production Office receipts or completion state as routine troubleshooting.</p>
+
+<h2>Upgrade and pilot checklist</h2>
+
+<p>From hotfix 9, deploy the new <code>Start-DeviceSetup.ps1</code>, <code>Core/Setup.Common.ps1</code>, <code>Core/Invoke-SetupStep.ps1</code>, <code>UI/MainWindow.xaml</code> and <code>UI/StepViewModel.cs</code> together, plus the updated <code>EnterpriseSteps/</code>, new <code>Catalogs/</code> and your selected profiles. Add the staging helper, launchers, docs and tests as needed. Keep custom scripts, payloads, branding, <code>Tools/ServiceUI.exe</code> and production state. If you edited shipped files, merge rather than overwrite them. Existing JSON does not enable mandatory reboot or broad removal by itself. The changed Office script will be reconsidered by fingerprint on an older deployment, so pilot even when retaining its selected-product policy.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Pilot on a disposable PC</th>
+  <th>Expected result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Inventory first</td>
+  <td>Correct manufacturer, exact matched app names, intended proposed name, no machine changes</td>
+</tr>
+<tr>
+  <td>C2R Microsoft 365 plus Project/Visio; separate legacy MSI image</td>
+  <td>Desktop and Store Office evidence gone; verify a subsequent licensed Portal install survives a rerun</td>
+</tr>
+<tr>
+  <td>Dell Command Update installed; unknown manufacturer</td>
+  <td>Command Update remains; unknown vendor makes no changes</td>
+</tr>
+<tr>
+  <td>Rename already active / pending same / pending different</td>
+  <td>No-op / report reboot needed / stop before overwriting another rename</td>
+</tr>
+<tr>
+  <td>BitLocker fully protected, suspended, encrypting</td>
+  <td>Audit exposes each actual state; strict mode honors the configured in-progress exception</td>
+</tr>
+<tr>
+  <td>Chrome or Drive missing, old, already current, blocked by policy/proxy</td>
+  <td>Install if needed, then app-specific update offer checked; blocked or inconclusive checks do not turn green</td>
+</tr>
+<tr>
+  <td>WinGet blocked, module missing, one installer fails, no applicable updates</td>
+  <td>Neutral skip with IT logs for incomplete work; success when a scan completes with nothing to do</td>
+</tr>
+<tr>
+  <td>Required step fails</td>
+  <td>Retry/support path; no mandatory restart until resolved</td>
+</tr>
+<tr>
+  <td>Successful live run: click Done / leave window open / relaunch after boot</td>
+  <td>Notice and forced OS restart / same deadline / no restart loop</td>
+</tr>
+<tr>
+  <td>Demo, including Done</td>
+  <td>Preview notice only; Windows stays up</td>
+</tr>
+</tbody>
+</table>
+
+<p>Build validation is documented in <code>Docs/STATIC-VALIDATION.txt</code>. The mocked PowerShell suites are supplied for Windows. Real NTFS, OEM uninstallers, Google COM/installer behavior, AppX, WinGet, BitLocker, rename, ServiceUI and shutdown must be piloted under your actual policy set.</p>
+
+<h2>Primary references</h2>
+
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/microsoft-365-apps/deploy/office-deployment-tool-configuration-options#remove-element">Microsoft: ODT Remove All, including Project and Visio</a></li>
+<li><a href="https://learn.microsoft.com/en-us/troubleshoot/microsoft-365/admin/miscellaneous/get-help-office-uninstall">Microsoft: command-line Get Help Office uninstall</a> and <a href="https://learn.microsoft.com/en-us/troubleshoot/microsoft-365/admin/miscellaneous/get-help-command-line-overview">kit lifetime</a></li>
+<li><a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/active-directory/naming-conventions-for-computer-domain-site-ou">Microsoft: computer naming rules</a> and <a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/rename-computer?view=powershell-5.1">Rename-Computer</a></li>
+<li><a href="https://support.google.com/chrome/a/answer/7650247">Google: Chrome enterprise deployment</a> and <a href="https://knowledge.workspace.google.com/admin/drive/set-up-drive-for-desktop-for-your-organization">Drive for desktop deployment</a></li>
+<li><a href="https://chromium.googlesource.com/chromium/src/+/main/chrome/updater/app/server/win/com_classes_legacy.cc">Chromium: Windows updater COM implementation</a> and <a href="https://chromium.googlesource.com/chromium/src/+/main/chrome/updater/app/server/win/updater_legacy_idl.template">updater state definitions</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/package-manager/winget/troubleshooting#system-context">Microsoft: WinGet SYSTEM support</a>, <a href="https://learn.microsoft.com/en-us/windows/package-manager/winget/upgrade">upgrade options</a>, and <a href="https://github.com/microsoft/winget-cli/blob/master/src/PowerShell/Help/Microsoft.WinGet.Client/Update-WinGetPackage.md">Update-WinGetPackage</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/security/operating-system-security/data-protection/bitlocker/operations-guide">Microsoft: BitLocker operations</a> and <a href="https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/shutdown">shutdown timing/forced application close</a></li>
+</ul>
+</section><section id="hotfix9"><h1>Hotfix 9: WinGet first, offline fallback</h1>
+
+<p>Company Portal and modern Windows Notepad can now try WinGet first and use your
+staged offline package if the app remains missing. This fits the existing
+SYSTEM + ServiceUI workflow; the WPF window still runs exactly as before.</p>
+
+<h2>Upgrade from hotfix 8</h2>
+
+<p>Close the running setup window and replace these files together:</p>
+
+<ul>
+<li><code>EnterpriseSteps/Enterprise.Common.ps1</code></li>
+<li><code>EnterpriseSteps/Invoke-UserAction.ps1</code></li>
+<li><code>EnterpriseSteps/Step-InstallCompanyPortal.ps1</code></li>
+<li><code>EnterpriseSteps/Step-InstallNotepad.ps1</code></li>
+<li><code>EnterpriseSteps/Test-EnterpriseConfiguration.ps1</code></li>
+</ul>
+
+<p>Also copy the new <code>Tests/Invoke-WinGetFallbackTests.ps1</code> and documentation.
+Preserve your branding, production JSON, payloads and customized step code;
+merge these changes if you edited the supplied enterprise scripts.</p>
+
+<p>In <strong>both install steps</strong> in your production JSON, change <code>Parameters.Mode</code> to
+<code>WinGetThenOffline</code>. Keep your existing offline package, dependency and license
+paths. This is the new default when Mode is omitted; an existing explicit
+<code>OfflinePackage</code> setting continues to run offline only. <code>IntuneWait</code> and Notepad's
+explicit <code>WindowsCapability</code> mode are still available.</p>
+
+<p>The changed step scripts/parameters change their execution fingerprints, so
+those steps can be reconsidered; healthy existing apps are detected and skipped.
+There is no need to reset the whole setup state or bump SetupVersion for this
+upgrade. Shared helper changes alone are not fingerprinted by the framework.</p>
+
+<h2>What happens</h2>
+
+<ol>
+<li>SYSTEM resolves the signed-in user and checks that user's healthy AppX
+registration. An already installed app is skipped.</li>
+<li>A temporary Task Scheduler task runs WinGet as that user with limited
+privileges and an existing interactive logon token; no credentials are stored.</li>
+<li>SYSTEM checks the user's app registration again, allowing up to
+<code>WinGetVerifySeconds</code> for it to appear.</li>
+<li>If still missing, SYSTEM provisions the configured offline bundle and the
+user helper registers it for the same user, as in the existing offline mode.</li>
+<li>The step succeeds only after the target user's healthy registration verifies.
+Company Portal's <code>NeedsCompanyPortal</code> flag clears to 0 only after verification.</li>
+</ol>
+
+<table>
+<thead>
+<tr>
+  <th>App</th>
+  <th>Exact Microsoft Store ID</th>
+  <th>Verified package</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Company Portal</td>
+  <td><code>9WZDNCRFJ3PZ</code></td>
+  <td><code>Microsoft.CompanyPortal</code></td>
+</tr>
+<tr>
+  <td>Windows Notepad</td>
+  <td><code>9MSMLRH6LZF3</code></td>
+  <td><code>Microsoft.WindowsNotepad</code></td>
+</tr>
+</tbody>
+</table>
+
+<p>WinGet is resolved from the current user's registered Microsoft App Installer
+package. The command uses <code>--source msstore --exact --silent</code>, accepts the package
+and source agreements, disables interactive prompts and requests silent
+authentication. Review those agreement choices as part of your deployment.
+The command does not specify <code>--scope machine</code>; it runs as the target user.
+It does not try to use WinGet under SYSTEM, bootstrap App Installer or modify
+source/policy settings. Microsoft explicitly says the WinGet CLI does not support
+SYSTEM context; the limited-user task is why this fits your existing launcher.</p>
+
+<h2>Configure the two steps</h2>
+
+<p>For Company Portal (merge into the existing step object):</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WinGetThenOffline"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"RegistryPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"HKLM:\\SOFTWARE\\YourCompany\\PostEnrollmentSetup"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"PackageRelativePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Payloads/CompanyPortal/CompanyPortal.appxbundle"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"DependencyRelativePaths"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"Payloads/CompanyPortal/Dependencies/YourRequiredDependency.appx"</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"LicenseRelativePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Payloads/CompanyPortal/License.xml"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"AllowUnlicensedPackage"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"WinGetTimeoutSeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">600</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"WinGetVerifySeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span>
+<span class="p">},</span>
+<span class="nt">"TimeoutSeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">2400</span>
+</code></pre>
+</div>
+
+<p>For Notepad:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WinGetThenOffline"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"PackageRelativePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Payloads/Notepad/Notepad.msixbundle"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"DependencyRelativePaths"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"Payloads/Notepad/Dependencies/YourRequiredDependency.appx"</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"LicenseRelativePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Payloads/Notepad/License.xml"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"AllowUnlicensedPackage"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"WinGetTimeoutSeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">600</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"WinGetVerifySeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span>
+<span class="p">},</span>
+<span class="nt">"TimeoutSeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">2400</span>
+</code></pre>
+</div>
+
+<p>Filenames are examples. Use the actual approved bundle, required dependencies
+and license from your offline kit. See <a href="#enterprise">obtaining and staging official packages</a>.
+If a particular package permits unlicensed provisioning, you may explicitly set
+<code>AllowUnlicensedPackage</code> to true and clear LicenseRelativePath. This does not
+bypass signing, dependencies or policy. No payloads or licenses are bundled.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Allowed values / purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Mode</td>
+  <td><code>WinGetThenOffline</code></td>
+  <td>Both Store installers; explicit old modes retain their behavior</td>
+</tr>
+<tr>
+  <td>WinGetTimeoutSeconds</td>
+  <td>600</td>
+  <td>30-1200 seconds for the launched WinGet process</td>
+</tr>
+<tr>
+  <td>WinGetVerifySeconds</td>
+  <td>30</td>
+  <td>0-120 seconds to wait for user registration after WinGet exits</td>
+</tr>
+<tr>
+  <td>Step TimeoutSeconds</td>
+  <td>2400 in the new examples</td>
+  <td>Overall UI time budget: include WinGet, 90 seconds of task overhead, verification, offline provisioning and up to 300 seconds of user registration</td>
+</tr>
+</tbody>
+</table>
+
+<p>The preflight requires a staged fallback bundle even if you expect WinGet to
+work. Runtime does not touch those files if WinGet succeeds or the app is already
+healthy; if fallback is needed and files are missing, the step fails with details.</p>
+
+<p><code>Config/Enterprise-Example.json</code> now uses this mode. For a focused pilot, use
+<a href="Config/StoreApps-WinGet-Example.json">StoreApps-WinGet-Example.json</a>, containing
+only the two install steps. It uses a separate SetupId and disables completed-step
+resume so every pilot launch rechecks app state. It never uninstalls existing apps
+to force a test. Both files have payload placeholders to replace.</p>
+
+<h2>Logs and failure handling</h2>
+
+<p>The existing <strong>SetupUI.log</strong> records the target SID, Store ID, attempt identifier,
+task exit code, verification and offline fallback outcome. The hotfix 8 read-only
+File Explorer access to the run folder is preserved.</p>
+
+<p>Detailed WinGet logs are in the <strong>signed-in user's</strong> profile:</p>
+
+<div class="codehilite">
+<pre><span></span><code>%LOCALAPPDATA%\PostEnrollmentSetupUI\WinGet\&lt;attempt-id&gt;\
+    Action.log
+    WinGet.log
+    stdout.log
+    stderr.log
+</code></pre>
+</div>
+
+<p>Action.log includes helper errors, the WinGet command and native exit code when
+available. WinGet.log may not exist if WinGet could not start. The primary log
+identifies the attempt folder; it does not import user-writable logs as trusted
+SYSTEM evidence or grant the user write access to the primary run log. Offline
+servicing and registration retain the existing DISM, user TEMP and event logs.
+Include the user-side logs in your normal support collection/retention process.</p>
+
+<p>Missing App Installer registration, disabled WinGet/msstore access, source/network
+errors and unsuccessful installs normally lead to the offline attempt. A native
+error does not force reinstallation if the app is actually present afterward;
+Intune or Store deployment may have finished concurrently. Conversely, exit 0
+without a verified registration triggers fallback. AppX inventory errors fail
+the step rather than being interpreted as an absent app.</p>
+
+<p>If WinGet times out, the helper attempts to stop only its launched process tree.
+Confirmed cancellation leads to verification and then offline fallback if needed.
+If cancellation/task completion cannot be confirmed, the step fails without
+starting a second installer. Review the user logs and active deployment before
+retrying. Windows servicing can continue inside a service after a client process
+exits; a busy/version-conflict error from offline deployment still requires review.</p>
+
+<p>Existing application control, Store source and AppX policies remain in force.
+Blocking the Store UI alone is not the same as disabling WinGet's msstore source.
+An offline payload is a connectivity fallback, not a policy bypass: policy that
+blocks the app or AppX deployment can block that route too. A user sign-out can
+prevent the temporary user task and registration from completing.</p>
+
+<h2>Validate and pilot</h2>
+
+<p>From the extracted root in a fresh 64-bit Windows PowerShell 5.1 session:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">.\</span><span class="n">EnterpriseSteps</span><span class="p">\</span><span class="nb">Test-EnterpriseConfiguration</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-ConfigPath</span> <span class="p">.\</span><span class="n">Config</span><span class="p">\</span><span class="n">StoreApps-WinGet-Example</span><span class="p">.</span><span class="n">json</span>
+<span class="p">.\</span><span class="n">Tests</span><span class="p">\</span><span class="nb">Invoke-WinGetFallbackTests</span><span class="p">.</span><span class="n">ps1</span>
+<span class="p">.\</span><span class="n">Tests</span><span class="p">\</span><span class="nb">Invoke-EnterpriseHelperTests</span><span class="p">.</span><span class="n">ps1</span>
+</code></pre>
+</div>
+
+<p>The first command reports missing placeholder payloads until you stage them.
+The tests use mocks; they do not invoke live WinGet, install apps, write HKLM or
+create scheduled tasks. For UI preview use <code>Start-DeviceSetup.ps1 -Demo</code> with that
+config. Demo mode does not execute scripts. For real installs, point your existing
+SYSTEM + ServiceUI launcher at the pilot config and retain <strong>-Live</strong>.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Pilot case</th>
+  <th>Expected result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>App already healthy for setup user</td>
+  <td>Neither installer is launched</td>
+</tr>
+<tr>
+  <td>Missing app; WinGet and msstore available</td>
+  <td>WinGet runs as the user; SYSTEM verifies; no offline deployment</td>
+</tr>
+<tr>
+  <td>WinGet missing, source denied or network unavailable</td>
+  <td>Failure recorded; staged offline route is attempted</td>
+</tr>
+<tr>
+  <td>WinGet returns zero but registration stays absent</td>
+  <td>Offline route is attempted</td>
+</tr>
+<tr>
+  <td>WinGet reports failure but registration exists</td>
+  <td>Success after verification; no duplicate offline deployment</td>
+</tr>
+<tr>
+  <td>Both routes fail / offline dependency or license missing</td>
+  <td>Failed UI step, clear logs; Portal flag remains 1 when known missing</td>
+</tr>
+<tr>
+  <td>App installed for another user only</td>
+  <td>Still treated as missing for the setup user</td>
+</tr>
+<tr>
+  <td>Task/process termination uncertain</td>
+  <td>Failed step; no automatic offline attempt</td>
+</tr>
+<tr>
+  <td>Retry after a successful installation</td>
+  <td>Current detection skips reinstalling the app</td>
+</tr>
+</tbody>
+</table>
+
+<p>Linux static syntax/configuration checks were run for this package. Windows
+PowerShell runtime, WinGet/msstore, Task Scheduler, WPF/ServiceUI and real
+offline installation tests could not be run in the authoring environment.
+Run the supplied tests and live cases on an enrollment test device before rollout.</p>
+
+<h2>Microsoft references</h2>
+
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/windows/package-manager/winget/troubleshooting">WinGet troubleshooting: SYSTEM context is unsupported</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/package-manager/winget/install">WinGet install command and switches</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/package-manager/winget/">WinGet availability and first-logon registration</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/client-management/mdm/policy-csp-desktopappinstaller">App Installer policies, including Microsoft Store source control</a></li>
+<li><a href="https://learn.microsoft.com/en-us/intune/app-management/deployment/add-microsoft-store">Intune Microsoft Store apps and Store UI policy behavior</a></li>
+</ul>
+
+<p>WinGet-related documentation reviewed November 5, 2026.</p>
+</section><section id="hotfix8"><h1>Hotfix 8: Read run logs in File Explorer</h1>
+
+<p>Earlier live runs granted full control to SYSTEM and the local Administrators
+group. Ordinary File Explorer uses the user's non-elevated token, so even a local
+administrator may be unable to browse that directory without elevation. The files
+were not intentionally limited to SYSTEM alone.</p>
+
+<h2>New runs</h2>
+
+<p>The default now grants the Explorer owner in the setup session <strong>read/execute
+access to that run folder and its contents</strong>, while SYSTEM and Administrators keep
+full control. The reader cannot modify/delete the logs or worker control files.
+State and Runs parent folders grant folder-only navigation/listing access;
+that reader permission does not inherit into Completed-*.json or other runs.</p>
+
+<p>This works with the existing SYSTEM + ServiceUI launch. The resolved reader SID
+is recorded in SetupUI.log. If the user cannot be identified, setup continues
+with the explicit readers (if any) plus SYSTEM/Administrators, and records the
+reason in the log. A SYSTEM process in session 0 needs explicit LogReaderSids.
+The configured StateDirectory parent is not re-permissioned. If you deliberately
+restricted that custom parent, its navigation permissions also need consideration.</p>
+
+<p>Run-folder access covers transcripts, MSI/servicing logs and diagnostic JSON,
+including request parameters. Do not put credentials into step parameters or
+logs. This permission grants access; it does not redact existing file contents.</p>
+
+<p>Optional settings inside <strong>Behavior</strong> (old JSON receives these defaults in memory):</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"AllowInteractiveUserToReadLogs"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="nt">"LogReaderSids"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+</code></pre>
+</div>
+
+<p>Set AllowInteractiveUserToReadLogs to false and leave LogReaderSids empty to keep
+new runs restricted to SYSTEM/Administrators. Alternatively add exact Windows
+user/group SID strings to LogReaderSids for additional readers. Group access
+depends on that group's SID being present in the reader's Windows token. These
+settings do not make anyone an administrator or grant write access.</p>
+
+<p>Changing settings governs new run folders and current parent navigation grants;
+it does not revoke read grants already attached to previous run folders. Keep an
+additional support reader in LogReaderSids if that account must continue browsing
+the parent folders after later launches by other users.</p>
+
+<h2>Upgrade from hotfix 7</h2>
+
+<p>Replace <strong>Start-DeviceSetup.ps1</strong> and <strong>Core/Setup.Common.ps1</strong> together. Keep your
+configuration, enterprise/custom steps and branding. No SetupVersion change or
+completion-state reset is needed. Copy <strong>Tools/Grant-SetupLogReadAccess.ps1</strong> if
+you want to grant access to logs created before this update.</p>
+
+<p>The new default applies on the next live launch, including existing custom JSON
+that omits the optional settings. Demo folders keep their normal user permissions.
+The ACL changes apply to SYSTEM live execution; an administrator-only local pilot
+with RequireSystemForLive=false keeps its existing inherited filesystem behavior.</p>
+
+<h2>Access existing runs now</h2>
+
+<p>From the extracted package folder, open <strong>Windows PowerShell as administrator</strong>
+using the same account whose File Explorer needs access, then run:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">.\</span><span class="n">Tools</span><span class="p">\</span><span class="nb">Grant-SetupLogReadAccess</span><span class="p">.</span><span class="n">ps1</span> <span class="p">`</span>
+    <span class="n">-ConfigPath</span> <span class="p">.\</span><span class="n">Config</span><span class="p">\</span><span class="n">Portal-Detection-Test</span><span class="p">.</span><span class="n">json</span> <span class="p">`</span>
+    <span class="n">-AllRuns</span>
+</code></pre>
+</div>
+
+<p>Use the configuration that generated the logs: the tool uses its StateDirectory
+and SetupId. For enterprise example runs, use Config/Enterprise-Example.json;
+for your production runs, use your production JSON. The default ReaderSid is the
+account running the repair tool. Without AllRuns it grants access only to the
+latest run; <code>-RunName 'YYYYMMDD-HHMMSS-xxxxxxxx'</code> targets one run instead.</p>
+
+<p>If running this from SYSTEM or with another administrator's credentials, supply
+the intended Explorer user's SID explicitly:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">.\</span><span class="n">Tools</span><span class="p">\</span><span class="nb">Grant-SetupLogReadAccess</span><span class="p">.</span><span class="n">ps1</span> <span class="p">`</span>
+    <span class="n">-ConfigPath</span> <span class="p">.\</span><span class="n">Config</span><span class="p">\</span><span class="n">Portal-Detection-Test</span><span class="p">.</span><span class="n">json</span> <span class="p">`</span>
+    <span class="n">-ReaderSid</span> <span class="s1">'S-1-12-1-REPLACE-WITH-YOUR-REAL-SID'</span> <span class="p">`</span>
+    <span class="n">-AllRuns</span>
+</code></pre>
+</div>
+
+<p>Obtain the real SID using <code>whoami /user</code> in the intended user's ordinary shell,
+not the SYSTEM shell. The example SID above is deliberately a placeholder.</p>
+
+<p>The repair tool grants read/execute on selected run folders, with child inheritance,
+and folder-only access to the two parent folders. It preserves existing access
+rules and does not take ownership, enable broad inheritance or change completion
+state ACLs. It refuses run directory links. Files with separately protected ACLs
+may still require individual administrative review; normal package-generated
+logs inherit the run-folder grant. It does not launch app scripts.</p>
+
+<h2>Validation</h2>
+
+<p>Static source/schema checks ran in the build environment. The new
+Tests/Invoke-LogAccessTests.ps1 uses temporary NTFS directories on Windows to
+check new/existing log inheritance, preserved SYSTEM/Administrators access,
+read-only rights and exclusion of completion state/other runs. Run it from an
+elevated Windows PowerShell session. These Windows ACL tests have not been run
+in the Linux build environment. Also verify opening a log from ordinary File
+Explorer and confirm the user cannot edit it.</p>
+
+<p><a href="https://learn.microsoft.com/en-us/windows/security/application-security/application-control/user-account-control/how-it-works">Microsoft: UAC and File Explorer tokens</a></p>
+</section><section id="hotfix7"><h1>Hotfix 7: Company Portal SID detection</h1>
+
+<p>The reported "No valid SID could be determined" message is consistent with the
+AppX cmdlet's direct <code>-User</code> query, rather than the custom Explorer-session error
+messages. A script location/stack trace would be needed to confirm the precise
+failing call on a particular device. It does not establish that Company Portal
+is missing, or that the interactive user's SID is invalid.</p>
+
+<h2>Changed detection</h2>
+
+<p>The shared helper now validates SID syntax without translating it to an account
+name, then runs <code>Get-AppxPackage -AllUsers -Name &lt;app&gt;</code>. It verifies:</p>
+
+<ul>
+<li>Exact package name, Microsoft publisher, healthy status and no partial staging.</li>
+<li>A PackageUserInformation entry whose UserSecurityId exactly matches the
+interactive user and whose InstallState is Installed.</li>
+</ul>
+
+<p>Another user's installation and a Staged entry do not count as success. AppX
+query errors still fail the step; they do not become a missing-app result.
+Explorer-owner selection is unchanged except for rejecting empty/service SIDs
+and logging the selected SID/session in SetupUI.log. Session 0 still requires
+an explicit, interactive TargetUserSid; no arbitrary profile is chosen.</p>
+
+<p>This shared change applies to Company Portal detection, install verification,
+Intune-wait polling, and Notepad detection. The registry flag's meaning is unchanged.</p>
+
+<h2>Upgrade from hotfix 6</h2>
+
+<p>Replace <strong>EnterpriseSteps/Enterprise.Common.ps1</strong>. No JSON edits or state reset
+are required. The full ZIP also includes updated tests/docs and a separate
+<strong>Config/Portal-Detection-Test.json</strong> for verifying detection without installing
+or removing applications. It writes the configured Company Portal registry flag.</p>
+
+<p>Run that test configuration through your existing SYSTEM + ServiceUI launcher
+with <strong>-Live</strong>. It has a separate SetupId and ResumeCompletedSteps=false, so each
+launch checks again. Do not enable -Live on the entire enterprise template just
+to test detection. No switch, or -Demo, still only simulates the UI.</p>
+
+<p>For a read-only inventory check in SYSTEM/elevated Windows PowerShell 5.1:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">Get-AppxPackage</span> <span class="n">-AllUsers</span> <span class="n">-Name</span> <span class="n">Microsoft</span><span class="p">.</span><span class="n">CompanyPortal</span> <span class="n">-ErrorAction</span> <span class="n">Stop</span> <span class="p">|</span>
+    <span class="nb">Format-List</span> <span class="n">Name</span><span class="p">,</span> <span class="n">Status</span><span class="p">,</span> <span class="n">IsPartiallyStaged</span><span class="p">,</span> <span class="n">PackageUserInformation</span>
+</code></pre>
+</div>
+
+<p>Look for the interactive user's SID with Installed, not just a package name.
+The selected SID is recorded in SetupUI.log. If this inventory command also
+fails, capture its full error and the step transcript; bypassing <code>-User</code> cannot
+repair an underlying AppX service/repository problem.</p>
+
+<h2>Validation</h2>
+
+<p>Static syntax/configuration/package checks ran in the build environment.
+The Windows helper tests now cover other-user-only registration, a Staged target,
+mixed users, an Entra-format SID, invalid/service SIDs, missing metadata and query
+failure. Windows runtime tests remain unexecuted here; verify on your test device.</p>
+
+<p>Microsoft references:</p>
+
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/powershell/module/appx/get-appxpackage?view=windowsserver2025-ps">Get-AppxPackage and AllUsers</a></li>
+<li><a href="https://learn.microsoft.com/en-us/uwp/api/windows.management.deployment.packageuserinformation?view=winrt-26100">Package user SID and installation state</a></li>
+</ul>
+</section><section id="hotfix6"><h1>Hotfix 6: IsSelected startup error</h1>
+
+<p>The enterprise JSON is valid without an IsSelected field. IsSelected is a property
+on the UI's compiled C# StepViewModel, not a configuration setting. Every step,
+including automatic steps, initializes that property.</p>
+
+<p>The earlier startup code reused any DeviceSetupUI.StepViewModel already loaded
+in the current PowerShell process. If an older release had been run in the same
+ISE/PowerShell host, that cached class could lack the optional-selection properties.
+An older UI/StepViewModel.cs file mixed with newer PowerShell files could produce
+the same missing-property symptom. Without the original error's script location,
+these are supported causes, not proof of which occurred on a particular device.</p>
+
+<p>Hotfix 6 loads the model under a namespace derived from its source hash, so a
+different source revision cannot reuse the earlier class. It also validates the
+selection properties before constructing the window. Old model files now produce
+a specific version-mismatch message identifying the files to update.</p>
+
+<h2>Install the fix</h2>
+
+<p>Prefer extracting the complete ZIP to a <strong>new folder</strong>, then copying your company
+configuration, branding and custom step scripts into it. For an in-place upgrade
+from hotfix 5, replace these together:</p>
+
+<ul>
+<li>Start-DeviceSetup.ps1</li>
+<li>Core/Setup.Common.ps1</li>
+<li>UI/StepViewModel.cs</li>
+<li>UI/MainWindow.xaml (merge your layout changes if customized)</li>
+</ul>
+
+<p>The C# and XAML contents have not changed from hotfix 5; copying them ensures an
+older file is not accidentally retained. Keep UI/TaskbarIdentity.cs from hotfix 4
+or later. Enterprise scripts and JSON are unchanged. No completion-state reset
+or SetupVersion bump is required for this framework-only fix.</p>
+
+<p>Close the previous setup window and launch Run-Enterprise-Demo.cmd from the new
+folder. It starts a fresh PowerShell process and runs no installers. Once the
+demo starts successfully, use your existing SYSTEM + ServiceUI live launcher
+pointing to the same updated folder/configuration.</p>
+
+<p>If the error still occurs, capture the complete message and script line/stack
+trace, plus whether it occurs before the window opens or after Start/Retry. This
+distinguishes a different object problem from a mismatched/cached UI model.</p>
+
+<h2>Validation</h2>
+
+<p>Static syntax, configuration, XAML/binding and package checks were run. Windows
+runtime execution is unavailable in the build environment. The updated Windows
+smoke suite includes cached legacy model, changed-source reload, mismatched-file
+diagnostics, and all-five-automatic-step enterprise initialization cases. These
+Windows regression tests are supplied but have not been executed here.</p>
+</section><section id="enterprise"><h1>Enterprise step scripts — updated for hotfix 10</h1>
+
+<p>For the new provisioning profile and additional enterprise steps, see <a href="#hotfix10">Hotfix 10</a>. The selected Office removal mode below is still the compatibility default.</p>
+
+<p>Hotfix 9 adds <a href="#hotfix9">WinGet first with offline fallback</a> for both Store apps.
+Hotfix 7 updates shared AppX detection; see <a href="#hotfix7">the SID detection fix</a>.</p>
+
+<p>Five configurable steps for your existing <strong>SYSTEM + ServiceUI + WPF</strong> workflow.
+They use Windows PowerShell 5.1 x64 and the existing worker, progress, retry and
+reboot reporting. No installer binaries or licenses are included.</p>
+
+<h2>Upgrade your existing package</h2>
+
+<p>From hotfix 8, follow the five-file update and configuration instructions in
+<a href="#hotfix9">Hotfix 9</a>. The following framework instructions are for older packages.</p>
+
+<p>From hotfix 4, copy <strong>EnterpriseSteps/</strong> and <strong>Payloads/README.md</strong>, and replace
+<strong>Core/Setup.Common.ps1</strong> and <strong>Start-DeviceSetup.ps1</strong>. The two framework changes
+only route primary-log writes through a shared append/retry helper. Merge that
+change if you customized either file. Keep your production Config, Steps, Assets
+and launcher. Earlier versions should first take all hotfix 4 framework files.</p>
+
+<p>Add selected entries from <a href="Config/Enterprise-Example.json">Enterprise-Example.json</a>
+to your own configuration. The existing 10-step limit includes these entries;
+do not append five more entries to an already full ten-step file. You can use the
+same MSI script in several steps with different parameters and unique IDs.</p>
+
+<p><strong>The enterprise example is a template:</strong> paths such as <code>YourApp.msi</code> and the
+zero ProductCode must be replaced. <code>Run-Enterprise-Demo.cmd</code> previews all five
+cards without running the scripts. Your normal default configuration is unchanged.</p>
+
+<ol>
+<li>Stage your approved payloads and enter their exact relative filenames.</li>
+<li>Choose the Office removal scope and Company Portal/Notepad install modes.</li>
+<li>Copy the desired step objects into your production JSON, preserving ordered dependencies.</li>
+<li>Run the preflight below against that JSON. It checks configuration, parameter
+names and explicitly listed file paths; it does not install anything.</li>
+<li>Pilot the live configuration using your current SYSTEM + ServiceUI launcher.
+Change its <code>-ConfigPath</code> to your tested JSON; retain <code>-Live</code> for real execution.</li>
+</ol>
+
+<div class="codehilite">
+<pre><span></span><code><span class="c"># From the extracted package root, in 64-bit Windows PowerShell:</span>
+<span class="p">.\</span><span class="n">EnterpriseSteps</span><span class="p">\</span><span class="nb">Test-EnterpriseConfiguration</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-ConfigPath</span> <span class="p">.\</span><span class="n">Config</span><span class="p">\</span><span class="n">Enterprise-Example</span><span class="p">.</span><span class="n">json</span>
+<span class="p">.\</span><span class="n">Tests</span><span class="p">\</span><span class="nb">Invoke-SmokeTests</span><span class="p">.</span><span class="n">ps1</span>
+<span class="p">.\</span><span class="n">Tests</span><span class="p">\</span><span class="nb">Invoke-EnterpriseHelperTests</span><span class="p">.</span><span class="n">ps1</span>
+<span class="p">.\</span><span class="n">Tests</span><span class="p">\</span><span class="nb">Invoke-WinGetFallbackTests</span><span class="p">.</span><span class="n">ps1</span>
+</code></pre>
+</div>
+
+<p>Preflight intentionally reports missing payloads in the unmodified template.
+When switching a step to IntuneWait or WindowsCapability, remove the unused
+offline payload parameters, or preflight will still check those listed paths.
+Disabled steps are not checked. A missing dependency/license can still fail a
+real deployment even when preflight passes.</p>
+
+<p>Run the package from a <strong>local, admin-controlled directory</strong>. SYSTEM and
+Administrators need write access; Users need read/execute on the user helper and
+Store payloads, but must not be able to modify scripts, configuration or payloads.
+The existing protected ProgramData state/log directory stays separate. ServiceUI
+must target the intended Explorer session. These steps assume one first-logon
+user, not an RDS/shared-device deployment across every existing profile.</p>
+
+<h2>Common behavior and logs</h2>
+
+<ul>
+<li>Human-readable progress, outcomes and errors go to the current run's
+<strong>SetupUI.log</strong>, alongside the UI's entries. Worker transcripts remain separate.</li>
+<li>Existing successful steps are resumed by the framework. Re-running a script
+also checks current detection state before installing.</li>
+<li>Exceptions fail the step and appear in the UI; native MSI 3010 reports a
+restart requirement. Step workers never initiate a reboot. The hotfix 10 controller can explicitly schedule one after completion.</li>
+<li>Use <code>SuccessExitCodes: [0, 3010]</code> and <code>RebootExitCodes: [3010]</code> as in the example.</li>
+<li>Set the UI timeout comfortably above the installer duration, busy retries,
+Store registration and Intune wait. A UI timeout is not a safe installer
+cancellation mechanism. Inspect device state before retrying a timed-out install.</li>
+<li>Imported helper files and payload bytes are not part of the existing step
+fingerprint. Use a new, deliberate <code>SetupVersion</code> for a changed deployment
+release when you need completed steps reconsidered. Re-running cleanup after
+production apps are installed can remove matching apps again; review its scope.</li>
+<li>Detection is point-in-time. This first-logon UI does not replace ongoing Intune
+application detection, compliance, or update management.</li>
+</ul>
+
+<p>The interactive helper uses a temporary Task Scheduler task running as the
+identified user with <strong>limited privileges and no stored password</strong>. SYSTEM
+independently checks the resulting app/registry state. It does not trust a
+user-writable success marker. The task is stopped/unregistered in normal cleanup;
+after a forced power-off, remove stale <code>PostEnrollment-UserAction-*</code> tasks during
+your pilot cleanup. They have no trigger and a bounded execution time.</p>
+
+<h2>1. MSI installer</h2>
+
+<p><strong>Script:</strong> <code>EnterpriseSteps/Step-InstallMsi.ps1</code></p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"MsiRelativePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Payloads/MSI/YourApp.msi"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"ProductCode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"{REPLACE-WITH-THE-REAL-MSI-PRODUCT-GUID}"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"MinimumVersion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"1.2.3"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Properties"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"DESKTOPSHORTCUT=0"</span><span class="p">,</span><span class="w"> </span><span class="s2">"COMPANYNAME=\"Example Company\""</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"ExpectedSha256"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"RequireValidSignature"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"AppendVerboseLogToPrimary"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"BusyRetries"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"BusyRetrySeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Use the MSI <strong>ProductCode</strong>, not UpgradeCode or PackageCode. Obtain it from the
+vendor/MSI metadata or an approved test installation's uninstall key. A changed
+ProductCode on a major upgrade needs updated detection configuration. Detection
+uses the two machine uninstall registry views and optional minimum DisplayVersion;
+it never queries <code>Win32_Product</code>. Version strings must be .NET-style numeric
+versions (for example <code>1.2.3</code>, not <code>1.2.3-beta</code>). Per-user MSI installs and products
+that intentionally omit those machine uninstall keys need custom detection.</p>
+
+<p>The script runs <code>/qn /norestart</code>, forces <code>ALLUSERS=1</code> and <code>REBOOT=ReallySuppress</code>,
+and accepts MSI properties as an array. It rejects scope/reboot overrides and
+does not support raw installer switches, transforms or EXE installers. Test your
+vendor's silent installation contract first. A valid Authenticode signature is
+required by default; <code>ExpectedSha256</code> optionally pins the exact approved file.
+For a legitimately unsigned internal MSI, explicitly set RequireValidSignature
+false and pin its approved hash.</p>
+
+<p>It retries 1618 (another installation in progress), accepts 0/3010, and verifies
+ProductCode/version afterward. Other codes fail. A success exit code with failed
+detection is a failure, not a green checkmark.</p>
+
+<p>The native <code>*-MSI-*.log</code> is kept separately. By default, its contents are appended
+to <strong>SetupUI.log after msiexec exits</strong>, tagged <code>[MSI]</code>. This avoids two programs
+writing different formats to the same file. Live UI messages are milestones,
+not an invented MSI percentage. Set AppendVerboseLogToPrimary false for summary
+entries and a path to the verbose log. Installer logs can expose property values;
+do not pass secrets in Properties and protect/retain logs according to policy.</p>
+
+<h2>2. Company Portal detection and registry flag</h2>
+
+<p><strong>Script:</strong> <code>EnterpriseSteps/Step-DetectCompanyPortal.ps1</code></p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"RegistryPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"HKLM:\\SOFTWARE\\YourCompany\\PostEnrollmentSetup"</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>In the native 64-bit registry view, this writes:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Value</th>
+  <th>Type</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>NeedsCompanyPortal</td>
+  <td>DWORD</td>
+  <td>1 = missing/unhealthy for the setup user; 0 = present and healthy</td>
+</tr>
+<tr>
+  <td>TargetUserSid</td>
+  <td>String</td>
+  <td>User whose app registration was checked</td>
+</tr>
+<tr>
+  <td>CheckedUtc</td>
+  <td>String</td>
+  <td>UTC time of the latest check</td>
+</tr>
+<tr>
+  <td>DetectionScope</td>
+  <td>String</td>
+  <td><code>InteractiveUserRegistration</code></td>
+</tr>
+</tbody>
+</table>
+
+<p>The script resolves the owner of Explorer in the setup process's session. You
+may explicitly supply <code>TargetUserSid</code> for an already interactive Explorer user;
+it will not select an arbitrary other user if identification fails. It queries
+<code>Microsoft.CompanyPortal</code> using AllUsers, then requires that user's exact SID
+with InstallState=Installed, Microsoft publisher, Status=Ok and no partial staging. Merely being provisioned or installed for another user does not
+count as ready. A missing app is logged and flagged <strong>without failing the step</strong>,
+so its dependent installer can run. Registry/API errors do fail the step.</p>
+
+<p>This tells you whether Portal is available <strong>at this check</strong>. It cannot prove
+whether enrollment installed it earlier or whether someone removed it afterward.
+The flag is a current-state marker, not immutable enrollment history.</p>
+
+<h2>3. Company Portal installation</h2>
+
+<p><strong>Script:</strong> <code>EnterpriseSteps/Step-InstallCompanyPortal.ps1</code></p>
+
+<p>My preferred enterprise owner is an Intune <strong>Microsoft Store app (new)</strong> Required
+assignment with <strong>System</strong> install behavior. Microsoft documents this for the
+Autopilot device group. Keep that assignment for servicing, and make sure a custom
+fallback does not compete with a second application deployment of the same app.</p>
+
+<p>There are three modes:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Mode</th>
+  <th>What the step does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>WinGetThenOffline (default)</td>
+  <td>Tries the exact msstore ID as the signed-in user, verifies registration, then uses the configured offline route if still absent; see <a href="#hotfix9">Hotfix 9</a></td>
+</tr>
+<tr>
+  <td>OfflinePackage</td>
+  <td>Provisions your staged official package/dependencies/license as SYSTEM, then installs/registers it for the interactive user if necessary; verifies that user's registration</td>
+</tr>
+<tr>
+  <td>IntuneWait</td>
+  <td>Polls for the Required Intune installation, up to WaitSeconds (default 300); fails if still absent. This observes installation and <strong>does not force or trigger Intune deployment</strong></td>
+</tr>
+</tbody>
+</table>
+
+<p>The installer rechecks the actual app before acting, even if the registry flag
+said it was missing. This handles Intune finishing between the two steps. It
+updates the flag to 1 before remediation and clears it to 0 only after detection
+succeeds. Use the same RegistryPath in both scripts. Configure
+<code>"DependsOn": ["portal_check"]</code> on the install step if using the supplied IDs.</p>
+
+<p>For Intune-managed delivery:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"IntuneWait"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"RegistryPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"HKLM:\\SOFTWARE\\YourCompany\\PostEnrollmentSetup"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"WaitSeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>For WinGet first with an immediate offline fallback, use these parameters (actual filenames vary). Set Mode to OfflinePackage if you want only the local route:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WinGetThenOffline"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"RegistryPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"HKLM:\\SOFTWARE\\YourCompany\\PostEnrollmentSetup"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"PackageRelativePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Payloads/CompanyPortal/CompanyPortal.appxbundle"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"DependencyRelativePaths"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">    </span><span class="s2">"Payloads/CompanyPortal/Dependencies/x64/DependencyFromYourDownload.appx"</span>
+<span class="w">  </span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"LicenseRelativePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Payloads/CompanyPortal/LicenseFromYourDownload.xml"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"AllowUnlicensedPackage"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"WinGetTimeoutSeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">600</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"WinGetVerifySeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">30</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<h3>Obtain official Store payloads on your packaging workstation</h3>
+
+<p>Option A for Company Portal: Microsoft publishes an official <strong>Company Portal
+preinstall ZIP</strong> for customers who cannot use the Store. Download and extract
+the kit from the <a href="https://www.microsoft.com/en-us/download/details.aspx?id=108156">Microsoft Download Center</a>.
+Use its real main app bundle, required dependencies and license where provided.
+Review its supplied deployment instructions. Check version currency; the kit may
+lag behind the Store. Do not feed the ZIP itself to Add-AppxProvisionedPackage.</p>
+
+<p>Option B: use a current WinGet installation on your <strong>administrator packaging
+workstation</strong>, not inside the SYSTEM step:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">winget</span> <span class="n">download</span> <span class="p">-</span><span class="n">-id</span> <span class="n">9WZDNCRFJ3PZ</span> <span class="p">-</span><span class="n">-source</span> <span class="n">msstore</span> <span class="p">-</span><span class="o">-exact</span> <span class="p">-</span><span class="n">-architecture</span> <span class="n">x64</span> <span class="p">-</span><span class="n">-download-directory</span> <span class="n">C</span><span class="p">:\</span><span class="n">Packaging</span><span class="p">\</span><span class="n">CompanyPortal</span> <span class="p">-</span><span class="n">-accept-source-agreements</span> <span class="p">-</span><span class="n">-accept-package-agreements</span>
+<span class="n">winget</span> <span class="n">download</span> <span class="p">-</span><span class="n">-id</span> <span class="n">9MSMLRH6LZF3</span> <span class="p">-</span><span class="n">-source</span> <span class="n">msstore</span> <span class="p">-</span><span class="o">-exact</span> <span class="p">-</span><span class="n">-architecture</span> <span class="n">x64</span> <span class="p">-</span><span class="n">-download-directory</span> <span class="n">C</span><span class="p">:\</span><span class="n">Packaging</span><span class="p">\</span><span class="n">Notepad</span> <span class="p">-</span><span class="n">-accept-source-agreements</span> <span class="p">-</span><span class="n">-accept-package-agreements</span>
+</code></pre>
+</div>
+
+<p>Microsoft documents that Store offline license retrieval needs Entra
+authentication and an eligible role (Global Administrator, User Administrator or
+License Administrator). Use the least privilege available. Availability is
+app/tenant dependent. If download/licensing is unavailable, retain Intune-managed
+delivery instead of scraping unofficial download sites.</p>
+
+<p>Copy the downloaded main bundle, dependency packages and license XML into the
+package's Payloads subfolder. List <strong>every required dependency explicitly</strong>,
+including the architecture variants the bundle needs. Do not guess dependency
+names, omit them, or indiscriminately mix versions from old downloads. Keep the
+downloaded names or rename them consistently in JSON. Test against your Windows
+builds and architecture. The sample package targets x64 Windows; ARM64 needs its
+own reviewed payload set and pilot.</p>
+
+<p><code>AllowUnlicensedPackage: true</code> maps to DISM SkipLicense. Only use it after verifying
+that the particular package supports unlicensed provisioning. WinGet's ability
+to download with <code>--skip-license</code> is <strong>not</strong> proof of that. Windows validates the
+app signatures during deployment; the scripts do not install certificates or
+disable package checks.</p>
+
+<p>SYSTEM provisioning and signed-in-user registration are separate operations.
+Registration uses the bundled limited-user task helper; it is not an
+<code>Add-AppxPackage</code> call run as SYSTEM. AppX policy, architecture, dependencies,
+package version conflicts or an unavailable user session can fail the step.
+Review the per-step DISM log, Windows AppXDeploymentServer event log and
+<code>%TEMP%\PostEnrollment-UserAction.log</code> in the <strong>user's</strong> profile. The primary log
+records the action and failure; detailed AppX diagnostics stay in those logs.</p>
+
+<h2>4. Remove selected Office products and OneDrive</h2>
+
+<p><strong>Script:</strong> <code>EnterpriseSteps/Step-RemovePreinstalledOfficeOneDrive.ps1</code></p>
+
+<p>Default scope:</p>
+
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Effect</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>OfficeProductIds</td>
+  <td><code>["O365HomePremRetail"]</code></td>
+  <td>Targets the consumer Microsoft 365/Office trial suite only</td>
+</tr>
+<tr>
+  <td>OdtRelativePath</td>
+  <td><code>Payloads/ODT/setup.exe</code></td>
+  <td>Your extracted, current Office Deployment Tool executable</td>
+</tr>
+<tr>
+  <td>AllowBusinessOfficeRemoval</td>
+  <td>false</td>
+  <td>Rejects broader suite removal unless deliberately enabled</td>
+</tr>
+<tr>
+  <td>RemoveOfficeHub</td>
+  <td>true</td>
+  <td>Removes <code>Microsoft.MicrosoftOfficeHub</code> registrations and provisioning (may appear as the Microsoft 365/Copilot hub)</td>
+</tr>
+<tr>
+  <td>RemoveStoreOfficeDesktop</td>
+  <td>false</td>
+  <td>Optional removal of Store-delivered <code>Microsoft.Office.Desktop</code>; requires the broader-removal acknowledgement</td>
+</tr>
+<tr>
+  <td>RemoveOneDrive</td>
+  <td>true</td>
+  <td>Uninstalls machine-wide OneDrive and the interactive user's per-user installation</td>
+</tr>
+<tr>
+  <td>ForceCloseApps</td>
+  <td>false</td>
+  <td>Fails if targeted Office/OneDrive processes are running; asks for closure/sync completion before retry</td>
+</tr>
+</tbody>
+</table>
+
+<p>Download and extract the <a href="https://www.microsoft.com/en-us/download/details.aspx?id=49117">Office Deployment Tool</a>
+on your packaging workstation, then place its <strong>setup.exe</strong>, not the self-extracting
+download EXE, at the configured path. A valid Microsoft signature is required.
+The script reads Click-to-Run ProductReleaseIds, intersects them with your exact
+allowlist, and generates an ODT XML with <strong>Remove All="FALSE"</strong> and those products.
+It does not broadly remove Visio/Project, MSI-era Office or every product with
+"Office" in its display name. ODT is only needed at runtime if an allowlisted
+Click-to-Run product is found; preflight checks the explicitly supplied file anyway.</p>
+
+<p>If you intentionally need to remove preinstalled business suites too:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"OfficeProductIds"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"O365HomePremRetail"</span><span class="p">,</span><span class="w"> </span><span class="s2">"O365BusinessRetail"</span><span class="p">,</span><span class="w"> </span><span class="s2">"O365ProPlusRetail"</span><span class="p">],</span>
+<span class="nt">"AllowBusinessOfficeRemoval"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="nt">"RemoveStoreOfficeDesktop"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+</code></pre>
+</div>
+
+<p><strong>A product ID does not reveal whether an OEM or IT installed it.</strong> Those expanded
+settings can remove a licensed managed suite with a matching ID. Run cleanup
+before your managed Office installation, and exclude it from later deployment
+versions unless removal is still intended. Keeping only the default consumer ID
+does not remove every possible Office365 preinstallation; use inventory from
+your actual OEM images to choose the allowlist.</p>
+
+<p>OneDrive removal invokes its Microsoft-signed uninstaller and verifies uninstall
+registration disappears. Machine binaries must be under Windows or Program Files;
+user uninstallers execute as that user, never as SYSTEM. The recognized command
+format is a quoted OneDriveSetup.exe path with <code>/uninstall</code>; unfamiliar formats
+fail for review instead of being executed. Other existing users' installations,
+the OS's bundled setup stub, OneDrive data folders and cloud files are left alone.
+Do not interpret successful cleanup as all-profile removal on a shared device.</p>
+
+<p>ForceCloseApps true can discard unsaved Office work or interrupt syncing; leave
+it false for normal first-logon use. Removal does not configure a permanent
+OneDrive block. If your organization excludes OneDrive, also review later Office
+deployment choices and applicable Intune policy so another deployment does not
+install it again. The script does not take ownership of files or delete synced data.</p>
+
+<h2>5. Install Windows Notepad if absent</h2>
+
+<p><strong>Script:</strong> <code>EnterpriseSteps/Step-InstallNotepad.ps1</code></p>
+
+<p>For modern Notepad (<code>Microsoft.WindowsNotepad</code>), use the same WinGetThenOffline
+parameters and offline staging workflow as Company Portal, with files under
+Payloads/Notepad. WinGet uses the exact msstore ID <code>9MSMLRH6LZF3</code>.
+An explicit OfflinePackage mode still runs only the staged package route. It verifies the interactive user's package, not just the
+existence of <code>System32\notepad.exe</code>, which is insufficient for modern app readiness.
+IntuneWait is also available when you assign Notepad through Intune.</p>
+
+<p>If you only need the classic text editor, a simpler option is:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Mode"</span><span class="p">:</span><span class="w"> </span><span class="s2">"WindowsCapability"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"CapabilitySource"</span><span class="p">:</span><span class="w"> </span><span class="s2">""</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"LimitAccess"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>This checks/installs the image's <code>Microsoft.Windows.Notepad*</code> capability via
+Add-WindowsCapability. Microsoft describes this as the <strong>older classic Notepad</strong>,
+not the modern Store app with tabs and newer features. It never silently falls
+back from a failed modern install to classic. If modern Notepad is already healthy,
+all modes skip installation. If the image exposes no matching capability, this
+mode fails with guidance to use the Store package.</p>
+
+<p>CapabilitySource optionally points to an approved matching Features on Demand
+source. LimitAccess true prevents contacting Windows Update; a suitable source
+is then needed if content is unavailable locally. With default settings, servicing
+still obeys your Windows Update/WSUS/FoD policies. The script does not change
+those policies to get around a content-source error. A reported RestartNeeded
+propagates through the existing UI.</p>
+
+<h2>Enterprise additions I would prioritize</h2>
+
+<p>These are recommendations, not extra changes silently executed by this pack.
+Keep enforcement in your existing Intune policies/application assignments, and
+use setup steps to verify the prerequisites for a usable first desktop.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Priority</th>
+  <th>Suggested check/step</th>
+  <th>Suggested ownership</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td>Required application/version health, Company Portal, VPN and authentication agent readiness</td>
+  <td>Existing Intune app assignments; UI verifies the user's usable result</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>BitLocker protection and recovery-key escrow status</td>
+  <td>Intune endpoint-security disk encryption policy and tenant reporting; local encryption status alone does not prove successful escrow</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td>Endpoint protection service and onboarding health</td>
+  <td>Your licensed endpoint-security solution; do not assume EMS E3 includes every Defender for Endpoint feature</td>
+</tr>
+<tr>
+  <td>4</td>
+  <td>Device/user certificates and corporate Wi-Fi/VPN connectivity</td>
+  <td>Intune certificate/network profiles; verify the required certificate thumbprint/EKU/expiry without exporting private keys</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>Dell driver/firmware readiness and pending reboot</td>
+  <td>Your approved Dell update tooling and update policy; schedule BIOS changes with power checks and a controlled restart</td>
+</tr>
+<tr>
+  <td>6</td>
+  <td>Free disk space, AC power and service-endpoint connectivity before large installs</td>
+  <td>Small local preflight check; test the actual endpoints/proxy path rather than generic internet ping</td>
+</tr>
+<tr>
+  <td>7</td>
+  <td>Final restart-required summary</td>
+  <td>Existing 3010 handling plus a user-visible restart instruction; let your deployment owner schedule the restart</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td>Setup log retention and a support-friendly result summary</td>
+  <td>Protected local logs, retention policy and your approved support collection process</td>
+</tr>
+</tbody>
+</table>
+
+<p>For this UI, my first extras would be <strong>readiness preflight</strong>, <strong>required agent/
+connectivity verification</strong>, and <strong>final restart guidance</strong>. Keep security policy
+changes, recurring updates and broad registry tuning out of a one-time installer
+step unless there is a specific gap. These recommendations do not depend on
+Intune Remediations or Windows Autopatch.</p>
+
+<h2>Windows pilot checklist and known limits</h2>
+
+<p>Static PowerShell/C# parsing, JSON schema, script references, UI bindings and
+configuration checks were run in the build environment. <strong>No Windows app install,
+uninstall, Task Scheduler, DISM, WPF or ServiceUI runtime test was run there.</strong>
+The helper tests are supplied for Windows and are also unexecuted in the build
+environment. Run them and the following live checks on a disposable enrollment
+test device before production use.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Scenario</th>
+  <th>Expected result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>WinGet succeeds / is unavailable / cannot verify registration</td>
+  <td>Verify and skip offline / attempt offline / attempt offline; see the <a href="#hotfix9">hotfix 9 pilot matrix</a></td>
+</tr>
+<tr>
+  <td>MSI already detected</td>
+  <td>Skip installer; success recorded</td>
+</tr>
+<tr>
+  <td>MSI absent</td>
+  <td>Install, log summary + verbose text, then verify ProductCode/version</td>
+</tr>
+<tr>
+  <td>MSI 1618 / 3010 / 1603</td>
+  <td>Bounded retry / success with restart required / failure with diagnostic log</td>
+</tr>
+<tr>
+  <td>Portal installed for another user only</td>
+  <td>NeedsCompanyPortal remains 1 for setup user</td>
+</tr>
+<tr>
+  <td>Portal missing, then installed</td>
+  <td>Detection succeeds with flag 1; installer clears it only after user registration verifies</td>
+</tr>
+<tr>
+  <td>Intune completes between Portal steps</td>
+  <td>Installer recheck skips duplicate installation and clears flag</td>
+</tr>
+<tr>
+  <td>Missing license/dependency or wrong architecture</td>
+  <td>Step fails; no false success based only on provisioning</td>
+</tr>
+<tr>
+  <td>User task denied by policy or user signs out</td>
+  <td>Step fails with actionable user-action/AppX diagnostics</td>
+</tr>
+<tr>
+  <td>Office consumer suite alongside Visio/business suite</td>
+  <td>Only explicitly allowlisted products removed; verify retained products still launch</td>
+</tr>
+<tr>
+  <td>Office/OneDrive running</td>
+  <td>Stops before removal unless ForceCloseApps explicitly enabled</td>
+</tr>
+<tr>
+  <td>Machine and current-user OneDrive</td>
+  <td>Both targeted installations checked; local sync folders preserved</td>
+</tr>
+<tr>
+  <td>Notepad modern versus capability</td>
+  <td>Correct app verified; capability mode documented as classic editor</td>
+</tr>
+<tr>
+  <td>Retry / second launch</td>
+  <td>Successful steps resume; failed steps recheck current detection before acting</td>
+</tr>
+</tbody>
+</table>
+
+<p>Additional limits: no generic MSI upgrade-code matching; no per-user MSI
+deployment; no MSI-era Office cleanup; no all-profile OneDrive removal; no forced
+Intune refresh/IME registry manipulation; no installer rollback. ODT/DISM and
+native installers can complete asynchronously or require reboot. Review native
+logs when post-detection fails instead of assuming the device is unchanged.</p>
+
+<h2>Microsoft references</h2>
+
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/intune/app-management/deployment/add-company-portal-autopilot">Company Portal: Intune Required System assignment</a></li>
+<li><a href="https://www.microsoft.com/en-us/download/details.aspx?id=108156">Company Portal official offline kit</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/package-manager/winget/download">WinGet download and offline license requirements</a></li>
+<li><a href="https://learn.microsoft.com/en-us/powershell/module/dism/add-appxprovisionedpackage?view=windowsserver2025-ps">Add-AppxProvisionedPackage</a></li>
+<li><a href="https://learn.microsoft.com/en-us/microsoft-365-apps/deploy/office-deployment-tool-configuration-options">Office Deployment Tool configuration</a></li>
+<li><a href="https://learn.microsoft.com/en-us/sharepoint/per-machine-installation">OneDrive per-machine versus per-user installation</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/features-on-demand-non-language-fod?view=windows-11">Notepad classic Features on Demand</a></li>
+<li><a href="https://learn.microsoft.com/en-ie/intune/device-configuration/endpoint-security/encrypt-bitlocker-windows">BitLocker policy and reporting</a></li>
+</ul>
+
+<p>Base enterprise documentation reviewed October 22, 2026; WinGet flow updated November 5, 2026. Verify download contents and pilot
+against your supported Windows builds when preparing each production release.</p>
+</section><section id="hotfix4"><h1>Hotfix 4: optional installs and window branding</h1>
+
+<h2>Upgrade your customized package</h2>
+
+<p>Close the existing setup process. Copy these files together from the new package:</p>
+
+<ul>
+<li>Start-DeviceSetup.ps1</li>
+<li>Core/Setup.Common.ps1</li>
+<li>UI/MainWindow.xaml</li>
+<li>UI/StepViewModel.cs</li>
+<li>UI/TaskbarIdentity.cs (new)</li>
+</ul>
+
+<p>Keep your own Config, Steps, Assets, and production launcher. If you changed XAML, merge those changes into the new template. Copy Tests/Invoke-SmokeTests.ps1 for the new regression checks. Run-Demo.cmd now includes -WindowStyle Hidden. The supplied live ServiceUI launcher already hides its PowerShell console.</p>
+
+<p>Older JSON files still work. UserSelectable defaults to false and IconPath defaults to an empty string, which uses the built-in setup icon. New optional text keys also have defaults. Do not bump SetupVersion or reset completion state just for this framework update. The existing execution fingerprint algorithm is unchanged.</p>
+
+<h2>Offer an app without installing it by default</h2>
+
+<p>Edit an existing step entry rather than adding an eleventh slot. Set these three properties:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"Enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="nt">"UserSelectable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="nt">"Required"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+</code></pre>
+</div>
+
+<p>Here is a complete example that can replace slot 6. Put your installation/detection code in Steps/Step-06.ps1 and remove its placeholder throw:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"Id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"step06"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Enabled"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"UserSelectable"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Title"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Install additional productivity tools"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Choose this if you need the additional tools for your role."</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Script"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Steps/Step-06.ps1"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<span class="w">  </span><span class="nt">"TimeoutSeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">1200</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"SuccessExitCodes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">3010</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"RebootExitCodes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">3010</span><span class="p">],</span>
+<span class="w">  </span><span class="nt">"Required"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"DependsOn"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">  </span><span class="nt">"DemoSeconds"</span><span class="p">:</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"DemoFailFirstAttempt"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<table>
+<thead>
+<tr>
+  <th>Enabled</th>
+  <th>UserSelectable</th>
+  <th>Required</th>
+  <th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>false</td>
+  <td>Either</td>
+  <td>Either, subject to validation</td>
+  <td>Hidden and never offered/run</td>
+</tr>
+<tr>
+  <td>true</td>
+  <td>false or omitted</td>
+  <td>true</td>
+  <td>Runs automatically; failure blocks overall success</td>
+</tr>
+<tr>
+  <td>true</td>
+  <td>false or omitted</td>
+  <td>false</td>
+  <td>Runs automatically; failure produces a warning</td>
+</tr>
+<tr>
+  <td>true</td>
+  <td>true</td>
+  <td>false</td>
+  <td>Offered unchecked; runs only if the user selects it</td>
+</tr>
+<tr>
+  <td>Either</td>
+  <td>true</td>
+  <td>true</td>
+  <td>Invalid configuration; a step cannot be both required and opt-in</td>
+</tr>
+</tbody>
+</table>
+
+<p>When at least one unfinished option is available, the checklist first displays selection checkboxes. Automatic steps wait while the user chooses extras. <strong>Start setup</strong> locks the selection and runs automatic plus selected steps in JSON order. There is no timeout that silently selects or starts optional apps. A workflow with no available options starts automatically as before.</p>
+
+<p>Unchecked items are reported as <strong>Not selected</strong>. They do not run, count toward progress, produce a warning, or become eligible for Retry unfinished. Selecting none is valid, including a configuration containing only user-selectable steps. Selected optional failures are visible warnings and can be retried. All enabled and disabled entries still share the ten-slot limit.</p>
+
+<h2>Prerequisites</h2>
+
+<p>DependsOn still refers to earlier enabled step IDs. An automatic step cannot depend on an opt-in step; the validator rejects that configuration. A selected optional app can depend on automatic steps or other selected options. If its optional prerequisite is unchecked, Start setup displays a message asking the user to select it or uncheck the dependent app. It never silently selects another app. Previously completed prerequisites already satisfy the selection check.</p>
+
+<h2>Later launches</h2>
+
+<p>With ResumeCompletedSteps=true, explicit declines are saved alongside successful completion records. If all work is complete or declined with matching execution fingerprints, a later live launch exits without showing another window. Decisions are device-level, not per signed-in user. Demo choices are not persisted to live state.</p>
+
+<p>Add <strong>-ChooseOptional</strong> to your existing SYSTEM + ServiceUI launch to offer unfinished optional items again. Completed steps still remain completed. This is different from -ResetState, which resets the entire run's completion records. If a new or changed option causes the chooser to appear, other unfinished, previously declined options are also available again, unchecked.</p>
+
+<p>An interrupted or failed selected app has no success/decline record, so it is offered unchecked on the next launch. With ResumeCompletedSteps=false, neither completion nor declines are reused. Execution-script/parameter/dependency changes invalidate matching fingerprints. Keep SetupVersion stable unless you intend a new setup revision.</p>
+
+<h2>Window/taskbar icon</h2>
+
+<p>The default is a blue device/checkmark icon embedded as WPF drawing geometry. It requires no separate asset file. To use your logo, place a square ICO or PNG in Assets and add this under Branding:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"IconPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Assets/company-setup.ico"</span>
+</code></pre>
+</div>
+
+<p>Use a real ICO file, not a renamed PNG. A multi-resolution ICO containing 16, 32, 48, and 256 pixel images is suitable. An empty IconPath uses the built-in icon. Keep IconPath package-relative. LogoPath and BannerPath are independent settings.</p>
+
+<p>The icon is assigned to the WPF window, including its title bar, taskbar button, and Alt+Tab entry. The launcher sets a process AppUserModelID derived from SetupId, with a separate Demo suffix, before displaying the window. This separates grouping from ordinary PowerShell windows. Use a dedicated powershell.exe process and -WindowStyle Hidden to avoid a separate console taskbar entry. This is branding for the running window; no pinned shortcut/relaunch registration is installed, and Task Manager still lists powershell.exe.</p>
+
+<h2>Transparent banner</h2>
+
+<p>BannerContainer now uses CanvasBrush, matching the window's light/dark background. It does not change AccentColor or other controls. Uniform + DownOnly remains the default sizing. Existing custom backgrounds can be merged into the XAML explicitly.</p>
+
+<h2>Preview and verification</h2>
+
+<p>Run Run-Demo.cmd to see the two unchecked extras alongside the original automatic setup steps. For a shorter dependency/retry example:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">powershell</span><span class="p">.</span><span class="n">exe</span> <span class="n">-NoProfile</span> <span class="n">-STA</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="p">.\</span><span class="nb">Start-DeviceSetup</span><span class="p">.</span><span class="n">ps1</span> <span class="n">-Demo</span> <span class="n">-ConfigPath</span> <span class="p">.\</span><span class="n">Config</span><span class="p">\</span><span class="n">Optional-Demo</span><span class="p">.</span><span class="n">json</span>
+</code></pre>
+</div>
+
+<p>Try selecting only the last option; the chooser should ask for its prerequisite. Select both, start, and retry the intentionally failed last option. Also test leaving both unchecked. Run Tests/Invoke-SmokeTests.ps1 in Windows PowerShell 5.1 with -STA. Test the real taskbar icon under your SYSTEM + ServiceUI launch and normal Windows display scaling.</p>
+
+<p>Static source/schema/XAML checks were run during authoring. Windows PowerShell execution, WPF rendering, checkbox interaction, taskbar grouping, SYSTEM resume, and real installations were not run in the Linux authoring environment.</p>
+</section><section id="config"><h1>Configuration reference</h1>
+
+<p>Edit <code>Config/Setup.json</code> with a text editor. JSON requires double quotes, lowercase <code>true</code>/<code>false</code>, and no comments or trailing commas. Forward slashes in paths work on Windows and avoid JSON backslash escaping. Run <code>Validate-Config.cmd</code> after editing.</p>
+
+<p>All listed keys are present in the examples. BannerStretch, BannerStretchDirection, IconPath, UserSelectable, and the selection-screen text fields are optional and default as shown when omitted; keep the other keys unless you modify the validator as well. Unknown fields are not a supported extension mechanism. There can be <strong>1-10 total step entries</strong>, with at least one enabled. To add your own step, edit an existing disabled slot or replace the list with your own entries.</p>
+
+<h2>Identity</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>SchemaVersion</code></td>
+  <td><code>1</code></td>
+  <td>Keep at 1 for this package format.</td>
+</tr>
+<tr>
+  <td><code>SetupId</code></td>
+  <td><code>"Company.DeviceSetup"</code></td>
+  <td>Stable package identity and state/mutex namespace. Letters, digits, dot, underscore, and hyphen; 1-80 characters.</td>
+</tr>
+<tr>
+  <td><code>SetupVersion</code></td>
+  <td><code>"1.0.0"</code></td>
+  <td>Change when you intentionally want a new setup revision. 1-40 safe characters.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Branding</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>CompanyName</code></td>
+  <td><code>"YOUR COMPANY"</code></td>
+  <td>Displayed next to the optional logo; an empty string hides the company text.</td>
+</tr>
+<tr>
+  <td><code>WindowTitle</code></td>
+  <td><code>"Welcome | Device setup"</code></td>
+  <td>Native Windows title bar text.</td>
+</tr>
+<tr>
+  <td><code>Heading</code></td>
+  <td><code>"Welcome to your new PC"</code></td>
+  <td>Large welcome heading.</td>
+</tr>
+<tr>
+  <td><code>Message</code></td>
+  <td><code>"Please wait while we finish device setup. We are preparing your applications, access, and preferences."</code></td>
+  <td>Welcome text beneath the heading. Wraps automatically; keep it to a short paragraph.</td>
+</tr>
+<tr>
+  <td><code>IconPath</code></td>
+  <td><code>""</code></td>
+  <td>Optional package-relative ICO/PNG. Empty uses the built-in setup icon; applies to title bar, taskbar, and Alt+Tab.</td>
+</tr>
+<tr>
+  <td><code>LogoPath</code></td>
+  <td><code>""</code></td>
+  <td>Relative PNG/JPG/BMP path, e.g. Assets/company-logo.png. Empty hides the logo.</td>
+</tr>
+<tr>
+  <td><code>BannerPath</code></td>
+  <td><code>""</code></td>
+  <td>Relative PNG/JPG/BMP path. Empty hides the full-width banner.</td>
+</tr>
+<tr>
+  <td><code>BannerHeight</code></td>
+  <td><code>110</code></td>
+  <td>Banner region height in WPF device-independent units; 40-240. Sets the available area, not a forced image height.</td>
+</tr>
+<tr>
+  <td><code>BannerStretch</code></td>
+  <td><code>"Uniform"</code></td>
+  <td>Optional. Uniform preserves the whole image and its aspect ratio. UniformToFill fills/crops. None keeps natural size. Fill changes aspect ratio to fill the region.</td>
+</tr>
+<tr>
+  <td><code>BannerStretchDirection</code></td>
+  <td><code>"DownOnly"</code></td>
+  <td>Optional. DownOnly prevents enlargement; Both permits enlargement and shrinking; UpOnly permits enlargement only. Has no effect with Stretch=None.</td>
+</tr>
+<tr>
+  <td><code>LogoMaxWidth</code></td>
+  <td><code>180</code></td>
+  <td>Maximum logo width; 24-400. Aspect ratio is preserved.</td>
+</tr>
+<tr>
+  <td><code>LogoMaxHeight</code></td>
+  <td><code>48</code></td>
+  <td>Maximum logo height; 24-120. Aspect ratio is preserved.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Appearance</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>Theme</code></td>
+  <td><code>"Light"</code></td>
+  <td>Light or Dark. The Dark-Demo.json example includes brighter accent/status colors for dark backgrounds.</td>
+</tr>
+<tr>
+  <td><code>AccentColor</code></td>
+  <td><code>"#2563EB"</code></td>
+  <td>Primary buttons, current-step spinner/border, and progress. Hex #RRGGBB.</td>
+</tr>
+<tr>
+  <td><code>SuccessColor</code></td>
+  <td><code>"#16815D"</code></td>
+  <td>Success status/checkmarks. Hex #RRGGBB.</td>
+</tr>
+<tr>
+  <td><code>FailureColor</code></td>
+  <td><code>"#C53F4E"</code></td>
+  <td>Failure status/crosses. Hex #RRGGBB.</td>
+</tr>
+<tr>
+  <td><code>WarningColor</code></td>
+  <td><code>"#A86D0B"</code></td>
+  <td>Warnings and restart reminder. Hex #RRGGBB.</td>
+</tr>
+<tr>
+  <td><code>WindowWidth</code></td>
+  <td><code>900</code></td>
+  <td>Preferred width; 640-1600. Clamped to available desktop work area.</td>
+</tr>
+<tr>
+  <td><code>WindowHeight</code></td>
+  <td><code>820</code></td>
+  <td>Preferred height; 520-1200. Clamped to available desktop work area; step list scrolls.</td>
+</tr>
+<tr>
+  <td><code>Topmost</code></td>
+  <td><code>true</code></td>
+  <td>Keep the window above ordinary application windows.</td>
+</tr>
+<tr>
+  <td><code>ReduceMotion</code></td>
+  <td><code>false</code></td>
+  <td>Disable spinner rotation. The Running state and progress remain visible.</td>
+</tr>
+<tr>
+  <td><code>ShowElapsedTime</code></td>
+  <td><code>true</code></td>
+  <td>Show total elapsed time and per-step duration.</td>
+</tr>
+<tr>
+  <td><code>ShowStepNumbers</code></td>
+  <td><code>true</code></td>
+  <td>Show numbers in pending-step circles.</td>
+</tr>
+<tr>
+  <td><code>FontFamily</code></td>
+  <td><code>"Segoe UI"</code></td>
+  <td>Installed Windows font family. Segoe UI is the default.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Text</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>SelectionHeading</code></td>
+  <td><code>"Choose optional apps"</code></td>
+  <td>Optional heading shown before setup when unfinished user-selectable steps exist.</td>
+</tr>
+<tr>
+  <td><code>SelectionMessage</code></td>
+  <td><code>"Select any extras you would like, then start setup. Required setup runs automatically."</code></td>
+  <td>Optional instructions while choosing.</td>
+</tr>
+<tr>
+  <td><code>StartButton</code></td>
+  <td><code>"Start setup"</code></td>
+  <td>Optional button label that submits choices and begins the run.</td>
+</tr>
+<tr>
+  <td><code>SelectionFooter</code></td>
+  <td><code>"Optional apps are unchecked by default."</code></td>
+  <td>Optional footer during selection.</td>
+</tr>
+<tr>
+  <td><code>SelectStepLabel</code></td>
+  <td><code>"Include this optional step"</code></td>
+  <td>Optional checkbox label.</td>
+</tr>
+<tr>
+  <td><code>RunningHeading</code></td>
+  <td><code>"Getting things ready"</code></td>
+  <td>Status-panel heading while steps run.</td>
+</tr>
+<tr>
+  <td><code>RunningMessage</code></td>
+  <td><code>"Your settings and applications are being prepared."</code></td>
+  <td>Status-panel supporting text while steps run.</td>
+</tr>
+<tr>
+  <td><code>SuccessHeading</code></td>
+  <td><code>"Your PC is ready"</code></td>
+  <td>Status-panel heading after all steps succeed.</td>
+</tr>
+<tr>
+  <td><code>SuccessMessage</code></td>
+  <td><code>"All included setup steps have finished. You can start using your device."</code></td>
+  <td>Status-panel supporting text after all steps succeed.</td>
+</tr>
+<tr>
+  <td><code>WarningHeading</code></td>
+  <td><code>"Ready, with a few things to review"</code></td>
+  <td>Heading when required steps succeeded but optional work failed/skipped.</td>
+</tr>
+<tr>
+  <td><code>WarningMessage</code></td>
+  <td><code>"Required setup is complete. An optional step needs attention."</code></td>
+  <td>Supporting text for that optional-issue outcome.</td>
+</tr>
+<tr>
+  <td><code>FailureHeading</code></td>
+  <td><code>"A few things need attention"</code></td>
+  <td>Heading when required work failed/skipped.</td>
+</tr>
+<tr>
+  <td><code>FailureMessage</code></td>
+  <td><code>"Review the highlighted steps, then retry or contact your IT service desk."</code></td>
+  <td>Supporting text after failure.</td>
+</tr>
+<tr>
+  <td><code>Footer</code></td>
+  <td><code>"Keep your device plugged in and connected."</code></td>
+  <td>Short instruction at the bottom of the window.</td>
+</tr>
+<tr>
+  <td><code>Support</code></td>
+  <td><code>"Need help? Contact your IT service desk."</code></td>
+  <td>Plain-text help/contact information. Does not launch an email client or browser.</td>
+</tr>
+<tr>
+  <td><code>RetryButton</code></td>
+  <td><code>"Retry unfinished"</code></td>
+  <td>Label for retrying failed/skipped steps.</td>
+</tr>
+<tr>
+  <td><code>CloseButton</code></td>
+  <td><code>"Done"</code></td>
+  <td>Result-screen close button label.</td>
+</tr>
+<tr>
+  <td><code>CopyButton</code></td>
+  <td><code>"Copy details"</code></td>
+  <td>Copy-diagnostics button label.</td>
+</tr>
+<tr>
+  <td><code>DetailsLabel</code></td>
+  <td><code>"Setup details"</code></td>
+  <td>Footer diagnostics expander label.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Behavior</h2>
+
+<p>Hotfix 8 adds optional <code>AllowInteractiveUserToReadLogs</code> (default true) and <code>LogReaderSids</code> (default empty array). These grant read-only access to new live run folders in SYSTEM mode. Existing JSON receives the defaults in memory. Completion-state files keep their protected ACLs. See <a href="#hotfix8">log access</a> for examples and existing-run repair.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Default</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>RequireSystemForLive</code></td>
+  <td><code>true</code></td>
+  <td>Default true. Live mode requires SID S-1-5-18. For a controlled local admin pilot you may set false in a separate config; this does not elevate the process.</td>
+</tr>
+<tr>
+  <td><code>ResumeCompletedSteps</code></td>
+  <td><code>true</code></td>
+  <td>Remember successful steps and declined options on later live runs. -ChooseOptional reoffers unfinished options without resetting successes.</td>
+</tr>
+<tr>
+  <td><code>StopOnRequiredFailure</code></td>
+  <td><code>false</code></td>
+  <td>True skips all remaining steps after a required failure. False continues independent work. Dependencies are always respected.</td>
+</tr>
+<tr>
+  <td><code>AllowRetry</code></td>
+  <td><code>true</code></td>
+  <td>Show Retry unfinished for failures/skips. Timeout/controller faults disable retry regardless of this value.</td>
+</tr>
+<tr>
+  <td><code>AutoCloseSuccessSeconds</code></td>
+  <td><code>0</code></td>
+  <td>0 leaves the results open. Otherwise closes 1-3600 seconds after full success; does not auto-close warnings/failures.</td>
+</tr>
+<tr>
+  <td><code>PollIntervalMilliseconds</code></td>
+  <td><code>400</code></td>
+  <td>UI update interval, 200-2000 ms. Spinner animation uses WPF animation independently.</td>
+</tr>
+<tr>
+  <td><code>StateDirectory</code></td>
+  <td><code>"%ProgramData%/Company/PostEnrollmentSetupUI"</code></td>
+  <td>Absolute local directory after environment-variable expansion. SetupId is appended. Default uses ProgramData; do not use a network path.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Each step</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Setting</th>
+  <th>Example</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>Id</code></td>
+  <td><code>"step01"</code></td>
+  <td>Stable unique identifier; 1-40 letters/digits/underscores/hyphens. Also used in log filenames and DependsOn.</td>
+</tr>
+<tr>
+  <td><code>Enabled</code></td>
+  <td><code>true</code></td>
+  <td>False omits the entry entirely. At least one step must be enabled.</td>
+</tr>
+<tr>
+  <td><code>UserSelectable</code></td>
+  <td><code>false</code></td>
+  <td>Optional. True offers an unchecked user choice; requires Required=false. False/omitted keeps automatic execution.</td>
+</tr>
+<tr>
+  <td><code>Title</code></td>
+  <td><code>"Device readiness"</code></td>
+  <td>Main card label.</td>
+</tr>
+<tr>
+  <td><code>Description</code></td>
+  <td><code>"Check that the device is ready for final setup."</code></td>
+  <td>Short explanation. Choice steps add Choose to install; automatic non-required steps add Non-blocking.</td>
+</tr>
+<tr>
+  <td><code>Script</code></td>
+  <td><code>"Steps/Step-01.ps1"</code></td>
+  <td>Package-relative .ps1 path; must exist for enabled steps.</td>
+</tr>
+<tr>
+  <td><code>Parameters</code></td>
+  <td><code>{}</code></td>
+  <td>JSON object of named PowerShell parameters supplied to the script.</td>
+</tr>
+<tr>
+  <td><code>TimeoutSeconds</code></td>
+  <td><code>1200</code></td>
+  <td>Whole-step execution limit, 1-86400 seconds. Includes child installer waits.</td>
+</tr>
+<tr>
+  <td><code>SuccessExitCodes</code></td>
+  <td><code>[0, 3010]</code></td>
+  <td>Final worker exit codes considered successful. Default 0 and 3010.</td>
+</tr>
+<tr>
+  <td><code>RebootExitCodes</code></td>
+  <td><code>[3010]</code></td>
+  <td>Successful codes indicating a reboot is required. Must also be listed in SuccessExitCodes.</td>
+</tr>
+<tr>
+  <td><code>Required</code></td>
+  <td><code>true</code></td>
+  <td>False makes failure non-blocking but does not prevent automatic execution. Set UserSelectable=true as well for opt-in installation.</td>
+</tr>
+<tr>
+  <td><code>DependsOn</code></td>
+  <td><code>[]</code></td>
+  <td>Earlier enabled IDs that must succeed first. Automatic steps cannot depend on user-selectable steps. Selected options require their optional prerequisites to be selected or already complete.</td>
+</tr>
+<tr>
+  <td><code>DemoSeconds</code></td>
+  <td><code>4</code></td>
+  <td>Simulated step duration, 1-60 seconds. Ignored in live mode.</td>
+</tr>
+<tr>
+  <td><code>DemoFailFirstAttempt</code></td>
+  <td><code>false</code></td>
+  <td>Intentionally fail this demo step on its first attempt, then pass on retry. Ignored in live mode.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Common customizations</h2>
+
+<h3>Company branding</h3>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"Branding"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"CompanyName"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Your Company"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"WindowTitle"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Your Company | Device setup"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Heading"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Welcome to your new PC"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"Message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Please wait while we finish device setup."</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"IconPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Assets/company-setup.ico"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"LogoPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Assets/company-logo.png"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"BannerPath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Assets/company-banner.jpg"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"BannerHeight"</span><span class="p">:</span><span class="w"> </span><span class="mi">110</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"BannerStretch"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Uniform"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"BannerStretchDirection"</span><span class="p">:</span><span class="w"> </span><span class="s2">"DownOnly"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"LogoMaxWidth"</span><span class="p">:</span><span class="w"> </span><span class="mi">180</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"LogoMaxHeight"</span><span class="p">:</span><span class="w"> </span><span class="mi">48</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>The file paths above require your actual image files. Leave either path empty when you do not want that image. See <code>Assets/README.md</code> for sizes and cropping behavior.</p>
+
+<h3>Banner sizing</h3>
+
+<p>The default Uniform + DownOnly combination keeps the whole image visible, preserves its aspect ratio, and only shrinks it when necessary. The image is centered in the fixed-height banner region. Unused space matches the main window background (CanvasBrush). Lower BannerHeight if you want a shorter header; the supported range is 40-240.</p>
+
+<table>
+<thead>
+<tr>
+  <th>Desired result</th>
+  <th>BannerStretch</th>
+  <th>BannerStretchDirection</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Entire image visible, no enlargement (default)</td>
+  <td>Uniform</td>
+  <td>DownOnly</td>
+</tr>
+<tr>
+  <td>Entire image visible, allow enlargement</td>
+  <td>Uniform</td>
+  <td>Both</td>
+</tr>
+<tr>
+  <td>Fill the header edge to edge, allow cropping (original behavior)</td>
+  <td>UniformToFill</td>
+  <td>Both</td>
+</tr>
+<tr>
+  <td>Keep natural size, clip anything outside the header</td>
+  <td>None</td>
+  <td>DownOnly (ignored)</td>
+</tr>
+</tbody>
+</table>
+
+<p>UniformToFill preserves aspect ratio but can zoom/crop small or differently shaped artwork. Fill can distort it. Natural size is measured in WPF device-independent units, using the image's DPI metadata; Windows display scaling still applies. Transparent PNG margins also count toward image size. The banner region clips overflow so cropped artwork stays within the header.</p>
+
+<h3>User-selectable installs and taskbar branding</h3>
+
+<p>See <a href="#hotfix4">the hotfix 4 guide</a> for complete JSON examples, the Enabled/UserSelectable/Required behavior table, dependency handling, persisted declines, -ChooseOptional, and icon setup.</p>
+
+<h3>Step order and dependencies</h3>
+
+<p>Steps run in their JSON array order, not numeric ID order. Reordering does not require renaming files. A dependency must point to an earlier enabled step. A disabled dependency is a validation error, so remove/change that reference when disabling a prerequisite.</p>
+
+<h3>Advanced visual changes</h3>
+
+<p>Edit <code>UI/MainWindow.xaml</code> for corner radii, card spacing, text sizes, the fixed DEVICE SETUP label, status badge layout, error-expander caption, or other strings outside the config. Edit the named resource brushes for light-theme backgrounds. The dark-theme palette is applied by Set-SetupXamlTheme in <code>Core/Setup.Common.ps1</code> before the window loads. Keep named controls, resource keys, and binding names intact unless you also update their code references.</p>
+
+<p>The window uses a native Windows frame plus WPF content. Native title-bar appearance follows Windows; selecting the Dark preset changes the content and does not force a dark native frame. The window can be minimized, cannot be maximized, and clamps itself to the desktop work area. Very long text, large banners, or unusually high display scaling may require shorter text or a larger screen.</p>
+
+<h2>Configuration validation</h2>
+
+<p>The bundled PowerShell validator checks required properties, branding files, step IDs/count, boolean flags, ranges, dependency order, relative paths, enabled script existence, and exit-code relationships. <code>Docs/Setup.schema.json</code> also supplies a JSON Schema for editors and external schema validators. It is a reference file, not a runtime network dependency.</p>
+
+<h2>Enterprise first-logon options (hotfix 10)</h2>
+
+<p>Optional <code>Behavior.EnforceFinalRestart</code> defaults to false; <code>Behavior.RestartCountdownSeconds</code> defaults to 120 (30–900). An enforced restart requires a SYSTEM live run, resume enabled, and the supplied restart marker as the final required step. <code>Steps[].NonBlockingSkipExitCodes</code> defaults to an empty array. These positive codes must be distinct from success/reboot codes and can only be used on non-required steps. See <a href="#hotfix10">Hotfix 10</a> for the complete recipe.</p>
+</section><section id="steps"><h1>Writing your setup steps</h1>
+
+<h2>The execution contract</h2>
+
+<p>Each enabled step is executed sequentially in a fresh, hidden <strong>64-bit Windows PowerShell 5.1</strong> process. When the parent is launched as SYSTEM through your ServiceUI workflow, its workers also run as SYSTEM. A step does not share local variables or functions with another step.</p>
+
+<p>The framework starts a transcript, supplies progress/installer helper functions, runs your script, and checks the process exit code. The UI remains on its own thread/process while the worker does the slow work.</p>
+
+<ol>
+<li>Keep <code>$ErrorActionPreference = 'Stop'</code> in your script.</li>
+<li>Detect the existing state before making changes. Steps must be safe to run again after interruption or failure.</li>
+<li>Apply the change.</li>
+<li>Verify the resulting state.</li>
+<li>Return normally for success; <code>throw</code> a useful message for failure.</li>
+</ol>
+
+<p>Returning <code>$false</code>, outputting the word <code>Failed</code>, or using <code>Write-Warning</code> does <strong>not</strong> mark a step failed.</p>
+
+<h2>Minimal example</h2>
+
+<p>Replace a placeholder step with your own code using this pattern:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">[</span><span class="k">CmdletBinding</span><span class="p">()]</span>
+<span class="k">param</span><span class="p">()</span>
+<span class="nv">$ErrorActionPreference</span> <span class="p">=</span> <span class="s1">'Stop'</span>
+
+<span class="nb">Write-SetupProgress</span> <span class="n">-Message</span> <span class="s1">'Applying configuration...'</span> <span class="n">-Percent</span> <span class="n">10</span>
+
+<span class="c"># Your real PowerShell commands go here.</span>
+
+<span class="nb">Write-SetupProgress</span> <span class="n">-Message</span> <span class="s1">'Verifying the result...'</span> <span class="n">-Percent</span> <span class="n">90</span>
+
+<span class="c"># Example: if your actual detection fails, throw a meaningful error.</span>
+<span class="c"># if (-not (Test-YourResult)) { throw 'The expected setting was not applied.' }</span>
+
+<span class="nb">Write-SetupProgress</span> <span class="n">-Message</span> <span class="s1">'Configuration verified.'</span> <span class="n">-Percent</span> <span class="n">100</span>
+</code></pre>
+</div>
+
+<p>This is a writing pattern, not a ready-made configuration action. The included <code>Steps/Step-XX.ps1</code> files retain a deliberate <code>throw</code> until you implement them, so an untouched placeholder cannot report success in production.</p>
+
+<h2>Sending progress</h2>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nb">Write-SetupProgress</span> <span class="n">-Message</span> <span class="s1">'Downloading application files...'</span>
+<span class="nb">Write-SetupProgress</span> <span class="n">-Message</span> <span class="s1">'Installing the application...'</span> <span class="n">-Percent</span> <span class="n">45</span>
+<span class="nb">Write-SetupProgress</span> <span class="n">-Message</span> <span class="s1">'Validating installation...'</span> <span class="n">-Percent</span> <span class="n">95</span>
+</code></pre>
+</div>
+
+<p><code>Message</code> updates the current card's detail line. Omitting <code>Percent</code> hides the per-step percentage bar while the spinner continues. Percentages are estimates you supply; the framework does not read an installer's internal progress. The overall bar weights each configured step equally and measures <strong>finished work</strong>, including failures/skips. Overall text and colors show whether the result succeeded.</p>
+
+<h2>Running installers and preserving exit codes</h2>
+
+<p>Prefer the supplied helper:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nv">$installer</span> <span class="p">=</span> <span class="nb">Join-Path</span> <span class="nv">$env:SETUP_PACKAGE_ROOT</span> <span class="s1">'Files/AppSetup.exe'</span>
+<span class="nv">$null</span> <span class="p">=</span> <span class="nb">Invoke-SetupProcess</span> <span class="n">-FilePath</span> <span class="nv">$installer</span> <span class="n">-Arguments</span> <span class="s1">'/quiet /norestart'</span>
+</code></pre>
+</div>
+
+<p><code>Invoke-SetupProcess</code> waits for the process tree, accepts 0 and 3010 by default, throws on other codes, and remembers a reboot-required result. Use the vendor's actual silent/no-restart arguments; EXE switches are not standardized.</p>
+
+<p>Override acceptable codes when required:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nv">$null</span> <span class="p">=</span> <span class="nb">Invoke-SetupProcess</span> <span class="n">-FilePath</span> <span class="nv">$installer</span> <span class="n">-Arguments</span> <span class="s1">'/S'</span> <span class="n">-SuccessExitCodes</span> <span class="p">@(</span><span class="n">0</span><span class="p">,</span><span class="n">3010</span><span class="p">)</span> <span class="n">-RebootExitCodes</span> <span class="p">@(</span><span class="n">3010</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>For raw native commands, check the exit code immediately:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">&amp;</span> <span class="nv">$installer</span> <span class="p">/</span><span class="n">quiet</span> <span class="p">/</span><span class="n">norestart</span>
+<span class="nv">$installExit</span> <span class="p">=</span> <span class="nv">$LASTEXITCODE</span>
+<span class="k">if</span> <span class="p">(</span><span class="nv">$installExit</span> <span class="n">-notin</span> <span class="p">@(</span><span class="n">0</span><span class="p">,</span><span class="n">3010</span><span class="p">))</span> <span class="p">{</span> <span class="k">throw</span> <span class="s2">"Installer failed: $installExit"</span> <span class="p">}</span>
+<span class="k">if</span> <span class="p">(</span><span class="nv">$installExit</span> <span class="o">-eq</span> <span class="n">3010</span><span class="p">)</span> <span class="p">{</span> <span class="n">exit</span> <span class="n">3010</span> <span class="p">}</span>
+</code></pre>
+</div>
+
+<p>A final nonzero <code>$LASTEXITCODE</code> is preserved by the worker when the step returns. An explicit <code>exit N</code> is also honored. Earlier native failures can be overwritten by later native commands, so check each command or use the helper. If you intentionally handle a nonzero code and recover, return an explicit <code>exit 0</code> or reset <code>$global:LASTEXITCODE = 0</code> after verification. The JSON step's <code>SuccessExitCodes</code> controls final acceptance; <code>RebootExitCodes</code> must be a subset of it.</p>
+
+<p>The framework displays a restart reminder and returns 3010 when needed. It schedules no restart unless the hotfix 10 final-restart policy is explicitly enabled. Suppress automatic reboots in each installer so they cannot interrupt the checklist unexpectedly.</p>
+
+<h2>Parameters</h2>
+
+<p>In your step script:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="p">[</span><span class="k">CmdletBinding</span><span class="p">()]</span>
+<span class="k">param</span><span class="p">(</span>
+    <span class="p">[</span><span class="k">Parameter</span><span class="p">(</span><span class="k">Mandatory</span><span class="p">)]</span><span class="no">[string]</span><span class="nv">$MsiRelativePath</span><span class="p">,</span>
+    <span class="p">[</span><span class="k">Parameter</span><span class="p">(</span><span class="k">Mandatory</span><span class="p">)]</span><span class="no">[string]</span><span class="nv">$ExpectedFile</span>
+<span class="p">)</span>
+</code></pre>
+</div>
+
+<p>In that step's JSON entry:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="nt">"Script"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Examples/Step-InstallMsi.ps1"</span><span class="p">,</span>
+<span class="nt">"Parameters"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"MsiRelativePath"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Files/YourApplication.msi"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"ExpectedFile"</span><span class="p">:</span><span class="w"> </span><span class="s2">"C:/Program Files/Vendor/App/App.exe"</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>Parameters are passed as named PowerShell parameters, not evaluated as commands. Boolean JSON values can bind to boolean/switch parameters. Do not place passwords, tokens, or private keys in configuration or progress messages; request files and transcripts retain setup information.</p>
+
+<h2>Environment available to every step</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Variable</th>
+  <th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>SETUP<em>PACKAGE</em>ROOT</td>
+  <td>Absolute directory containing Start-DeviceSetup.ps1</td>
+</tr>
+<tr>
+  <td>SETUP<em>STEP</em>ID</td>
+  <td>Current JSON step ID</td>
+</tr>
+<tr>
+  <td>SETUP<em>RUN</em>DIRECTORY</td>
+  <td>This run's log and diagnostic directory</td>
+</tr>
+<tr>
+  <td>SETUP<em>PROGRESS</em>FILE</td>
+  <td>Internal current-step progress JSON path</td>
+</tr>
+</tbody>
+</table>
+
+<p>Use <code>$env:SETUP_PACKAGE_ROOT</code> to locate shared assets/installers. <code>$PSScriptRoot</code> inside a step refers to that step's own folder. Use the progress helper instead of writing progress JSON yourself.</p>
+
+<h2>Dependencies, failures, and retry</h2>
+
+<ul>
+<li>A step may depend only on <strong>earlier enabled</strong> step IDs.</li>
+<li>A failed/skipped dependency causes the dependent step to be skipped.</li>
+<li>With <code>StopOnRequiredFailure: false</code>, independent later steps can continue.</li>
+<li>With <code>StopOnRequiredFailure: true</code>, a required failure skips all remaining steps.</li>
+<li>Optional failures remain visibly failed but do not make the overall deployment fail if all required steps succeeded.</li>
+<li><strong>Retry unfinished</strong> resets only failed/skipped included steps. Unselected options are excluded. Successful steps remain completed. Dependencies are checked again.</li>
+<li>There is no unlimited automatic retry loop.</li>
+<li>A timeout always stops the run and disables in-window retry. The framework asks Windows to terminate the worker process tree; a service-owned MSI/custom installer operation may outlive that tree. Inspect device/installer state before restarting the workflow.</li>
+</ul>
+
+<h2>Completion and resume</h2>
+
+<p>With <code>ResumeCompletedSteps: true</code>, a successful step is remembered. Its fingerprint includes its script content, configured parameters, success/reboot codes, and dependency fingerprints. Changing a step or one of its declared dependencies causes affected work to run again. Changing only branding or wording does not.</p>
+
+<p>External installer contents and helper files imported by your script are <strong>not automatically fingerprinted</strong>. Bump <code>SetupVersion</code> when those inputs change and you want steps reconsidered. Detection inside each step remains essential. A saved success is a record of previous execution, not continuous compliance monitoring.</p>
+
+<h2>User-specific settings</h2>
+
+<p>These steps inherit SYSTEM. Reading or writing HKCU or APPDATA accesses the SYSTEM profile. Use your existing intentional user-context mechanism for settings that require the signed-in user; do not assume the visible window changes the worker's identity. This package does not introduce a separate user-context execution engine.</p>
+
+<h2>Examples supplied</h2>
+
+<ul>
+<li><code>Examples/Step-InstallMsi.ps1</code>: local MSI, no-restart install, log, and simple file verification. Replace file-presence detection with version/product detection as appropriate.</li>
+<li><code>Examples/Step-SetMachineSetting.ps1</code>: example machine-registry setting and verification.</li>
+</ul>
+
+<p>Neither example runs unless you explicitly reference it from the JSON configuration and launch <strong>-Live</strong>.</p>
+
+<h2>Optional app choices</h2>
+
+<p>Use Enabled=true, UserSelectable=true, Required=false to offer a script unchecked before the run. Required=false alone still runs automatically. Keep detection/idempotence inside optional scripts just as for required actions; selecting an app is not an installation check. All chosen scripts use the same SYSTEM worker and progress helpers. See <a href="#hotfix4">hotfix 4</a> for selection, dependency, retry, and remembered-decline behavior.</p>
+
+<h2>Supplied enterprise steps</h2>
+
+<p>See <a href="#enterprise">Enterprise steps</a> for configurable MSI installation with primary-log integration, Company Portal detection/installation, selective Office/OneDrive removal and Notepad installation. These scripts use the existing worker and do not replace your custom Steps folder.</p>
+
+<p>A successful worker may set <code>$global:SetupUiStepSummary</code> to a short plain-text result for the card and Results.json. See <a href="#hotfix10">Hotfix 10</a> for non-blocking skip codes and the final restart marker. A neutral skip does not satisfy a dependency.</p>
+</section><section id="deployment"><h1>Deployment and your first-logon workflow</h1>
+
+<h2>Keep the current launch approach</h2>
+
+<p>This package intentionally retains your <strong>SYSTEM + ServiceUI</strong> setup. It does not register scheduled tasks, change enrollment policies, replace ESP, or alter your current first-logon trigger.</p>
+
+<p>Stage the complete folder locally before your existing post-enrollment launch runs. The main window launches hidden child processes for the individual steps and polls their status. The window and workers inherit the original SYSTEM identity.</p>
+
+<h2>Direct ServiceUI command</h2>
+
+<p>From your existing SYSTEM process, after the intended user's desktop exists:</p>
+
+<div class="codehilite">
+<pre><span></span><code>ServiceUI.exe -process:explorer.exe C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe -NoLogo -NoProfile -STA -WindowStyle Hidden -ExecutionPolicy Bypass -File "C:\Program Files\YourCompany\DeviceSetup\Start-DeviceSetup.ps1" -ConfigPath "C:\Program Files\YourCompany\DeviceSetup\Config\Setup.json" -Live
+</code></pre>
+</div>
+
+<p>Use your actual Windows/install paths. <code>Run-Live-ServiceUI.cmd</code> uses variable-based Windows paths and expects <strong>x64 ServiceUI.exe</strong>, which resolves System32 to 64-bit PowerShell. Do not pass a Sysnative path to an x64 ServiceUI process. To use it, place your existing x64 ServiceUI.exe in <code>Tools</code>, then invoke the CMD from your SYSTEM deployment mechanism. Double-clicking it as a normal user does not grant SYSTEM privileges; the live-mode identity check will reject that run by default.</p>
+
+<p>The sample targets <code>explorer.exe</code>. Keep your existing session-selection logic if you support RDP, fast user switching, or multiple signed-in sessions. A process-name match is not a robust way to identify the intended employee on a multi-session computer.</p>
+
+<h2>Installation location and permissions</h2>
+
+<p>Use a local protected folder such as <code>C:\Program Files\YourCompany\DeviceSetup</code>. Preserve SYSTEM/Administrators write access and ordinary-user read/execute access. Scripts, XAML, executable files, and JSON control SYSTEM execution and must not be writable by standard users. Do not run the live package from an employee-writable Downloads/Desktop folder.</p>
+
+<p>Use your organization's approved script-signing/application-control approach. The sample commands use <code>ExecutionPolicy Bypass</code> for packaging convenience; this does not bypass WDAC/AppLocker or other enforcement policies.</p>
+
+<p>The UI intentionally has no Open File, Open Log, or browser-launch buttons; diagnostics are displayed as text and can be copied. Users can minimize the window while work runs. Close/Alt+F4 is ignored until the run finishes; this is a workflow behavior, not a kiosk/security boundary.</p>
+
+<h2>Intune integration</h2>
+
+<ol>
+<li>Package your completed folder with your normal Win32 packaging process.</li>
+<li>Use your existing SYSTEM staging/install script to copy it to a protected local folder.</li>
+<li>Detect that <strong>the framework is staged</strong>, using your existing version/file marker.</li>
+<li>Let your existing first-desktop/after-ESP trigger launch the ServiceUI command.</li>
+<li>Retain your completion/cleanup flow or use this package's completion records to avoid repeating successful work.</li>
+</ol>
+
+<p>Do not make an ESP-blocking staging app wait for these desktop-only steps. ESP must be able to finish before the first-desktop launcher can run. The framework's staging detection and the final-setup completion result are separate concerns.</p>
+
+<p>ServiceUI cannot show the popup before the target desktop/session exists. Keep your current enrollment-completion checks; a fixed sleep is not sufficient to identify the end of every provisioning scenario.</p>
+
+<h2>State and log locations</h2>
+
+<p>Default live location:</p>
+
+<div class="codehilite">
+<pre><span></span><code>C:\ProgramData\Company\PostEnrollmentSetupUI\Company.DeviceSetup\
+</code></pre>
+</div>
+
+<p><code>StateDirectory</code> is the configured parent; <code>SetupId</code> is appended automatically. In SYSTEM live mode, SYSTEM and Administrators retain full control. By default, the interactive user gets read-only access to the new run folder, plus folder-only navigation permissions on the package and Runs folders. Completion-state files do not inherit that reader grant. The configured parent itself is not re-permissioned. See <a href="#hotfix8">log access and existing-run repair</a>.</p>
+
+<table>
+<thead>
+<tr>
+  <th>File/folder</th>
+  <th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Completed-1.0.0.json</td>
+  <td>Success records and declined options for that SetupVersion</td>
+</tr>
+<tr>
+  <td>Runs/<timestamp-id>/SetupUI.log</td>
+  <td>Controller status transitions</td>
+</tr>
+<tr>
+  <td>Runs/<timestamp-id>/stepXX-attempt-N.log</td>
+  <td>Per-attempt PowerShell transcript</td>
+</tr>
+<tr>
+  <td>Runs/<timestamp-id>/*.request.json</td>
+  <td>Parameters and paths given to the step worker</td>
+</tr>
+<tr>
+  <td>Runs/<timestamp-id>/*.progress.json</td>
+  <td>Latest live detail/percentage</td>
+</tr>
+<tr>
+  <td>Runs/<timestamp-id>/*.result.json</td>
+  <td>Worker completion/error details</td>
+</tr>
+<tr>
+  <td>Runs/<timestamp-id>/Results.json</td>
+  <td>Overall outcome and per-step results</td>
+</tr>
+</tbody>
+</table>
+
+<p>Demo runs use <code>%LOCALAPPDATA%\PostEnrollmentSetupUI\Demo\Runs</code>. They never update live completion state.</p>
+
+<p>Completed work is skipped on later launches. With ResumeCompletedSteps=true, explicit declines are also remembered. If every enabled step is complete or declined with matching fingerprints, live mode exits without displaying a window. Incomplete/failed automatic work is reconsidered; incomplete/failed user-selectable work is offered unchecked again. This is once-per-device behavior, not once per employee profile.</p>
+
+<p>Logs are not automatically deleted. Apply your normal endpoint log-retention policy. Never write credentials to messages, parameters, or transcripts.</p>
+
+<h2>Offering optional apps again</h2>
+
+<p>Add <strong>-ChooseOptional</strong> to the existing SYSTEM + ServiceUI command to reoffer unfinished optional apps. Completed work stays completed. User choices are made before any step runs; automatic steps wait until Start setup is selected when choices are available. Old configurations without UserSelectable keep automatic execution. See <a href="#hotfix4">hotfix 4</a> for details.</p>
+
+<p>The script sets a process-wide AppUserModelID before presenting the WPF window. Run it in its own powershell.exe process. Keep -WindowStyle Hidden to avoid showing a separate console window. The window icon can be customized with Branding.IconPath; the underlying executable remains powershell.exe.</p>
+
+<h2>Resetting for a controlled retest</h2>
+
+<p>Use <strong>-ResetState -Live</strong> with the same SYSTEM launcher to archive the completion file and reconsider all enabled steps. This can repeat installations/configuration, so use it only when you intend a full retest. It does not uninstall anything. The normal in-window retry leaves successful steps untouched.</p>
+
+<p>For a new intended setup revision, change <code>SetupVersion</code>. Changing only <code>SetupId</code> also creates a separate state namespace, so keep IDs stable unless you intend a new workflow.</p>
+
+<h2>Return codes</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Exit code</th>
+  <th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>0</td>
+  <td>All required steps succeeded; optional failures may still be present in Results.json</td>
+</tr>
+<tr>
+  <td>1</td>
+  <td>A required step failed/skipped, or setup encountered a configuration/controller error</td>
+</tr>
+<tr>
+  <td>3010</td>
+  <td>Required work succeeded and a successful step requested reboot; by default only a reminder is shown. The opt-in hotfix 10 policy can also schedule it</td>
+</tr>
+<tr>
+  <td>1618</td>
+  <td>Another instance of this package is already running</td>
+</tr>
+<tr>
+  <td>2 from CMD wrapper</td>
+  <td>ServiceUI.exe is missing</td>
+</tr>
+</tbody>
+</table>
+
+<p>The default window remains open at the result screen until <strong>Done</strong> is selected; the parent launch does not finish until then. To close automatically after full success, set <code>AutoCloseSuccessSeconds</code>, for example 10. Warnings/failures remain visible. A reboot request is retained across launches until the detected Windows boot time changes.</p>
+
+<h2>Updating the package</h2>
+
+<p>Keep your production scripts/config and review changes before replacing the framework. Retest using the actual ServiceUI command, standard-user desktop, screen scaling, app-control policies, and your intended post-ESP timing. Do not upgrade a package while one of its live steps is running.</p>
+
+<p>For the new first-logon launchers and forced-restart behavior, see <a href="#hotfix10">Hotfix 10</a>.</p>
+</section><section id="testing"><h1>Testing and troubleshooting</h1>
+
+<h2>What has and has not been tested</h2>
+
+<p>The authoring environment is Linux. Validation here covers PowerShell source syntax with a tree-sitter parser, JSON/schema consistency, package paths/dependencies, XAML XML/resource/name references, documentation links, and the HTML design reference. These are useful static checks, not a substitute for the Windows WPF runtime.</p>
+
+<p><strong>Not executed here:</strong> Windows PowerShell 5.1, WPF XAML loading/rendering, the C# model under .NET Framework, ServiceUI session injection, SYSTEM execution, installer process termination, and actual application installs. No production-readiness or successful deployment claim is implied.</p>
+
+<h2>Windows smoke tests</h2>
+
+<p>From the extracted folder:</p>
+
+<div class="codehilite">
+<pre><span></span><code><span class="n">powershell</span><span class="p">.</span><span class="n">exe</span> <span class="n">-NoProfile</span> <span class="n">-STA</span> <span class="n">-ExecutionPolicy</span> <span class="n">Bypass</span> <span class="o">-File</span> <span class="p">.\</span><span class="n">Tests</span><span class="p">\</span><span class="nb">Invoke-SmokeTests</span><span class="p">.</span><span class="n">ps1</span>
+</code></pre>
+</div>
+
+<p>The script parses the PowerShell files with Microsoft's actual PowerShell parser, loads all supplied configurations, exercises outcome/dependency logic, compiles the C# view model and taskbar helper (without invoking the shell API), and loads/measures the WPF layout with ten step models using the same theme-loading path as the application. It checks light, dark, all-ten, and custom-color cases, including brush types and the Done button's accent background. It also runs temporary worker fixtures for success, failure, explicit 3010, helper-based 3010, and progress updates. It does not display the main window, install an app, touch HKLM, or call ServiceUI. Its temporary files are removed afterward.</p>
+
+<p>Hotfix 2 adds a JSON persistence regression check: create Results.json in a temporary folder containing spaces, overwrite it twice, verify the latest data and check for leftover files. The worker success fixture also publishes two progress updates and verifies the second one. These tests exercise the File.Replace branch that the original tests missed. Windows PowerShell converts a plain $null to an empty string for the backup filename; the fix passes [NullString]::Value to supply a true null. This preserves the existing replacement/retry behavior without creating a backup file. These runtime checks have not been executed in the Linux authoring environment.</p>
+
+<p>Theme hotfix 1 applies configured colors to the XAML SolidColorBrush elements before loading the window. This avoids passing PowerShell-created objects through ResourceDictionary's object-valued indexer. The original smoke test loaded only the unmodified XAML and did not exercise this runtime theme path. The expanded Windows tests have not been executed in the Linux authoring environment.</p>
+
+<h2>Visual pilot</h2>
+
+<ol>
+<li>Run <code>Run-Demo.cmd</code> as a regular user. Confirm both optional extras are unchecked. Select one and choose Start setup; required steps should then begin.</li>
+<li>Confirm the window fits the display and remains responsive throughout the demo.</li>
+<li>Confirm step 3 shows a failure and step 4 is skipped due to the dependency.</li>
+<li>Expand the error; verify the message is legible and selectable.</li>
+<li>Choose Retry unfinished. Only failed/skipped steps should run; all steps should then finish.
+Confirm no error popup appears and Results.json in the displayed log folder contains Outcome=Success and the latest step results.</li>
+<li>Confirm Done closes the window. During active work, Close/Alt+F4 should leave the workflow running; minimize should work.</li>
+<li>Run the Dark-Demo and All10-Demo configurations shown in README.md.</li>
+<li>Test at your normal laptop resolution, 100/125/150/200% scaling, and your normal docked monitor setup. The step list should scroll, and the footer must remain reachable.</li>
+<li>Add your actual logo/banner and inspect sizing, long welcome text, and long step labels. With Uniform + DownOnly, a small banner should remain centered without enlargement and a large banner should shrink without cropping. Check UniformToFill + Both only if you want the original fill/crop behavior. These banner layout checks require a Windows visual pilot; they were not executed here.</li>
+</ol>
+
+<h2>Hotfix 4 selection and icon checks</h2>
+
+<p>The smoke tests exercise selection prerequisites, rejection without partial mutation, selecting no apps, exclusion from retry, remembered declines, ChooseOptional, legacy config defaults, and invalid required/optional dependencies. They also check that the built-in icon resolves while measuring the WPF window. These Windows tests are supplied but have not been executed here.</p>
+
+<ol>
+<li>Run the short Config/Optional-Demo.json demo. Start with no options checked; only the automatic step should run and the other two should say Not selected without warning.</li>
+<li>Relaunch the demo and select only the last option. Start setup should stay on the selection screen and explain the prerequisite. Select both, start, and retry the deliberately failed last option; only that failed option should retry.</li>
+<li>Confirm choices lock after Start setup. Confirm elapsed time begins with execution, not while the user chooses. Verify keyboard selection with Tab/Space and both themes.</li>
+<li>Under your actual SYSTEM + ServiceUI launcher, use harmless live step scripts. Decline an app, finish required work, then relaunch: the window should not reappear for the matching declined app. Relaunch with -ChooseOptional and verify it is offered unchecked, while completed work is retained.</li>
+<li>Test a configuration containing only user-selectable steps and choose none: progress should finish without division by zero. Test an interrupted selected app: on relaunch it should be offered unchecked.</li>
+<li>Check the title-bar, taskbar and Alt+Tab icon using the default and your own multi-resolution ICO/PNG. Launch a separate ordinary PowerShell window and confirm taskbar grouping is separate. Validate both the normal-user demo and SYSTEM + ServiceUI. The PowerShell console should be hidden when using the supplied launchers. Task Manager will still show powershell.exe.</li>
+<li>Check your transparent banner against light and dark window backgrounds. CanvasBrush should blend it into the window without changing the accent controls.</li>
+</ol>
+
+<h2>SYSTEM/ServiceUI pilot</h2>
+
+<ol>
+<li>Work on a disposable/test device with your normal application-control policies.</li>
+<li>Put a harmless real action in one step, such as verifying an existing file. Disable the other steps. Keep RequireSystemForLive true.</li>
+<li>Stage the full package in a protected local folder and use your existing SYSTEM + ServiceUI first-desktop trigger.</li>
+<li>Confirm the expected logged-on session sees the UI and the step transcript reports the expected identity.</li>
+<li>Verify success, a deliberate throw, a declared dependency failure, and an optional failure.</li>
+<li>Run the package again. Matching successful steps should be skipped; if all work is complete, no window should appear.</li>
+<li>Change the test step's contents and rerun. Its fingerprint should change and the step should run again.</li>
+<li>Test a short time limit with a harmless sleeping step. The worker should be terminated, remaining steps skipped, and in-window retry hidden.</li>
+<li>Test reboot-required behavior using a harmless <code>exit 3010</code> step. With EnforceFinalRestart omitted or false, confirm no reboot is initiated and the caller receives 3010 after Done.</li>
+<li>Test an interrupted run/logoff and a second simultaneous launch. Confirm retry/resume behavior and the 1618 duplicate-instance result.</li>
+</ol>
+
+<p>Only then add the real application/configuration work and validate each action's detection and idempotence. Custom actions can impose limitations that the UI cannot infer.</p>
+
+<h2>Troubleshooting</h2>
+
+<table>
+<thead>
+<tr>
+  <th>Symptom</th>
+  <th>Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>Optional app runs automatically</td>
+  <td>Required=false only affects failure handling. Set Enabled=true, UserSelectable=true, Required=false to offer an unchecked choice.</td>
+</tr>
+<tr>
+  <td>Declined optional app is not offered again</td>
+  <td>Add -ChooseOptional to the existing live launch; this retains completed work.</td>
+</tr>
+<tr>
+  <td>PowerShell icon still appears</td>
+  <td>Confirm the new UI/TaskbarIdentity.cs and XAML are deployed; launch in a fresh dedicated powershell.exe with -WindowStyle Hidden. Check whether the icon belongs to a separate console or an old pinned shortcut. Task Manager still identifies the host as powershell.exe.</td>
+</tr>
+<tr>
+  <td>No window when launched by Intune</td>
+  <td>Confirm the call occurs after desktop readiness; confirm ServiceUI/session target and use your existing known-good launcher. A direct SYSTEM launch without ServiceUI is not interactive.</td>
+</tr>
+<tr>
+  <td>Live run says SYSTEM is required</td>
+  <td>ServiceUI does not elevate an ordinary user. Invoke from your existing SYSTEM task/deployment.</td>
+</tr>
+<tr>
+  <td>Powershell host/STA error</td>
+  <td>Use 64-bit Windows PowerShell 5.1 with -STA. Use Sysnative from a 32-bit caller.</td>
+</tr>
+<tr>
+  <td>Window closes immediately / hidden startup failure</td>
+  <td>Run Validate-Config.cmd, then launch the PS1 from a visible PowerShell console. Check JSON paths, image existence, runtime version, and application-control policy.</td>
+</tr>
+<tr>
+  <td><code>#FF2563EB is not a valid value for property Background</code></td>
+  <td>Install theme hotfix 1: replace Start-DeviceSetup.ps1 and Core/Setup.Common.ps1 together. Keep configured colors as #RRGGBB. The FF prefix in the error is WPF's opacity channel; the hex color is valid.</td>
+</tr>
+<tr>
+  <td><code>Exception calling "Replace" with "3" argument(s): The path is not of a legal form</code> after retry</td>
+  <td>Install hotfix 2 by replacing Core/Setup.Common.ps1. The JSON writer needs [NullString]::Value for File.Replace's backup filename. The original generic popup title can say "could not start" even for a later runtime error.</td>
+</tr>
+<tr>
+  <td>A supplied step fails instantly</td>
+  <td>Placeholder scripts deliberately throw until you replace their code.</td>
+</tr>
+<tr>
+  <td>Script works interactively but fails here</td>
+  <td>Check SYSTEM's profile, working directory, network identity, permissions, mapped drives, and bitness. Use local files and explicit paths.</td>
+</tr>
+<tr>
+  <td>State did not rerun a completed step</td>
+  <td>Match SetupId/SetupVersion; inspect the completion record. For intentional full retest use -ResetState; for a new revision bump SetupVersion.</td>
+</tr>
+<tr>
+  <td>Changed installer file did not rerun a step</td>
+  <td>External payload/helper contents are not fingerprinted. Bump SetupVersion or change the step/parameters; keep real detection in your script.</td>
+</tr>
+<tr>
+  <td>UI reports success after an EXE failed</td>
+  <td>Check that every native result is tested; prefer Invoke-SetupProcess. Outputting false/error text is not a failure signal.</td>
+</tr>
+<tr>
+  <td>Step remains running after its installer seems done</td>
+  <td>Ensure your script returns and all waited-for child processes exit. Inspect the transcript and installer process tree.</td>
+</tr>
+<tr>
+  <td>Timeout still leaves installer activity</td>
+  <td>Some installs continue inside a Windows service. Inspect/recover that operation before restarting the workflow.</td>
+</tr>
+<tr>
+  <td>Progress jumps or shows 100% with a failure</td>
+  <td>Overall progress counts finished steps, including failed/skipped work. Status color and text indicate the outcome.</td>
+</tr>
+<tr>
+  <td>Retry button is missing</td>
+  <td>AllowRetry must be true; a timeout/controller error intentionally disables retry.</td>
+</tr>
+<tr>
+  <td>Dark content, light title bar</td>
+  <td>The content theme is custom WPF; the native title bar is left to Windows.</td>
+</tr>
+<tr>
+  <td>Banner appears enlarged, zoomed or cropped</td>
+  <td>Use hotfix 3 with Branding.BannerStretch=Uniform and BannerStretchDirection=DownOnly (the defaults). Unused header space now matches the window background. Lower BannerHeight to reduce vertical space.</td>
+</tr>
+<tr>
+  <td>Completion state is unreadable</td>
+  <td>Inspect/archive the state file explicitly. The framework stops rather than silently repeating production actions.</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Sources used for platform behavior</h2>
+
+<ul>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.windows.window.icon">Microsoft: Window.Icon</a></li>
+<li><a href="https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-setcurrentprocessexplicitappusermodelid">Microsoft: SetCurrentProcessExplicitAppUserModelID</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/desktop/wpf/advanced/threading-model">Microsoft: WPF threading model</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.stretch">Microsoft: WPF Stretch modes</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.windows.controls.stretchdirection">Microsoft: WPF StretchDirection and DownOnly</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.io.file.replace?view=netframework-4.8.1">Microsoft: File.Replace and the nullable backup filename</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.management.automation.language.nullstring">Microsoft: NullString passes null to a .NET string parameter</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.windows.controls.control.background?view=netframework-4.8.1">Microsoft: WPF Control.Background requires a Brush</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.solidcolorbrush?view=netframework-4.8.1">Microsoft: SolidColorBrush and hexadecimal color formats</a></li>
+<li><a href="https://learn.microsoft.com/en-us/dotnet/desktop/wpf/graphics-multimedia/animation-overview">Microsoft: WPF animation overview</a></li>
+<li><a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-process?view=powershell-5.1">Microsoft: Start-Process, Windows PowerShell 5.1</a></li>
+<li><a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.host/start-transcript?view=powershell-5.1">Microsoft: Start-Transcript, Windows PowerShell 5.1</a></li>
+<li><a href="https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables?view=powershell-5.1">Microsoft: automatic variables and LASTEXITCODE</a></li>
+</ul>
+
+<p>The window, configuration format, step runner, and documentation in this package are a custom implementation, not a Microsoft or PSADT product.</p>
+
+<h2>Enterprise step pack (hotfix 5)</h2>
+
+<p>Run Tests/Invoke-EnterpriseHelperTests.ps1 in a fresh 64-bit Windows PowerShell process. It uses temporary files and mocked app deployment commands to check concurrent log writes, user-scoped app health detection, provisioning-versus-registration, idempotency, and missing-license rejection. It makes no live app, registry or scheduled-task changes. These tests have not been run in the Linux authoring environment. Follow the separate Windows pilot matrix in <a href="#enterprise">Enterprise steps</a> for real MSI, AppX, Office and OneDrive validation.</p>
+
+<h2>UI model loading (hotfix 6)</h2>
+
+<p>The Windows smoke suite now loads a simulated legacy model first, verifies the current source loads independently, checks unchanged/changed source caching and old-file diagnostics, and initializes the five automatic enterprise steps. These regression tests are supplied but not executed in the Linux build environment. See <a href="#hotfix6">Hotfix 6</a>.</p>
+
+<h2>Log access (hotfix 8)</h2>
+
+<p>Run Tests/Invoke-LogAccessTests.ps1 from elevated Windows PowerShell for temporary-directory NTFS inheritance and read-only checks. It does not touch production state or logs. These Windows tests are supplied but unexecuted in the build environment. Verify ordinary File Explorer can open logs and cannot save edits. See <a href="#hotfix8">Hotfix 8</a>.</p>
+
+<h2>WinGet fallback (hotfix 9)</h2>
+
+<p>Run <code>Tests/Invoke-WinGetFallbackTests.ps1</code> in a fresh 64-bit Windows PowerShell 5.1
+process. It uses mocks to check both apps: healthy-app skip, verified WinGet
+success, native failure with an app now present, success without registration,
+offline fallback/verification failure, inventory errors and uncertain cancellation.
+It does not execute installers or scheduled tasks. These runtime tests are supplied
+but were not executed in the Linux build environment.</p>
+
+<p>Use <code>Config/StoreApps-WinGet-Example.json</code> for the focused live pilot after staging
+its payloads. See <a href="#hotfix9">Hotfix 9</a> for upgrade instructions, the test matrix,
+user-side logs, policy handling and the distinction between Demo and Live.</p>
+
+<h2>Enterprise first-logon setup (hotfix 10)</h2>
+
+<p>Run <code>Tests/Invoke-ProvisioningTests.ps1</code> and <code>Tests/Invoke-EnterpriseWorkflowMocks.ps1</code> in fresh x64 Windows PowerShell 5.1 processes. The first covers naming, encryption verdicts, skip/resume, and restart scheduling with a mocked native process. The second covers Office inventory/removal/receipts, WinGet denial, and Google updater state transitions with platform operations replaced by fixtures. Neither restarts or installs anything. Then pilot the <a href="#hotfix10">live scenarios</a> on a disposable enrollment device. Static validation in this build does not substitute for Windows runtime verification.</p>
+</section></main></div></body></html>

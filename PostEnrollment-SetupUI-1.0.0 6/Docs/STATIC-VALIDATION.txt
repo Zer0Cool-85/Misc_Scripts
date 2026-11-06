@@ -1,0 +1,585 @@
+Enterprise first-logon package · hotfix 10 · 2026-11-06
+
+PASS Grammar parse Core/Invoke-SetupStep.ps1
+PASS Windows script encoding Core/Invoke-SetupStep.ps1
+PASS Grammar parse Core/Setup.Common.ps1
+PASS Windows script encoding Core/Setup.Common.ps1
+PASS Grammar parse EnterpriseSteps/Enterprise.Common.ps1
+PASS Windows script encoding EnterpriseSteps/Enterprise.Common.ps1
+PASS Grammar parse EnterpriseSteps/Invoke-MachinePackageUpdates.ps1
+PASS Windows script encoding EnterpriseSteps/Invoke-MachinePackageUpdates.ps1
+PASS Grammar parse EnterpriseSteps/Invoke-UserAction.ps1
+PASS Windows script encoding EnterpriseSteps/Invoke-UserAction.ps1
+PASS Grammar parse EnterpriseSteps/Provisioning.Common.ps1
+PASS Windows script encoding EnterpriseSteps/Provisioning.Common.ps1
+PASS Grammar parse EnterpriseSteps/Step-CheckBitLocker.ps1
+PASS Windows script encoding EnterpriseSteps/Step-CheckBitLocker.ps1
+PASS Grammar parse EnterpriseSteps/Step-CheckRequiredServices.ps1
+PASS Windows script encoding EnterpriseSteps/Step-CheckRequiredServices.ps1
+PASS Grammar parse EnterpriseSteps/Step-DetectCompanyPortal.ps1
+PASS Windows script encoding EnterpriseSteps/Step-DetectCompanyPortal.ps1
+PASS Grammar parse EnterpriseSteps/Step-GoogleWorkspaceApps.ps1
+PASS Windows script encoding EnterpriseSteps/Step-GoogleWorkspaceApps.ps1
+PASS Grammar parse EnterpriseSteps/Step-InstallCompanyPortal.ps1
+PASS Windows script encoding EnterpriseSteps/Step-InstallCompanyPortal.ps1
+PASS Grammar parse EnterpriseSteps/Step-InstallMsi.ps1
+PASS Windows script encoding EnterpriseSteps/Step-InstallMsi.ps1
+PASS Grammar parse EnterpriseSteps/Step-InstallNotepad.ps1
+PASS Windows script encoding EnterpriseSteps/Step-InstallNotepad.ps1
+PASS Grammar parse EnterpriseSteps/Step-NameDevice.ps1
+PASS Windows script encoding EnterpriseSteps/Step-NameDevice.ps1
+PASS Grammar parse EnterpriseSteps/Step-RemoveOemApps.ps1
+PASS Windows script encoding EnterpriseSteps/Step-RemoveOemApps.ps1
+PASS Grammar parse EnterpriseSteps/Step-RemovePreinstalledOfficeOneDrive.ps1
+PASS Windows script encoding EnterpriseSteps/Step-RemovePreinstalledOfficeOneDrive.ps1
+PASS Grammar parse EnterpriseSteps/Step-RequireRestart.ps1
+PASS Windows script encoding EnterpriseSteps/Step-RequireRestart.ps1
+PASS Grammar parse EnterpriseSteps/Step-UpdateOtherApps.ps1
+PASS Windows script encoding EnterpriseSteps/Step-UpdateOtherApps.ps1
+PASS Grammar parse EnterpriseSteps/Test-EnterpriseConfiguration.ps1
+PASS Windows script encoding EnterpriseSteps/Test-EnterpriseConfiguration.ps1
+PASS Grammar parse Examples/Step-InstallMsi.ps1
+PASS Windows script encoding Examples/Step-InstallMsi.ps1
+PASS Grammar parse Examples/Step-SetMachineSetting.ps1
+PASS Windows script encoding Examples/Step-SetMachineSetting.ps1
+PASS Grammar parse Start-DeviceSetup.ps1
+PASS Windows script encoding Start-DeviceSetup.ps1
+PASS Grammar parse Steps/Step-01.ps1
+PASS Windows script encoding Steps/Step-01.ps1
+PASS Grammar parse Steps/Step-02.ps1
+PASS Windows script encoding Steps/Step-02.ps1
+PASS Grammar parse Steps/Step-03.ps1
+PASS Windows script encoding Steps/Step-03.ps1
+PASS Grammar parse Steps/Step-04.ps1
+PASS Windows script encoding Steps/Step-04.ps1
+PASS Grammar parse Steps/Step-05.ps1
+PASS Windows script encoding Steps/Step-05.ps1
+PASS Grammar parse Steps/Step-06.ps1
+PASS Windows script encoding Steps/Step-06.ps1
+PASS Grammar parse Steps/Step-07.ps1
+PASS Windows script encoding Steps/Step-07.ps1
+PASS Grammar parse Steps/Step-08.ps1
+PASS Windows script encoding Steps/Step-08.ps1
+PASS Grammar parse Steps/Step-09.ps1
+PASS Windows script encoding Steps/Step-09.ps1
+PASS Grammar parse Steps/Step-10.ps1
+PASS Windows script encoding Steps/Step-10.ps1
+PASS Grammar parse Tests/Invoke-EnterpriseHelperTests.ps1
+PASS Windows script encoding Tests/Invoke-EnterpriseHelperTests.ps1
+PASS Grammar parse Tests/Invoke-EnterpriseWorkflowMocks.ps1
+PASS Windows script encoding Tests/Invoke-EnterpriseWorkflowMocks.ps1
+PASS Grammar parse Tests/Invoke-LogAccessTests.ps1
+PASS Windows script encoding Tests/Invoke-LogAccessTests.ps1
+PASS Grammar parse Tests/Invoke-ProvisioningTests.ps1
+PASS Windows script encoding Tests/Invoke-ProvisioningTests.ps1
+PASS Grammar parse Tests/Invoke-SmokeTests.ps1
+PASS Windows script encoding Tests/Invoke-SmokeTests.ps1
+PASS Grammar parse Tests/Invoke-WinGetFallbackTests.ps1
+PASS Windows script encoding Tests/Invoke-WinGetFallbackTests.ps1
+PASS Grammar parse Tools/Grant-SetupLogReadAccess.ps1
+PASS Windows script encoding Tools/Grant-SetupLogReadAccess.ps1
+PASS Grammar parse Tools/Stage-WinGetClient.ps1
+PASS Windows script encoding Tools/Stage-WinGetClient.ps1
+PASS Grammar parse UI/StepViewModel.cs
+PASS Grammar parse UI/TaskbarIdentity.cs
+PASS Windows CMD line endings Run-Inventory-Live-ServiceUI.cmd
+PASS Windows CMD line endings Run-Live-ServiceUI.cmd
+PASS Windows CMD line endings Run-FirstLogon-Demo.cmd
+PASS Windows CMD line endings Run-FirstLogon-Live-ServiceUI.cmd
+PASS Windows CMD line endings Run-Demo.cmd
+PASS Windows CMD line endings Validate-Config.cmd
+PASS Windows CMD line endings Run-Enterprise-Demo.cmd
+PASS Configuration schema All10-Demo.json
+PASS Unique ID All10-Demo.json/step01
+PASS Enabled relative script All10-Demo.json/step01
+PASS All JSON parameters declared by script All10-Demo.json/step01
+PASS Earlier enabled prerequisites All10-Demo.json/step01
+PASS Distinct outcome codes All10-Demo.json/step01
+PASS Unique ID All10-Demo.json/step02
+PASS Enabled relative script All10-Demo.json/step02
+PASS All JSON parameters declared by script All10-Demo.json/step02
+PASS Earlier enabled prerequisites All10-Demo.json/step02
+PASS Distinct outcome codes All10-Demo.json/step02
+PASS Unique ID All10-Demo.json/step03
+PASS Enabled relative script All10-Demo.json/step03
+PASS All JSON parameters declared by script All10-Demo.json/step03
+PASS Earlier enabled prerequisites All10-Demo.json/step03
+PASS Distinct outcome codes All10-Demo.json/step03
+PASS Unique ID All10-Demo.json/step04
+PASS Enabled relative script All10-Demo.json/step04
+PASS All JSON parameters declared by script All10-Demo.json/step04
+PASS Earlier enabled prerequisites All10-Demo.json/step04
+PASS Distinct outcome codes All10-Demo.json/step04
+PASS Unique ID All10-Demo.json/step05
+PASS Enabled relative script All10-Demo.json/step05
+PASS All JSON parameters declared by script All10-Demo.json/step05
+PASS Earlier enabled prerequisites All10-Demo.json/step05
+PASS Distinct outcome codes All10-Demo.json/step05
+PASS Unique ID All10-Demo.json/step06
+PASS Enabled relative script All10-Demo.json/step06
+PASS All JSON parameters declared by script All10-Demo.json/step06
+PASS Earlier enabled prerequisites All10-Demo.json/step06
+PASS Distinct outcome codes All10-Demo.json/step06
+PASS Unique ID All10-Demo.json/step07
+PASS Enabled relative script All10-Demo.json/step07
+PASS All JSON parameters declared by script All10-Demo.json/step07
+PASS Earlier enabled prerequisites All10-Demo.json/step07
+PASS Distinct outcome codes All10-Demo.json/step07
+PASS Unique ID All10-Demo.json/step08
+PASS Enabled relative script All10-Demo.json/step08
+PASS All JSON parameters declared by script All10-Demo.json/step08
+PASS Earlier enabled prerequisites All10-Demo.json/step08
+PASS Distinct outcome codes All10-Demo.json/step08
+PASS Unique ID All10-Demo.json/step09
+PASS Enabled relative script All10-Demo.json/step09
+PASS All JSON parameters declared by script All10-Demo.json/step09
+PASS Earlier enabled prerequisites All10-Demo.json/step09
+PASS Distinct outcome codes All10-Demo.json/step09
+PASS Unique ID All10-Demo.json/step10
+PASS Enabled relative script All10-Demo.json/step10
+PASS All JSON parameters declared by script All10-Demo.json/step10
+PASS Earlier enabled prerequisites All10-Demo.json/step10
+PASS Distinct outcome codes All10-Demo.json/step10
+PASS Step limit All10-Demo.json
+PASS Configuration schema Dark-Demo.json
+PASS Unique ID Dark-Demo.json/step01
+PASS Enabled relative script Dark-Demo.json/step01
+PASS All JSON parameters declared by script Dark-Demo.json/step01
+PASS Earlier enabled prerequisites Dark-Demo.json/step01
+PASS Distinct outcome codes Dark-Demo.json/step01
+PASS Unique ID Dark-Demo.json/step02
+PASS Enabled relative script Dark-Demo.json/step02
+PASS All JSON parameters declared by script Dark-Demo.json/step02
+PASS Earlier enabled prerequisites Dark-Demo.json/step02
+PASS Distinct outcome codes Dark-Demo.json/step02
+PASS Unique ID Dark-Demo.json/step03
+PASS Enabled relative script Dark-Demo.json/step03
+PASS All JSON parameters declared by script Dark-Demo.json/step03
+PASS Earlier enabled prerequisites Dark-Demo.json/step03
+PASS Distinct outcome codes Dark-Demo.json/step03
+PASS Unique ID Dark-Demo.json/step04
+PASS Enabled relative script Dark-Demo.json/step04
+PASS All JSON parameters declared by script Dark-Demo.json/step04
+PASS Earlier enabled prerequisites Dark-Demo.json/step04
+PASS Distinct outcome codes Dark-Demo.json/step04
+PASS Unique ID Dark-Demo.json/step05
+PASS Enabled relative script Dark-Demo.json/step05
+PASS All JSON parameters declared by script Dark-Demo.json/step05
+PASS Earlier enabled prerequisites Dark-Demo.json/step05
+PASS Distinct outcome codes Dark-Demo.json/step05
+PASS Unique ID Dark-Demo.json/step06
+PASS Enabled relative script Dark-Demo.json/step06
+PASS All JSON parameters declared by script Dark-Demo.json/step06
+PASS Earlier enabled prerequisites Dark-Demo.json/step06
+PASS Distinct outcome codes Dark-Demo.json/step06
+PASS Unique ID Dark-Demo.json/step07
+PASS Enabled relative script Dark-Demo.json/step07
+PASS All JSON parameters declared by script Dark-Demo.json/step07
+PASS Earlier enabled prerequisites Dark-Demo.json/step07
+PASS Distinct outcome codes Dark-Demo.json/step07
+PASS Unique ID Dark-Demo.json/step08
+PASS Unique ID Dark-Demo.json/step09
+PASS Unique ID Dark-Demo.json/step10
+PASS Step limit Dark-Demo.json
+PASS Configuration schema Enterprise-Example.json
+PASS Unique ID Enterprise-Example.json/cleanup
+PASS Enabled relative script Enterprise-Example.json/cleanup
+PASS All JSON parameters declared by script Enterprise-Example.json/cleanup
+PASS Earlier enabled prerequisites Enterprise-Example.json/cleanup
+PASS Distinct outcome codes Enterprise-Example.json/cleanup
+PASS Unique ID Enterprise-Example.json/msi
+PASS Enabled relative script Enterprise-Example.json/msi
+PASS All JSON parameters declared by script Enterprise-Example.json/msi
+PASS Earlier enabled prerequisites Enterprise-Example.json/msi
+PASS Distinct outcome codes Enterprise-Example.json/msi
+PASS Unique ID Enterprise-Example.json/portal_check
+PASS Enabled relative script Enterprise-Example.json/portal_check
+PASS All JSON parameters declared by script Enterprise-Example.json/portal_check
+PASS Earlier enabled prerequisites Enterprise-Example.json/portal_check
+PASS Distinct outcome codes Enterprise-Example.json/portal_check
+PASS Unique ID Enterprise-Example.json/portal_install
+PASS Enabled relative script Enterprise-Example.json/portal_install
+PASS All JSON parameters declared by script Enterprise-Example.json/portal_install
+PASS Earlier enabled prerequisites Enterprise-Example.json/portal_install
+PASS Distinct outcome codes Enterprise-Example.json/portal_install
+PASS Unique ID Enterprise-Example.json/notepad
+PASS Enabled relative script Enterprise-Example.json/notepad
+PASS All JSON parameters declared by script Enterprise-Example.json/notepad
+PASS Earlier enabled prerequisites Enterprise-Example.json/notepad
+PASS Distinct outcome codes Enterprise-Example.json/notepad
+PASS Step limit Enterprise-Example.json
+PASS Configuration schema Enterprise-FirstLogon.json
+PASS Unique ID Enterprise-FirstLogon.json/cleanup
+PASS Enabled relative script Enterprise-FirstLogon.json/cleanup
+PASS All JSON parameters declared by script Enterprise-FirstLogon.json/cleanup
+PASS Earlier enabled prerequisites Enterprise-FirstLogon.json/cleanup
+PASS Distinct outcome codes Enterprise-FirstLogon.json/cleanup
+PASS Unique ID Enterprise-FirstLogon.json/oem
+PASS Enabled relative script Enterprise-FirstLogon.json/oem
+PASS All JSON parameters declared by script Enterprise-FirstLogon.json/oem
+PASS Earlier enabled prerequisites Enterprise-FirstLogon.json/oem
+PASS Distinct outcome codes Enterprise-FirstLogon.json/oem
+PASS Unique ID Enterprise-FirstLogon.json/name
+PASS Enabled relative script Enterprise-FirstLogon.json/name
+PASS All JSON parameters declared by script Enterprise-FirstLogon.json/name
+PASS Earlier enabled prerequisites Enterprise-FirstLogon.json/name
+PASS Distinct outcome codes Enterprise-FirstLogon.json/name
+PASS Unique ID Enterprise-FirstLogon.json/google
+PASS Enabled relative script Enterprise-FirstLogon.json/google
+PASS All JSON parameters declared by script Enterprise-FirstLogon.json/google
+PASS Earlier enabled prerequisites Enterprise-FirstLogon.json/google
+PASS Distinct outcome codes Enterprise-FirstLogon.json/google
+PASS Unique ID Enterprise-FirstLogon.json/portal_check
+PASS Enabled relative script Enterprise-FirstLogon.json/portal_check
+PASS All JSON parameters declared by script Enterprise-FirstLogon.json/portal_check
+PASS Earlier enabled prerequisites Enterprise-FirstLogon.json/portal_check
+PASS Distinct outcome codes Enterprise-FirstLogon.json/portal_check
+PASS Unique ID Enterprise-FirstLogon.json/portal_install
+PASS Enabled relative script Enterprise-FirstLogon.json/portal_install
+PASS All JSON parameters declared by script Enterprise-FirstLogon.json/portal_install
+PASS Earlier enabled prerequisites Enterprise-FirstLogon.json/portal_install
+PASS Distinct outcome codes Enterprise-FirstLogon.json/portal_install
+PASS Unique ID Enterprise-FirstLogon.json/notepad
+PASS Enabled relative script Enterprise-FirstLogon.json/notepad
+PASS All JSON parameters declared by script Enterprise-FirstLogon.json/notepad
+PASS Earlier enabled prerequisites Enterprise-FirstLogon.json/notepad
+PASS Distinct outcome codes Enterprise-FirstLogon.json/notepad
+PASS Unique ID Enterprise-FirstLogon.json/bitlocker
+PASS Enabled relative script Enterprise-FirstLogon.json/bitlocker
+PASS All JSON parameters declared by script Enterprise-FirstLogon.json/bitlocker
+PASS Earlier enabled prerequisites Enterprise-FirstLogon.json/bitlocker
+PASS Distinct outcome codes Enterprise-FirstLogon.json/bitlocker
+PASS Unique ID Enterprise-FirstLogon.json/updates
+PASS Enabled relative script Enterprise-FirstLogon.json/updates
+PASS All JSON parameters declared by script Enterprise-FirstLogon.json/updates
+PASS Earlier enabled prerequisites Enterprise-FirstLogon.json/updates
+PASS Distinct outcome codes Enterprise-FirstLogon.json/updates
+PASS Unique ID Enterprise-FirstLogon.json/restart
+PASS Enabled relative script Enterprise-FirstLogon.json/restart
+PASS All JSON parameters declared by script Enterprise-FirstLogon.json/restart
+PASS Earlier enabled prerequisites Enterprise-FirstLogon.json/restart
+PASS Distinct outcome codes Enterprise-FirstLogon.json/restart
+PASS Step limit Enterprise-FirstLogon.json
+PASS Configuration schema Enterprise-Inventory-Pilot.json
+PASS Unique ID Enterprise-Inventory-Pilot.json/cleanup
+PASS Enabled relative script Enterprise-Inventory-Pilot.json/cleanup
+PASS All JSON parameters declared by script Enterprise-Inventory-Pilot.json/cleanup
+PASS Earlier enabled prerequisites Enterprise-Inventory-Pilot.json/cleanup
+PASS Distinct outcome codes Enterprise-Inventory-Pilot.json/cleanup
+PASS Unique ID Enterprise-Inventory-Pilot.json/oem
+PASS Enabled relative script Enterprise-Inventory-Pilot.json/oem
+PASS All JSON parameters declared by script Enterprise-Inventory-Pilot.json/oem
+PASS Earlier enabled prerequisites Enterprise-Inventory-Pilot.json/oem
+PASS Distinct outcome codes Enterprise-Inventory-Pilot.json/oem
+PASS Unique ID Enterprise-Inventory-Pilot.json/name
+PASS Enabled relative script Enterprise-Inventory-Pilot.json/name
+PASS All JSON parameters declared by script Enterprise-Inventory-Pilot.json/name
+PASS Earlier enabled prerequisites Enterprise-Inventory-Pilot.json/name
+PASS Distinct outcome codes Enterprise-Inventory-Pilot.json/name
+PASS Unique ID Enterprise-Inventory-Pilot.json/bitlocker
+PASS Enabled relative script Enterprise-Inventory-Pilot.json/bitlocker
+PASS All JSON parameters declared by script Enterprise-Inventory-Pilot.json/bitlocker
+PASS Earlier enabled prerequisites Enterprise-Inventory-Pilot.json/bitlocker
+PASS Distinct outcome codes Enterprise-Inventory-Pilot.json/bitlocker
+PASS Step limit Enterprise-Inventory-Pilot.json
+PASS Configuration schema Optional-Demo.json
+PASS Unique ID Optional-Demo.json/step01
+PASS Enabled relative script Optional-Demo.json/step01
+PASS All JSON parameters declared by script Optional-Demo.json/step01
+PASS Earlier enabled prerequisites Optional-Demo.json/step01
+PASS Distinct outcome codes Optional-Demo.json/step01
+PASS Unique ID Optional-Demo.json/step02
+PASS Unique ID Optional-Demo.json/step03
+PASS Unique ID Optional-Demo.json/step04
+PASS Unique ID Optional-Demo.json/step05
+PASS Unique ID Optional-Demo.json/step06
+PASS Enabled relative script Optional-Demo.json/step06
+PASS All JSON parameters declared by script Optional-Demo.json/step06
+PASS Earlier enabled prerequisites Optional-Demo.json/step06
+PASS Distinct outcome codes Optional-Demo.json/step06
+PASS Unique ID Optional-Demo.json/step07
+PASS Enabled relative script Optional-Demo.json/step07
+PASS All JSON parameters declared by script Optional-Demo.json/step07
+PASS Earlier enabled prerequisites Optional-Demo.json/step07
+PASS Distinct outcome codes Optional-Demo.json/step07
+PASS Unique ID Optional-Demo.json/step08
+PASS Unique ID Optional-Demo.json/step09
+PASS Unique ID Optional-Demo.json/step10
+PASS Step limit Optional-Demo.json
+PASS Configuration schema Portal-Detection-Test.json
+PASS Unique ID Portal-Detection-Test.json/portal_check
+PASS Enabled relative script Portal-Detection-Test.json/portal_check
+PASS All JSON parameters declared by script Portal-Detection-Test.json/portal_check
+PASS Earlier enabled prerequisites Portal-Detection-Test.json/portal_check
+PASS Distinct outcome codes Portal-Detection-Test.json/portal_check
+PASS Step limit Portal-Detection-Test.json
+PASS Configuration schema Setup.json
+PASS Unique ID Setup.json/step01
+PASS Enabled relative script Setup.json/step01
+PASS All JSON parameters declared by script Setup.json/step01
+PASS Earlier enabled prerequisites Setup.json/step01
+PASS Distinct outcome codes Setup.json/step01
+PASS Unique ID Setup.json/step02
+PASS Enabled relative script Setup.json/step02
+PASS All JSON parameters declared by script Setup.json/step02
+PASS Earlier enabled prerequisites Setup.json/step02
+PASS Distinct outcome codes Setup.json/step02
+PASS Unique ID Setup.json/step03
+PASS Enabled relative script Setup.json/step03
+PASS All JSON parameters declared by script Setup.json/step03
+PASS Earlier enabled prerequisites Setup.json/step03
+PASS Distinct outcome codes Setup.json/step03
+PASS Unique ID Setup.json/step04
+PASS Enabled relative script Setup.json/step04
+PASS All JSON parameters declared by script Setup.json/step04
+PASS Earlier enabled prerequisites Setup.json/step04
+PASS Distinct outcome codes Setup.json/step04
+PASS Unique ID Setup.json/step05
+PASS Enabled relative script Setup.json/step05
+PASS All JSON parameters declared by script Setup.json/step05
+PASS Earlier enabled prerequisites Setup.json/step05
+PASS Distinct outcome codes Setup.json/step05
+PASS Unique ID Setup.json/step06
+PASS Enabled relative script Setup.json/step06
+PASS All JSON parameters declared by script Setup.json/step06
+PASS Earlier enabled prerequisites Setup.json/step06
+PASS Distinct outcome codes Setup.json/step06
+PASS Unique ID Setup.json/step07
+PASS Enabled relative script Setup.json/step07
+PASS All JSON parameters declared by script Setup.json/step07
+PASS Earlier enabled prerequisites Setup.json/step07
+PASS Distinct outcome codes Setup.json/step07
+PASS Unique ID Setup.json/step08
+PASS Unique ID Setup.json/step09
+PASS Unique ID Setup.json/step10
+PASS Step limit Setup.json
+PASS Configuration schema StoreApps-WinGet-Example.json
+PASS Unique ID StoreApps-WinGet-Example.json/portal_install
+PASS Enabled relative script StoreApps-WinGet-Example.json/portal_install
+PASS All JSON parameters declared by script StoreApps-WinGet-Example.json/portal_install
+PASS Earlier enabled prerequisites StoreApps-WinGet-Example.json/portal_install
+PASS Distinct outcome codes StoreApps-WinGet-Example.json/portal_install
+PASS Unique ID StoreApps-WinGet-Example.json/notepad
+PASS Enabled relative script StoreApps-WinGet-Example.json/notepad
+PASS All JSON parameters declared by script StoreApps-WinGet-Example.json/notepad
+PASS Earlier enabled prerequisites StoreApps-WinGet-Example.json/notepad
+PASS Distinct outcome codes StoreApps-WinGet-Example.json/notepad
+PASS Step limit StoreApps-WinGet-Example.json
+PASS Full profile: final checkpoint with boot-safe enforced restart
+PASS Best-effort maintenance cannot block required dependencies
+PASS Maintenance timeouts fit inside controller budget
+PASS Requested Office and Google behaviors enabled
+PASS Read-only pilot has no active modification steps
+PASS Prior profile still has no forced restart: Enterprise-Example
+PASS Prior profile still has no forced restart: StoreApps-WinGet-Example
+PASS Prior profile still has no forced restart: Portal-Detection-Test
+PASS Prior profile still has no forced restart: Setup
+PASS Prior profile still has no forced restart: Optional-Demo
+PASS Prior profile still has no forced restart: Dark-Demo
+PASS Prior profile still has no forced restart: All10-Demo
+PASS Schema rejects unsafe restart/skip configuration
+PASS Schema rejects unsafe restart/skip configuration
+PASS Schema rejects unsafe restart/skip configuration
+PASS Three exact OEM profiles
+PASS Exact OEM allowlist Dell
+PASS Enterprise management and driver tools excluded Dell
+PASS Exact OEM allowlist Lenovo
+PASS Enterprise management and driver tools excluded Lenovo
+PASS Exact OEM allowlist HP
+PASS Enterprise management and driver tools excluded HP
+PASS Unique WPF names
+PASS WPF trigger and storyboard targets
+PASS All WPF resources resolve
+PASS Bindings match model properties
+PASS Neutral skip has an actual skipped card
+PASS Documentation local link README.md -> Docs/HOTFIX10.md
+PASS Documentation local link README.md -> Docs/HOTFIX9.md
+PASS Documentation local link README.md -> Docs/HOTFIX8.md
+PASS Documentation local link README.md -> Docs/HOTFIX7.md
+PASS Documentation local link README.md -> Docs/HOTFIX6.md
+PASS Documentation local link README.md -> Docs/ENTERPRISE-STEPS.md
+PASS Documentation local link README.md -> Docs/HOTFIX4.md
+PASS Documentation local link README.md -> Docs/DEPLOYMENT.md
+PASS Documentation local link README.md -> Docs/CONFIGURATION.md
+PASS Documentation local link README.md -> Docs/STEP-AUTHORING.md
+PASS Documentation local link README.md -> Docs/DEPLOYMENT.md
+PASS Documentation local link README.md -> Docs/TESTING.md
+PASS Documentation local link README.md -> Docs/ENTERPRISE-STEPS.md
+PASS Documentation local link README.md -> Docs/HOTFIX4.md
+PASS Documentation local link README.md -> Docs/Design-Preview.html
+PASS Documentation local link README.md -> ../Docs/HOTFIX10.md
+PASS Documentation local link HOTFIX10.md -> ../Config/Enterprise-FirstLogon.json
+PASS Documentation local link HOTFIX10.md -> ../Config/Enterprise-Inventory-Pilot.json
+PASS Documentation local link HOTFIX10.md -> ../Catalogs/OemCleanup.json
+PASS Documentation local link CONFIGURATION.md -> HOTFIX8.md
+PASS Documentation local link CONFIGURATION.md -> HOTFIX4.md
+PASS Documentation local link CONFIGURATION.md -> HOTFIX10.md
+PASS Documentation local link HOTFIX9.md -> ENTERPRISE-STEPS.md
+PASS Documentation local link HOTFIX9.md -> ../Config/StoreApps-WinGet-Example.json
+PASS Documentation local link DEPLOYMENT.md -> HOTFIX8.md
+PASS Documentation local link DEPLOYMENT.md -> HOTFIX4.md
+PASS Documentation local link DEPLOYMENT.md -> HOTFIX10.md
+PASS Documentation local link TESTING.md -> ENTERPRISE-STEPS.md
+PASS Documentation local link TESTING.md -> HOTFIX6.md
+PASS Documentation local link TESTING.md -> HOTFIX8.md
+PASS Documentation local link TESTING.md -> HOTFIX9.md
+PASS Documentation local link TESTING.md -> HOTFIX10.md
+PASS Documentation local link STEP-AUTHORING.md -> HOTFIX4.md
+PASS Documentation local link STEP-AUTHORING.md -> ENTERPRISE-STEPS.md
+PASS Documentation local link STEP-AUTHORING.md -> HOTFIX10.md
+PASS Documentation local link ENTERPRISE-STEPS.md -> HOTFIX10.md
+PASS Documentation local link ENTERPRISE-STEPS.md -> HOTFIX9.md
+PASS Documentation local link ENTERPRISE-STEPS.md -> HOTFIX7.md
+PASS Documentation local link ENTERPRISE-STEPS.md -> HOTFIX9.md
+PASS Documentation local link ENTERPRISE-STEPS.md -> ../Config/Enterprise-Example.json
+PASS Documentation local link ENTERPRISE-STEPS.md -> HOTFIX9.md
+PASS Documentation local link ENTERPRISE-STEPS.md -> HOTFIX9.md
+PASS Documentation local link README.md -> ../Docs/ENTERPRISE-STEPS.md
+PASS Documentation local link README.md -> ../Docs/HOTFIX9.md
+PASS Documentation local link README.md -> ../Docs/HOTFIX10.md
+PASS Offline guide target #hotfix6
+PASS Offline guide target #start
+PASS Offline guide target Config/StoreApps-WinGet-Example.json
+PASS Offline guide target Docs/Design-Preview.html
+PASS Offline guide target Config/Enterprise-FirstLogon.json
+PASS Offline guide target Config/Enterprise-Inventory-Pilot.json
+PASS Offline guide target #config
+PASS Offline guide target #hotfix9
+PASS Offline guide target #enterprise
+PASS Offline guide target Config/Enterprise-Example.json
+PASS Offline guide target #testing
+PASS Offline guide target #hotfix8
+PASS Offline guide target Catalogs/OemCleanup.json
+PASS Offline guide target #hotfix4
+PASS Offline guide target #deployment
+PASS Offline guide target #hotfix7
+PASS Offline guide target #hotfix10
+PASS Offline guide target #steps
+PASS Hotfix 10 in offline guide
+PASS Previous file retained: Assets/README.md
+PASS Unchanged prior contents: Assets/README.md
+PASS Previous file retained: Config/All10-Demo.json
+PASS Unchanged prior contents: Config/All10-Demo.json
+PASS Previous file retained: Config/Dark-Demo.json
+PASS Unchanged prior contents: Config/Dark-Demo.json
+PASS Previous file retained: Config/Enterprise-Example.json
+PASS Unchanged prior contents: Config/Enterprise-Example.json
+PASS Previous file retained: Config/Optional-Demo.json
+PASS Unchanged prior contents: Config/Optional-Demo.json
+PASS Previous file retained: Config/Portal-Detection-Test.json
+PASS Unchanged prior contents: Config/Portal-Detection-Test.json
+PASS Previous file retained: Config/Setup.json
+PASS Unchanged prior contents: Config/Setup.json
+PASS Previous file retained: Config/StoreApps-WinGet-Example.json
+PASS Unchanged prior contents: Config/StoreApps-WinGet-Example.json
+PASS Previous file retained: Core/Invoke-SetupStep.ps1
+PASS Previous file retained: Core/Setup.Common.ps1
+PASS Previous file retained: Docs/CONFIGURATION.md
+PASS Previous file retained: Docs/DEPLOYMENT.md
+PASS Previous file retained: Docs/Design-Preview.html
+PASS Unchanged prior contents: Docs/Design-Preview.html
+PASS Previous file retained: Docs/ENTERPRISE-STEPS.md
+PASS Previous file retained: Docs/HOTFIX4.md
+PASS Unchanged prior contents: Docs/HOTFIX4.md
+PASS Previous file retained: Docs/HOTFIX6.md
+PASS Unchanged prior contents: Docs/HOTFIX6.md
+PASS Previous file retained: Docs/HOTFIX7.md
+PASS Unchanged prior contents: Docs/HOTFIX7.md
+PASS Previous file retained: Docs/HOTFIX8.md
+PASS Unchanged prior contents: Docs/HOTFIX8.md
+PASS Previous file retained: Docs/HOTFIX9.md
+PASS Unchanged prior contents: Docs/HOTFIX9.md
+PASS Previous file retained: Docs/STATIC-VALIDATION.txt
+PASS Previous file retained: Docs/STEP-AUTHORING.md
+PASS Previous file retained: Docs/Setup.schema.json
+PASS Previous file retained: Docs/TESTING.md
+PASS Previous file retained: EnterpriseSteps/Enterprise.Common.ps1
+PASS Previous file retained: EnterpriseSteps/Invoke-UserAction.ps1
+PASS Previous file retained: EnterpriseSteps/Step-DetectCompanyPortal.ps1
+PASS Unchanged prior contents: EnterpriseSteps/Step-DetectCompanyPortal.ps1
+PASS Previous file retained: EnterpriseSteps/Step-InstallCompanyPortal.ps1
+PASS Unchanged prior contents: EnterpriseSteps/Step-InstallCompanyPortal.ps1
+PASS Previous file retained: EnterpriseSteps/Step-InstallMsi.ps1
+PASS Unchanged prior contents: EnterpriseSteps/Step-InstallMsi.ps1
+PASS Previous file retained: EnterpriseSteps/Step-InstallNotepad.ps1
+PASS Unchanged prior contents: EnterpriseSteps/Step-InstallNotepad.ps1
+PASS Previous file retained: EnterpriseSteps/Step-RemovePreinstalledOfficeOneDrive.ps1
+PASS Previous file retained: EnterpriseSteps/Test-EnterpriseConfiguration.ps1
+PASS Previous file retained: Examples/Step-InstallMsi.ps1
+PASS Unchanged prior contents: Examples/Step-InstallMsi.ps1
+PASS Previous file retained: Examples/Step-SetMachineSetting.ps1
+PASS Unchanged prior contents: Examples/Step-SetMachineSetting.ps1
+PASS Previous file retained: Payloads/README.md
+PASS Previous file retained: README.md
+PASS Previous file retained: Run-Demo.cmd
+PASS Unchanged prior contents: Run-Demo.cmd
+PASS Previous file retained: Run-Enterprise-Demo.cmd
+PASS Unchanged prior contents: Run-Enterprise-Demo.cmd
+PASS Previous file retained: Run-Live-ServiceUI.cmd
+PASS Unchanged prior contents: Run-Live-ServiceUI.cmd
+PASS Previous file retained: SHA256SUMS.txt
+PASS Previous file retained: START-HERE.html
+PASS Previous file retained: Start-DeviceSetup.ps1
+PASS Previous file retained: Steps/Step-01.ps1
+PASS Unchanged prior contents: Steps/Step-01.ps1
+PASS Previous file retained: Steps/Step-02.ps1
+PASS Unchanged prior contents: Steps/Step-02.ps1
+PASS Previous file retained: Steps/Step-03.ps1
+PASS Unchanged prior contents: Steps/Step-03.ps1
+PASS Previous file retained: Steps/Step-04.ps1
+PASS Unchanged prior contents: Steps/Step-04.ps1
+PASS Previous file retained: Steps/Step-05.ps1
+PASS Unchanged prior contents: Steps/Step-05.ps1
+PASS Previous file retained: Steps/Step-06.ps1
+PASS Unchanged prior contents: Steps/Step-06.ps1
+PASS Previous file retained: Steps/Step-07.ps1
+PASS Unchanged prior contents: Steps/Step-07.ps1
+PASS Previous file retained: Steps/Step-08.ps1
+PASS Unchanged prior contents: Steps/Step-08.ps1
+PASS Previous file retained: Steps/Step-09.ps1
+PASS Unchanged prior contents: Steps/Step-09.ps1
+PASS Previous file retained: Steps/Step-10.ps1
+PASS Unchanged prior contents: Steps/Step-10.ps1
+PASS Previous file retained: Tests/Invoke-EnterpriseHelperTests.ps1
+PASS Unchanged prior contents: Tests/Invoke-EnterpriseHelperTests.ps1
+PASS Previous file retained: Tests/Invoke-LogAccessTests.ps1
+PASS Unchanged prior contents: Tests/Invoke-LogAccessTests.ps1
+PASS Previous file retained: Tests/Invoke-SmokeTests.ps1
+PASS Unchanged prior contents: Tests/Invoke-SmokeTests.ps1
+PASS Previous file retained: Tests/Invoke-WinGetFallbackTests.ps1
+PASS Unchanged prior contents: Tests/Invoke-WinGetFallbackTests.ps1
+PASS Previous file retained: Tools/Grant-SetupLogReadAccess.ps1
+PASS Unchanged prior contents: Tools/Grant-SetupLogReadAccess.ps1
+PASS Previous file retained: Tools/README.md
+PASS Previous file retained: UI/MainWindow.xaml
+PASS Previous file retained: UI/StepViewModel.cs
+PASS Previous file retained: UI/TaskbarIdentity.cs
+PASS Unchanged prior contents: UI/TaskbarIdentity.cs
+PASS Previous file retained: Validate-Config.cmd
+PASS Unchanged prior contents: Validate-Config.cmd
+PASS Preserved implementation: New-SetupDirectorySecurity
+PASS Preserved implementation: Set-SetupDirectorySecurity
+PASS Preserved implementation: Get-SetupLogUserSid
+PASS Preserved implementation: Add-SetupLogReaderAccess
+PASS Preserved implementation: Set-SetupXamlTheme
+PASS Preserved implementation: Write-SetupJson
+PASS Preserved implementation: Test-EnterpriseUserApp
+PASS Preserved implementation: Install-EnterpriseStoreAppWithWinGetFallback
+PASS Preserved implementation: Get-EnterpriseUserSid
+PASS Launcher points to intended profile and mode: Run-FirstLogon-Live-ServiceUI.cmd
+PASS Launcher points to intended profile and mode: Run-Inventory-Live-ServiceUI.cmd
+PASS Launcher points to intended profile and mode: Run-FirstLogon-Demo.cmd
+PASS Office name rules extracted
+PASS Office desktop name fixture: Microsoft 365 Apps for enterprise - en-us
+PASS Office desktop name fixture: Microsoft Office Professional Plus 2016
+PASS Office desktop name fixture: Microsoft Project Professional 2019 - en-us
+PASS Office desktop name fixture: Microsoft Visio LTSC Professional 2021 - en-us
+PASS Office desktop name fixture: Microsoft Teams Meeting Add-in for Microsoft Office
+PASS Office desktop name fixture: Microsoft Access database engine 2016
+PASS Office desktop name fixture: Microsoft Visual Studio Tools for Office Runtime
+PASS Office desktop name fixture: Office Tool from Another Vendor
+
+578 build checks passed. 40 PowerShell scripts and 2 C# files parsed; 9 profiles schema-validated.
+Build checks: tree-sitter grammar (not the Windows PowerShell engine), JSON Schema, rollout/skip invariants, local documentation, legacy compatibility, and name fixtures.
+Windows PowerShell 5.1, WPF/ServiceUI, BitLocker, registry/AppX, Google COM, WinGet, vendor uninstallers and OS restart: NOT EXECUTED in this Linux environment.
+Included mock and live Windows pilot instructions: Docs/HOTFIX10.md. Offline payload paths are placeholders and must be staged on your packaging workstation.

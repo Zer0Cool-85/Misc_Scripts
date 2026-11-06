@@ -1,0 +1,54 @@
+{
+  "Dell": {
+    "Appx": [
+      "DellInc.DellCustomerConnect",
+      "DellInc.DellDigitalDelivery",
+      "DellInc.MyDell"
+    ],
+    "Programs": [
+      "Dell Customer Connect",
+      "Dell Digital Delivery",
+      "Dell Digital Delivery Services",
+      "Dell Product Registration"
+    ],
+    "Publishers": [
+      "Dell Inc.",
+      "Dell",
+      "Dell Technologies"
+    ]
+  },
+  "Lenovo": {
+    "Appx": [
+      "E046963F.LenovoWelcome",
+      "E046963F.LenovoNow"
+    ],
+    "Programs": [
+      "Lenovo Welcome",
+      "Lenovo Now"
+    ],
+    "Publishers": [
+      "Lenovo",
+      "Lenovo Group Limited",
+      "Lenovo Group Ltd."
+    ]
+  },
+  "HP": {
+    "Appx": [
+      "AD2F1837.HPJumpStarts",
+      "AD2F1837.HPRegistration",
+      "AD2F1837.HPQuickDrop"
+    ],
+    "Programs": [
+      "HP JumpStart Bridge",
+      "HP JumpStart Launch",
+      "HP JumpStart Apps",
+      "HP Registration Service",
+      "HP QuickDrop"
+    ],
+    "Publishers": [
+      "HP Inc.",
+      "HP",
+      "Hewlett-Packard Company"
+    ]
+  }
+}
