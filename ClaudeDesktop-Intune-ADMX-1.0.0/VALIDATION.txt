@@ -1,0 +1,31 @@
+Claude Desktop Intune ADMX package 1.0.0
+Reviewed: 2026-11-13
+
+PASS: ClaudeDesktop.admx conforms to the Microsoft MS-GPREG ADMX/ADML XML schema
+PASS: ClaudeDesktop.admx is below 1 MiB
+PASS: en-US/ClaudeDesktop.adml conforms to the Microsoft MS-GPREG ADMX/ADML XML schema
+PASS: en-US/ClaudeDesktop.adml is below 1 MiB
+PASS: Unique id identifiers in string table
+PASS: Unique id identifiers in presentation table
+PASS: Unique name identifiers in category table
+PASS: Unique name identifiers in definition table
+PASS: Unique name identifiers in policy table
+PASS: Exactly 12 policies
+PASS: No external ADMX namespace dependencies
+PASS: Versioned custom namespace
+PASS: No Intune-unsupported comboBox controls
+PASS: No list or REG_MULTI_SZ encoding for JSON strings
+PASS: All 44 localized references, categories, and supported-on references resolve
+PASS: All registry names, types, and 64-bit-native machine-policy paths match the expected mappings
+PASS: All 24 Enabled/Disabled declarations checked; six named-value deletions cannot delete sibling values or the whole key
+PASS: Numeric boundary cases 0, 1, 72, 73 and the five string-valued effort choices checked
+PASS: All six parameter controls bind to the correct element IDs and input types
+PASS: JSON help examples parse correctly; UUID examples are syntactically valid and folder backslashes decode correctly
+
+Schema source: Microsoft MS-GPREG sections 7.1, 7.2, and 7.3.
+Published HTML line wrapping inside XML attributes was normalized for schema compilation.
+The shipped templates retain the Microsoft policy-definition XML namespace.
+
+Scope of validation: static schema and semantic checks on the generated files.
+NOT TESTED: live Intune import, Policy CSP delivery, Windows registry application/removal, or Claude application enforcement.
+Required next step: pilot import, assignment, feature behavior, and rollback on a Windows test device using README.md.

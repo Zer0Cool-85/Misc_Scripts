@@ -1,0 +1,189 @@
+<?xml version='1.0' encoding='utf-8'?>
+<policyDefinitionResources xmlns="http://www.microsoft.com/GroupPolicy/PolicyDefinitions" revision="1.0" schemaVersion="1.0">
+  <displayName>Claude Desktop for Windows - custom administrative template</displayName>
+  <description>Version 1.0.0. Machine policies for Intune imported administrative templates. Documentation reviewed 2026-11-13.</description>
+  <resources>
+    <stringTable>
+      <string id="SUPPORTED_Claude">Claude Desktop for Windows with support for this policy; Team or Enterprise plan</string>
+      <string id="SUPPORTED_Effort">Claude Desktop for Windows 1.25927.0 or later; Team or Enterprise plan</string>
+      <string id="SUPPORTED_EDR">Claude Desktop MSIX 4.4212.0 or later; Windows 10/11 and Cowork prerequisites; beta</string>
+      <string id="CAT_ClaudeDesktop">Claude Desktop (Custom)</string>
+      <string id="CAT_Identity">Sign-in</string>
+      <string id="CAT_Updates">Updates</string>
+      <string id="CAT_Capabilities">Features and extensions</string>
+      <string id="CAT_Workspace">Workspace folders</string>
+      <string id="CAT_EDR">Cowork EDR (beta)</string>
+      <string id="EFFORT_low">Low</string>
+      <string id="EFFORT_medium">Medium</string>
+      <string id="EFFORT_high">High</string>
+      <string id="EFFORT_xhigh">Extra high</string>
+      <string id="EFFORT_max">Maximum</string>
+      <string id="POL_ForceLoginOrgUUID">Restrict sign-in to approved organizations</string>
+      <string id="HELP_ForceLoginOrgUUID">Require membership in the specified Claude organization(s). Use one UUID without surrounding quotes, or a JSON array of UUID strings. A single UUID also preselects that organization during login.
+
+Enabled: writes the supplied value. Disabled: deletes only this policy value; it does not turn off the associated feature.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+Use Claude organization UUIDs, not an Entra tenant ID or an email domain. This field is stored as one REG_SZ value, not REG_MULTI_SZ. The template does not validate UUIDs or JSON. Quit and reopen Claude Desktop after changing it.
+
+Format example (replace with your values):
+["11111111-1111-4111-8111-111111111111","22222222-2222-4222-8222-222222222222"]
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\forceLoginOrgUUID
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_DisableAutoUpdates">Disable automatic updates</string>
+      <string id="HELP_DisableAutoUpdates">Control whether Claude Desktop performs automatic updates.
+
+Enabled: writes REG_DWORD 1. Disabled: writes REG_DWORD 0.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+Enabled disables automatic updates; use it only with an update deployment process. Disabled permits automatic updates. This is not an application-version pin or an application-control rule.
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\disableAutoUpdates
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_AutoUpdaterEnforcementHours">Set update restart enforcement hours</string>
+      <string id="HELP_AutoUpdaterEnforcementHours">Set the time allowed before Claude restarts to apply a prepared update.
+
+Enabled: writes the supplied value. Disabled: deletes only this policy value; it does not turn off the associated feature.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+This restarts the application, not Windows. It does not set the update-check frequency. The template restricts input to 1 through 72; the editor initially shows 72.
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\autoUpdaterEnforcementHours
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_DesktopExtensions">Allow desktop extensions</string>
+      <string id="HELP_DesktopExtensions">Control desktop extension availability.
+
+Enabled: writes REG_DWORD 1. Disabled: writes REG_DWORD 0.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+To use the organization-managed extension allowlist, do not disable this setting or Allow extension directory access. To block user-added local MCP servers as well, also disable Allow local MCP servers.
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\isDesktopExtensionEnabled
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_ExtensionDirectory">Allow extension directory access</string>
+      <string id="HELP_ExtensionDirectory">Control access to the desktop extension directory.
+
+Enabled: writes REG_DWORD 1. Disabled: writes REG_DWORD 0.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+Directory access is a separate control from Allow desktop extensions. Disabling only directory access should not be treated as disabling every extension. Keep directory access available when relying on the organization-managed extension allowlist.
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\isDesktopExtensionDirectoryEnabled
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_LocalDevMCP">Allow local MCP servers</string>
+      <string id="HELP_LocalDevMCP">Control local MCP servers added by users.
+
+Enabled: writes REG_DWORD 1. Disabled: writes REG_DWORD 0.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+Desktop extensions can also run local servers. To block both paths, also disable Allow desktop extensions. This setting is not a remote-connector allowlist.
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\isLocalDevMcpEnabled
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_ClaudeCode">Allow Claude Code in Desktop</string>
+      <string id="HELP_ClaudeCode">Control access to the Claude Code experience inside Claude Desktop.
+
+Enabled: writes REG_DWORD 1. Disabled: writes REG_DWORD 0.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+This template targets Claude Desktop. It does not configure or disable a separately installed Claude Code CLI.
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\isClaudeCodeForDesktopEnabled
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_Cowork">Allow Cowork in Desktop</string>
+      <string id="HELP_Cowork">Control access to Cowork inside Claude Desktop.
+
+Enabled: writes REG_DWORD 1. Disabled: writes REG_DWORD 0.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+Enabling this policy does not install Windows virtualization features or satisfy other Cowork prerequisites.
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\secureVmFeaturesEnabled
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_EffortLevel">Set Claude Code session effort level</string>
+      <string id="HELP_EffortLevel">Choose the starting effort level for Claude Code sessions in Desktop: low, medium, high, xhigh, or max.
+
+Enabled: writes the supplied value. Disabled: deletes only this policy value; it does not turn off the associated feature.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+Requires Claude Desktop 1.25927.0 or later according to the reviewed documentation. The managed choice is reapplied at each new session; it is not a restriction on every in-session selection. Does not apply to Cowork.
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\effortLevel
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_WorkspaceFolders">Set allowed Cowork workspace folders</string>
+      <string id="HELP_WorkspaceFolders">Provide the folder list used when mounting Cowork workspaces.
+
+Enabled: writes the supplied value. Disabled: deletes only this policy value; it does not turn off the associated feature.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+Enter a JSON array of path strings. Escape Windows backslashes as double backslashes. Do not add quotes around the entire array. This is stored as one REG_SZ value. The template does not validate JSON, expand variables, or create folders. Do not treat the mount list as a Windows filesystem access-control boundary. Test list handling in your deployed Claude build; empty-list semantics are not asserted by this template.
+
+Format example (replace with your values):
+["C:\\CompanyData\\Claude","D:\\ApprovedWork"]
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\allowedWorkspaceFolders
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_EDRPackage">Set Cowork EDR sensor package path (beta)</string>
+      <string id="HELP_EDRPackage">Point Cowork at a supported vendor-signed sensor package already staged on the endpoint.
+
+Enabled: writes the supplied value. Disabled: deletes only this policy value; it does not turn off the associated feature.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+Also configure the vendor ID. Use the integration package and instructions supplied by your EDR vendor, not an arbitrary Windows agent installer. Windows requires the MSIX build of Claude Desktop 4.4212.0 or later and Cowork virtualization prerequisites. Removing the setting does not uninstall an existing sensor from the VM. The template only sets the path; it does not deploy a package.
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\coworkEDRIntegration
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+      <string id="POL_EDRVendor">Set Cowork EDR vendor ID (beta)</string>
+      <string id="HELP_EDRVendor">Identify the approved EDR vendor for Cowork sensor package verification.
+
+Enabled: writes the supplied value. Disabled: deletes only this policy value; it does not turn off the associated feature.
+
+Not configured: this profile does not specify the setting. App defaults, organization controls, or other policy sources may still apply. Avoid managing the same value from multiple sources. Importing the template alone does not apply any setting.
+
+Obtain the exact lowercase identifier from the vendor integration instructions. Also configure the sensor package path. No vendor is preselected. This policy targets the local Cowork VM, not cloud-hosted sessions. Removing it does not uninstall an existing sensor.
+
+Registry: HKEY_LOCAL_MACHINE\Software\Policies\Claude\coworkEDRIntegrationVendor
+Custom template reference: https://support.claude.com/en/articles/12622667-enterprise-configuration-for-claude-desktop</string>
+    </stringTable>
+    <presentationTable>
+      <presentation id="PRES_ForceLoginOrgUUID">
+        <textBox refId="ForceLoginOrgUUID_Value">
+          <label>Organization UUID, or JSON array of organization UUIDs:</label>
+        </textBox>
+      </presentation>
+      <presentation id="PRES_AutoUpdaterEnforcementHours">
+        <decimalTextBox refId="AutoUpdaterEnforcementHours_Value" defaultValue="72" spin="true" spinStep="1">Hours before an update-related restart is enforced (1-72):</decimalTextBox>
+      </presentation>
+      <presentation id="PRES_EffortLevel">
+        <dropdownList refId="EffortLevel_Value" noSort="true">Effort level:</dropdownList>
+      </presentation>
+      <presentation id="PRES_WorkspaceFolders">
+        <textBox refId="WorkspaceFolders_Value">
+          <label>Allowed folder paths as a JSON array:</label>
+        </textBox>
+      </presentation>
+      <presentation id="PRES_EDRPackage">
+        <textBox refId="EDRPackage_Value">
+          <label>Full local path to the vendor-signed sensor package:</label>
+        </textBox>
+      </presentation>
+      <presentation id="PRES_EDRVendor">
+        <textBox refId="EDRVendor_Value">
+          <label>Supported vendor ID, in lowercase:</label>
+        </textBox>
+      </presentation>
+    </presentationTable>
+  </resources>
+</policyDefinitionResources>
