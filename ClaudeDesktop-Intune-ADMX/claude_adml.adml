@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitionResources xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                            xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions"
+                            revision="1.0"
+                            schemaVersion="1.0">
+
+  <displayName>Claude Desktop</displayName>
+  <description>Administrative Templates for Anthropic Claude Desktop enterprise configuration.</description>
+
+  <resources>
+    <stringTable>
+
+      <!-- Supported On -->
+      <string id="SUPPORTED_WIN10_AND_LATER">Windows 10 and later</string>
+
+      <!-- Categories -->
+      <string id="Claude_Category">Claude Desktop</string>
+      <string id="Claude_Updates_Category">Updates</string>
+      <string id="Claude_Features_Category">Features</string>
+
+      <!-- ═══════════════════════════════════════════════
+           UPDATE POLICIES
+           ═══════════════════════════════════════════════ -->
+
+      <string id="DisableAutoUpdates">Disable Auto Updates</string>
+      <string id="DisableAutoUpdates_Explain">
+Controls whether Claude Desktop automatically updates itself.
+
+Set to 0 (recommended) to allow automatic updates.
+Set to 1 to disable automatic updates.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\disableAutoUpdates
+      </string>
+
+      <string id="AutoUpdaterEnforcementHours">Auto Updater Enforcement Hours</string>
+      <string id="AutoUpdaterEnforcementHours_Explain">
+Sets the maximum number of hours Claude Desktop will wait before force-restarting to apply a pending update.
+
+Accepted values: 1 to 72 hours.
+Default recommended value: 72.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\autoUpdaterEnforcementHours
+      </string>
+
+      <!-- ═══════════════════════════════════════════════
+           FEATURE POLICIES
+           ═══════════════════════════════════════════════ -->
+
+      <string id="SecureVmFeaturesEnabled">Enable Cowork (Secure VM Features)</string>
+      <string id="SecureVmFeaturesEnabled_Explain">
+Enables or disables the Cowork feature in Claude Desktop, which requires the Windows Virtual Machine Platform to be active.
+
+Set to 1 to enable Cowork.
+Set to 0 to disable Cowork.
+
+Note: The Virtual Machine Platform Windows feature must be enabled on the device for Cowork to function.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\secureVmFeaturesEnabled
+      </string>
+
+      <string id="IsDesktopExtensionEnabled">Enable Desktop Extensions</string>
+      <string id="IsDesktopExtensionEnabled_Explain">
+Controls whether desktop extensions are enabled in Claude Desktop.
+
+Set to 1 to enable desktop extensions.
+Set to 0 to disable desktop extensions.
+
+Note: If this value is set to 0, the extension allowlist will not be populated.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\isDesktopExtensionEnabled
+      </string>
+
+      <string id="IsDesktopExtensionDirectoryEnabled">Enable Extension Directory</string>
+      <string id="IsDesktopExtensionDirectoryEnabled_Explain">
+Controls whether the extension directory is accessible in Claude Desktop.
+
+Set to 1 to enable the extension directory.
+Set to 0 to disable the extension directory.
+
+Note: If this value is set to 0, the extension allowlist will not be populated.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\isDesktopExtensionDirectoryEnabled
+      </string>
+
+      <string id="IsLocalDevMcpEnabled">Enable Local Dev MCP Servers</string>
+      <string id="IsLocalDevMcpEnabled_Explain">
+Controls whether locally configured MCP (Model Context Protocol) servers are enabled in Claude Desktop.
+
+Set to 1 to allow local MCP servers.
+Set to 0 to block local MCP servers.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\isLocalDevMcpEnabled
+      </string>
+
+      <string id="IsClaudeCodeForDesktopEnabled">Enable Claude Code for Desktop</string>
+      <string id="IsClaudeCodeForDesktopEnabled_Explain">
+Controls whether the Claude Code feature is accessible within Claude Desktop.
+
+Set to 1 to enable Claude Code in the desktop app.
+Set to 0 to disable Claude Code in the desktop app.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\isClaudeCodeForDesktopEnabled
+      </string>
+
+      <string id="ForceLoginOrgUUID">Restrict Login to Organization(s)</string>
+      <string id="ForceLoginOrgUUID_Explain">
+Limits Claude Desktop sign-in to the specified Claude organization(s).
+
+Enable this policy and enter one organization UUID as plain text, or a JSON array of UUID strings. The array is stored as a single REG_SZ value, not REG_MULTI_SZ.
+
+Single-organization format: 11111111-1111-4111-8111-111111111111
+Multiple-organization format: ["11111111-1111-4111-8111-111111111111","22222222-2222-4222-8222-222222222222"]
+Replace the examples with real Claude organization UUIDs. Do not use an Entra tenant ID or an email domain.
+
+The textbox does not validate UUIDs or JSON. Quit and reopen Claude Desktop after changing this setting.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\forceLoginOrgUUID
+      </string>
+
+      <string id="AllowedWorkspaceFolders">Allowed Cowork Workspace Folders</string>
+      <string id="AllowedWorkspaceFolders_Explain">
+Sets the list of folder paths that users can mount as Cowork workspaces.
+
+Enable this policy and enter a JSON array of path strings. The JSON text is stored as one REG_SZ value. Escape Windows backslashes with a second backslash.
+
+Example: ["C:\\CompanyData\\Claude","D:\\ApprovedWork"]
+
+Do not add quotes around the entire array. The textbox does not validate JSON or folder existence. Folder creation, variable expansion, and wildcard expansion are not supplied by this template. Test the intended paths in your deployed Claude version.
+
+To disable Cowork itself, use the existing Enable Cowork policy with value 0. This folder setting is not a Windows filesystem permission rule.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\allowedWorkspaceFolders
+      </string>
+
+      <string id="EffortLevel">Claude Code Session Effort Level</string>
+      <string id="EffortLevel_Explain">
+Sets the starting effort level for Claude Code sessions in Claude Desktop.
+
+Enable this policy and enter exactly one lowercase value: low, medium, high, xhigh, or max.
+
+The value is applied at the start of each new session. This setting does not apply to Cowork. The reviewed Anthropic documentation specifies Claude Desktop version 1.25927.0 or later.
+
+This is a plain text field to keep the supplied template's simple value-input pattern. It does not validate the choice, so spelling and case must be correct.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\effortLevel
+      </string>
+
+      <string id="CoworkEDRIntegration">Cowork EDR Sensor Package Path (Beta)</string>
+      <string id="CoworkEDRIntegration_Explain">
+Sets the full path to an approved vendor's signed sensor package for the local Cowork virtual machine.
+
+Enable this policy and enter the actual package path as plain text. Do not surround the path with quotes. Unlike a JSON array, a plain path uses single backslashes.
+
+Also configure Cowork EDR Vendor ID. Deploy the package separately using your vendor's integration instructions; this policy does not copy or download it.
+
+The integration is in beta. Anthropic specifies the Windows MSIX build of Claude Desktop 4.4212.0 or later and the Cowork virtualization prerequisites. Use the vendor's Cowork integration package, not an arbitrary Windows agent installer. Removing these settings does not uninstall a sensor already installed in the VM.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\coworkEDRIntegration
+      </string>
+
+      <string id="CoworkEDRIntegrationVendor">Cowork EDR Vendor ID (Beta)</string>
+      <string id="CoworkEDRIntegrationVendor_Explain">
+Sets the approved EDR vendor identifier used for Cowork sensor package verification.
+
+Enable this policy and enter the exact lowercase vendor ID from your vendor's Cowork integration instructions. Do not substitute the vendor display name or guess the identifier.
+
+Also configure Cowork EDR Sensor Package Path and deploy the signed integration package separately. These settings cover the local Cowork VM, not cloud-hosted sessions. Removing these settings does not uninstall an existing sensor.
+
+This textbox does not validate the vendor ID.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\coworkEDRIntegrationVendor
+      </string>
+
+    </stringTable>
+
+    <presentationTable>
+
+      <presentation id="DisableAutoUpdates">
+        <decimalTextBox refId="DisableAutoUpdates_Value" defaultValue="0">Disable Auto Updates (0 = enabled, 1 = disabled):</decimalTextBox>
+      </presentation>
+
+      <presentation id="AutoUpdaterEnforcementHours">
+        <decimalTextBox refId="AutoUpdaterEnforcementHours_Value" defaultValue="72">Enforcement Hours (1-72):</decimalTextBox>
+      </presentation>
+
+      <presentation id="SecureVmFeaturesEnabled">
+        <decimalTextBox refId="SecureVmFeaturesEnabled_Value" defaultValue="1">Enable Cowork (0 = disabled, 1 = enabled):</decimalTextBox>
+      </presentation>
+
+      <presentation id="IsDesktopExtensionEnabled">
+        <decimalTextBox refId="IsDesktopExtensionEnabled_Value" defaultValue="1">Enable Desktop Extensions (0 = disabled, 1 = enabled):</decimalTextBox>
+      </presentation>
+
+      <presentation id="IsDesktopExtensionDirectoryEnabled">
+        <decimalTextBox refId="IsDesktopExtensionDirectoryEnabled_Value" defaultValue="1">Enable Extension Directory (0 = disabled, 1 = enabled):</decimalTextBox>
+      </presentation>
+
+      <presentation id="IsLocalDevMcpEnabled">
+        <decimalTextBox refId="IsLocalDevMcpEnabled_Value" defaultValue="1">Enable Local Dev MCP (0 = disabled, 1 = enabled):</decimalTextBox>
+      </presentation>
+
+      <presentation id="IsClaudeCodeForDesktopEnabled">
+        <decimalTextBox refId="IsClaudeCodeForDesktopEnabled_Value" defaultValue="1">Enable Claude Code for Desktop (0 = disabled, 1 = enabled):</decimalTextBox>
+      </presentation>
+
+      <presentation id="ForceLoginOrgUUID">
+        <textBox refId="ForceLoginOrgUUID_Value">
+          <label>Claude organization UUID or JSON array of UUIDs:</label>
+        </textBox>
+      </presentation>
+
+      <presentation id="AllowedWorkspaceFolders">
+        <textBox refId="AllowedWorkspaceFolders_Value">
+          <label>Allowed folder paths as a JSON array:</label>
+        </textBox>
+      </presentation>
+
+      <presentation id="EffortLevel">
+        <textBox refId="EffortLevel_Value">
+          <label>Effort level (low, medium, high, xhigh, or max):</label>
+        </textBox>
+      </presentation>
+
+      <presentation id="CoworkEDRIntegration">
+        <textBox refId="CoworkEDRIntegration_Value">
+          <label>Full local path to the vendor-signed EDR integration package:</label>
+        </textBox>
+      </presentation>
+
+      <presentation id="CoworkEDRIntegrationVendor">
+        <textBox refId="CoworkEDRIntegrationVendor_Value">
+          <label>Supported EDR vendor ID in lowercase:</label>
+        </textBox>
+      </presentation>
+
+    </presentationTable>
+  </resources>
+</policyDefinitionResources>

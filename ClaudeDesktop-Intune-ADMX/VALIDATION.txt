@@ -1,0 +1,12 @@
+Claude Desktop supplied-template update, 2026-11-13
+
+PASS: ADMX: root namespaces, revisions, and root attributes unchanged.
+PASS: ADML: root namespaces, revisions, and root attributes unchanged.
+PASS: All seven existing policy definitions and every existing string/presentation are byte-for-byte unchanged when extracted.
+PASS: Exactly 12 policies, with five single REG_SZ text inputs added under the existing Features category.
+PASS: All registry mappings, string IDs, presentation IDs, category references, and control references pass.
+PASS: No external namespace dependencies, enum controls, multi-string inputs, or new Enabled/Disabled value blocks were introduced.
+PASS: Original and extended XML structures pass the published Microsoft schema after namespace binding normalization in memory only.
+PASS: JSON organization and folder examples parse correctly.
+
+NOT TESTED: live Intune import, device policy delivery, and Claude application enforcement.
