@@ -1,0 +1,28 @@
+; Corporate branding theme - deployed by Install-DesktopBranding.ps1
+; The install script rewrites Wallpaper, AutoColorization, ColorizationColor, SystemMode and AppMode
+; in the deployed copy to match its parameters, so you mainly need to set DisplayName here.
+
+[Theme]
+DisplayName=Company
+
+[Control Panel\Desktop]
+Wallpaper=%SystemRoot%\Web\Wallpaper\Company\Company.jpg
+TileWallpaper=0
+WallpaperStyle=10
+Pattern=
+
+[VisualStyles]
+Path=%ResourceDir%\Themes\Aero\Aero.msstyles
+ColorStyle=NormalColor
+Size=NormalSize
+AutoColorization=0
+ColorizationColor=0XC43F177E
+SystemMode=Dark
+AppMode=Light
+VisualStyleVersion=10
+
+[MasterThemeSelector]
+MTSM=RJSPBS
+
+[Sounds]
+SchemeName=@%SystemRoot%\System32\mmres.dll,-800
