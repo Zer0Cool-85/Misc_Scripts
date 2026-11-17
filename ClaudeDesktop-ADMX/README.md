@@ -85,6 +85,33 @@ Intune will not let you re-import a template with the same namespace while profi
 To ship a new version: bump `revision` in both files, delete the profiles that reference
 the old import (or migrate them), delete the old import, then re-import.
 
+### Troubleshooting the import
+
+**"Command error, check your command query for any syntax error or concurrency issues with running commands on the storage"**
+
+This is a generic backend error from the Intune import service, and Microsoft doesn't document it.
+Version 1.1 of this template removes the likeliest triggers:
+
+- the ADML display text has no apostrophes, double quotes, square brackets or backslashes
+  (examples with those characters are in this README only)
+- the XML comment before the root element is gone
+- the custom `maxLength` values are gone (the default is 1023 characters)
+
+To retry:
+
+1. In **Import ADMX**, **delete the failed `ClaudeDesktop.admx` entry** first. A failed or stuck
+   entry with the same namespace makes the next upload fail too.
+2. Wait a few minutes, refresh, and make sure no other ADMX upload is still *In progress*.
+3. Upload `ClaudeDesktop.admx` and `en-US/ClaudeDesktop.adml` again, once.
+4. If it still fails, copy both files into `C:\Windows\PolicyDefinitions` (and `\en-US`) on a test
+   PC and open `gpedit.msc`. If the Group Policy editor loads them without an error, the files are
+   valid, and the problem is on the Intune side. Retry later or open a Microsoft support case
+   with the error text.
+
+**Fallback if you can't import it:** deploy the values directly with an Intune
+**Platform script** or **Remediation** (PowerShell, run as SYSTEM) that writes them under
+`HKLM:\SOFTWARE\Policies\Claude`, using the same names and types as the table above.
+
 ---
 
 ## Group Policy (on-prem / hybrid)
@@ -133,7 +160,7 @@ Windows Registry Editor Version 5.00
 ## Scope & caveats
 
 - Keys and semantics are taken from Anthropic's **Enterprise configuration for Claude Desktop**
-  article (support.claude.com/en/articles/12622667) as of November 2026. Anthropic adds keys
+  article (support.claude.com/en/articles/12622667) as of November 2026. Template revision 1.1. Anthropic adds keys
   over time – check the article before relying on a setting that isn't listed here.
 - Anthropic doesn't state the Windows value types for `allowedWorkspaceFolders`, `effortLevel`
   and the EDR keys; this template writes them as REG_SZ, matching how other string/JSON keys

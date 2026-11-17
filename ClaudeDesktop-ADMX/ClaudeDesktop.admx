@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Claude Desktop for Windows - Enterprise policy template
-  Registry location: HKLM\SOFTWARE\Policies\Claude
-  Self-contained (no dependency on Windows.admx) so it can be imported
-  directly into Microsoft Intune as an "Imported Administrative Template".
--->
 <policyDefinitions xmlns:xsd="http://www.w3.org/2001/XMLSchema"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   revision="1.0" schemaVersion="1.0"
+                   revision="1.1" schemaVersion="1.0"
                    xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions">
   <policyNamespaces>
     <target prefix="claude" namespace="Anthropic.Policies.ClaudeDesktop" />
   </policyNamespaces>
 
-  <resources minRequiredRevision="1.0" />
+  <resources minRequiredRevision="1.1" />
 
   <supportedOn>
     <definitions>
@@ -46,7 +40,7 @@
 
   <policies>
 
-    <!-- ===================== Sign-in ===================== -->
+    <!-- Sign-in -->
     <policy name="ForceLoginOrgUUID" class="Machine"
             displayName="$(string.ForceLoginOrgUUID)"
             explainText="$(string.ForceLoginOrgUUID_Help)"
@@ -55,11 +49,11 @@
       <parentCategory ref="Cat_SignIn" />
       <supportedOn ref="SUPPORTED_ClaudeDesktop" />
       <elements>
-        <text id="ForceLoginOrgUUID_Value" valueName="forceLoginOrgUUID" required="true" maxLength="2048" />
+        <text id="ForceLoginOrgUUID_Value" valueName="forceLoginOrgUUID" required="true" />
       </elements>
     </policy>
 
-    <!-- ===================== Updates ===================== -->
+    <!-- Updates -->
     <policy name="DisableAutoUpdates" class="Machine"
             displayName="$(string.DisableAutoUpdates)"
             explainText="$(string.DisableAutoUpdates_Help)"
@@ -83,7 +77,7 @@
       </elements>
     </policy>
 
-    <!-- ===================== Claude Code ===================== -->
+    <!-- Claude Code -->
     <policy name="IsClaudeCodeForDesktopEnabled" class="Machine"
             displayName="$(string.IsClaudeCodeForDesktopEnabled)"
             explainText="$(string.IsClaudeCodeForDesktopEnabled_Help)"
@@ -112,7 +106,7 @@
       </elements>
     </policy>
 
-    <!-- ===================== Cowork ===================== -->
+    <!-- Cowork -->
     <policy name="SecureVmFeaturesEnabled" class="Machine"
             displayName="$(string.SecureVmFeaturesEnabled)"
             explainText="$(string.SecureVmFeaturesEnabled_Help)"
@@ -131,7 +125,7 @@
       <parentCategory ref="Cat_Cowork" />
       <supportedOn ref="SUPPORTED_ClaudeDesktop" />
       <elements>
-        <text id="AllowedWorkspaceFolders_Value" valueName="allowedWorkspaceFolders" required="true" maxLength="4096" />
+        <text id="AllowedWorkspaceFolders_Value" valueName="allowedWorkspaceFolders" required="true" />
       </elements>
     </policy>
 
@@ -143,12 +137,12 @@
       <parentCategory ref="Cat_Cowork" />
       <supportedOn ref="SUPPORTED_ClaudeDesktop" />
       <elements>
-        <text id="CoworkEDRIntegrationVendor_Value" valueName="coworkEDRIntegrationVendor" required="true" maxLength="128" />
-        <text id="CoworkEDRIntegration_Value" valueName="coworkEDRIntegration" required="true" maxLength="1024" />
+        <text id="CoworkEDRIntegrationVendor_Value" valueName="coworkEDRIntegrationVendor" required="true" />
+        <text id="CoworkEDRIntegration_Value" valueName="coworkEDRIntegration" required="true" />
       </elements>
     </policy>
 
-    <!-- ===================== Extensions & MCP ===================== -->
+    <!-- Extensions & MCP -->
     <policy name="IsDesktopExtensionEnabled" class="Machine"
             displayName="$(string.IsDesktopExtensionEnabled)"
             explainText="$(string.IsDesktopExtensionEnabled_Help)"
