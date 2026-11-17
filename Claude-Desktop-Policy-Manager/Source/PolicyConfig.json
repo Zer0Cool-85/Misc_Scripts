@@ -1,0 +1,26 @@
+{
+  "SchemaVersion": 1,
+  "ConfigurationId": "CHANGE-ME",
+  "Enforcement": {
+    "IntervalMinutes": 15,
+    "RunAtStartup": true,
+    "RunAtLogon": true,
+    "RunOnRegistryChange": true,
+    "ConfigureAuditPolicy": true
+  },
+  "Policies": {
+    "disableAutoUpdates": null,
+    "autoUpdaterEnforcementHours": null,
+    "isDesktopExtensionEnabled": null,
+    "isDesktopExtensionDirectoryEnabled": null,
+    "isLocalDevMcpEnabled": null,
+    "isClaudeCodeForDesktopEnabled": null,
+    "secureVmFeaturesEnabled": null,
+    "forceLoginOrgUUID": null,
+    "allowedWorkspaceFolders": null,
+    "effortLevel": null,
+    "coworkEDRIntegration": null,
+    "coworkEDRIntegrationVendor": null
+  },
+  "RemovePolicies": []
+}
