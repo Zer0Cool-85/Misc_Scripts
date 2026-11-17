@@ -1,2 +1,0 @@
-Put the desktop wallpaper image here (default name: Company.jpg).
-Supported: .jpg .jpeg .png .bmp .gif. Delete this file before packaging.

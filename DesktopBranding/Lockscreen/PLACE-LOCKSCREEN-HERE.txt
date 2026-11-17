@@ -1,2 +1,0 @@
-Put the lock screen image here (default name: CompanyLock.jpg).
-Supported: .jpg .jpeg .png .bmp .gif. Delete this file before packaging.
