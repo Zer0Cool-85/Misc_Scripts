@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitionResources xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                            xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions"
+                            revision="1.0"
+                            schemaVersion="1.0">
+
+  <displayName>Claude Desktop Additional</displayName>
+  <description>Additional Administrative Templates for Anthropic Claude Desktop enterprise configuration.</description>
+
+  <resources>
+    <stringTable>
+
+      <string id="SUPPORTED_CLAUDEADD_WIN10">Windows 10 and later</string>
+
+      <string id="ClaudeAdd_Category">Claude Desktop Additional</string>
+      <string id="ClaudeAdd_SignIn_Category">Sign-in</string>
+      <string id="ClaudeAdd_Code_Category">Claude Code</string>
+      <string id="ClaudeAdd_Cowork_Category">Cowork</string>
+
+      <string id="ForceLoginOrgUUID">Force Login Organization UUID</string>
+      <string id="ForceLoginOrgUUID_Explain">
+Requires users to sign in with an account that belongs to a specific Claude organization. Sign-in fails if the account is not in a listed organization.
+
+Enter a single organization UUID to require and pre-select that organization.
+Enter a JSON array of UUIDs to accept any listed organization without pre-selecting one. See the README for the exact format.
+
+Claude Desktop reads this value at launch. Users must quit and reopen the app after a change.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\forceLoginOrgUUID (REG_SZ)
+      </string>
+
+      <string id="EffortLevel">Claude Code Default Effort Level</string>
+      <string id="EffortLevel_Explain">
+Sets the default effort level for Claude Code sessions in Claude Desktop. The value is applied at the start of every session, even if the user changed it earlier.
+
+Does not apply to Cowork sessions. Requires Claude Desktop 1.25927.0 or later.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\effortLevel (REG_SZ: low, medium, high, xhigh or max)
+      </string>
+      <string id="EffortLevel_Low">Low</string>
+      <string id="EffortLevel_Medium">Medium</string>
+      <string id="EffortLevel_High">High</string>
+      <string id="EffortLevel_XHigh">Extra High</string>
+      <string id="EffortLevel_Max">Max</string>
+
+      <string id="AllowedWorkspaceFolders">Cowork Allowed Workspace Folders</string>
+      <string id="AllowedWorkspaceFolders_Explain">
+Limits which folders users can mount into Cowork. When not configured, any folder can be mounted.
+
+Enter a JSON array of folder paths. Every backslash in a path must be doubled because the value is JSON. See the README for the exact format.
+
+Registry key: HKLM\SOFTWARE\Policies\Claude\allowedWorkspaceFolders (REG_SZ)
+      </string>
+
+      <string id="CoworkEDRIntegration">Cowork EDR Integration (Beta)</string>
+      <string id="CoworkEDRIntegration_Explain">
+Installs the signed sensor package from your EDR vendor inside Cowork. When not configured, no package is installed.
+
+EDR vendor ID: the vendor identifier in lowercase.
+Sensor package path: full path to the signed sensor package on the device.
+
+Registry keys:
+HKLM\SOFTWARE\Policies\Claude\coworkEDRIntegrationVendor (REG_SZ)
+HKLM\SOFTWARE\Policies\Claude\coworkEDRIntegration (REG_SZ)
+      </string>
+
+    </stringTable>
+
+    <presentationTable>
+
+      <presentation id="ForceLoginOrgUUID">
+        <textBox refId="ForceLoginOrgUUID_Value">
+          <label>Organization UUID or JSON array of UUIDs:</label>
+        </textBox>
+      </presentation>
+
+      <presentation id="EffortLevel">
+        <dropdownList refId="EffortLevel_Value" defaultItem="2">Default effort level:</dropdownList>
+      </presentation>
+
+      <presentation id="AllowedWorkspaceFolders">
+        <textBox refId="AllowedWorkspaceFolders_Value">
+          <label>Allowed folders as a JSON array:</label>
+        </textBox>
+      </presentation>
+
+      <presentation id="CoworkEDRIntegration">
+        <textBox refId="CoworkEDRIntegrationVendor_Value">
+          <label>EDR vendor ID (lowercase):</label>
+        </textBox>
+        <textBox refId="CoworkEDRIntegration_Value">
+          <label>Sensor package path:</label>
+        </textBox>
+      </presentation>
+
+    </presentationTable>
+  </resources>
+</policyDefinitionResources>

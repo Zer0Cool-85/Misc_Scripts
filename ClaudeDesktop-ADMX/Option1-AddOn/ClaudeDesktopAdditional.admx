@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitions xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://schemas.microsoft.com/GroupPolicy/2006/07/PolicyDefinitions"
+                   revision="1.0"
+                   schemaVersion="1.0">
+
+  <policyNamespaces>
+    <target prefix="claudeadd" namespace="Anthropic.Policies.ClaudeAdditional" />
+  </policyNamespaces>
+
+  <resources minRequiredRevision="1.0" />
+
+  <supportedOn>
+    <definitions>
+      <definition name="SUPPORTED_CLAUDEADD_WIN10" displayName="$(string.SUPPORTED_CLAUDEADD_WIN10)" />
+    </definitions>
+  </supportedOn>
+
+  <categories>
+    <category name="ClaudeAdd" displayName="$(string.ClaudeAdd_Category)" />
+    <category name="ClaudeAdd_SignIn" displayName="$(string.ClaudeAdd_SignIn_Category)">
+      <parentCategory ref="ClaudeAdd" />
+    </category>
+    <category name="ClaudeAdd_Code" displayName="$(string.ClaudeAdd_Code_Category)">
+      <parentCategory ref="ClaudeAdd" />
+    </category>
+    <category name="ClaudeAdd_Cowork" displayName="$(string.ClaudeAdd_Cowork_Category)">
+      <parentCategory ref="ClaudeAdd" />
+    </category>
+  </categories>
+
+  <policies>
+
+    <policy name="ForceLoginOrgUUID"
+            class="Machine"
+            displayName="$(string.ForceLoginOrgUUID)"
+            explainText="$(string.ForceLoginOrgUUID_Explain)"
+            presentation="$(presentation.ForceLoginOrgUUID)"
+            key="SOFTWARE\Policies\Claude">
+      <parentCategory ref="ClaudeAdd_SignIn" />
+      <supportedOn ref="SUPPORTED_CLAUDEADD_WIN10" />
+      <elements>
+        <text id="ForceLoginOrgUUID_Value"
+              valueName="forceLoginOrgUUID" />
+      </elements>
+    </policy>
+
+    <policy name="EffortLevel"
+            class="Machine"
+            displayName="$(string.EffortLevel)"
+            explainText="$(string.EffortLevel_Explain)"
+            presentation="$(presentation.EffortLevel)"
+            key="SOFTWARE\Policies\Claude">
+      <parentCategory ref="ClaudeAdd_Code" />
+      <supportedOn ref="SUPPORTED_CLAUDEADD_WIN10" />
+      <elements>
+        <enum id="EffortLevel_Value"
+              valueName="effortLevel">
+          <item displayName="$(string.EffortLevel_Low)"><value><string>low</string></value></item>
+          <item displayName="$(string.EffortLevel_Medium)"><value><string>medium</string></value></item>
+          <item displayName="$(string.EffortLevel_High)"><value><string>high</string></value></item>
+          <item displayName="$(string.EffortLevel_XHigh)"><value><string>xhigh</string></value></item>
+          <item displayName="$(string.EffortLevel_Max)"><value><string>max</string></value></item>
+        </enum>
+      </elements>
+    </policy>
+
+    <policy name="AllowedWorkspaceFolders"
+            class="Machine"
+            displayName="$(string.AllowedWorkspaceFolders)"
+            explainText="$(string.AllowedWorkspaceFolders_Explain)"
+            presentation="$(presentation.AllowedWorkspaceFolders)"
+            key="SOFTWARE\Policies\Claude">
+      <parentCategory ref="ClaudeAdd_Cowork" />
+      <supportedOn ref="SUPPORTED_CLAUDEADD_WIN10" />
+      <elements>
+        <text id="AllowedWorkspaceFolders_Value"
+              valueName="allowedWorkspaceFolders" />
+      </elements>
+    </policy>
+
+    <policy name="CoworkEDRIntegration"
+            class="Machine"
+            displayName="$(string.CoworkEDRIntegration)"
+            explainText="$(string.CoworkEDRIntegration_Explain)"
+            presentation="$(presentation.CoworkEDRIntegration)"
+            key="SOFTWARE\Policies\Claude">
+      <parentCategory ref="ClaudeAdd_Cowork" />
+      <supportedOn ref="SUPPORTED_CLAUDEADD_WIN10" />
+      <elements>
+        <text id="CoworkEDRIntegrationVendor_Value"
+              valueName="coworkEDRIntegrationVendor" />
+        <text id="CoworkEDRIntegration_Value"
+              valueName="coworkEDRIntegration" />
+      </elements>
+    </policy>
+
+  </policies>
+</policyDefinitions>
