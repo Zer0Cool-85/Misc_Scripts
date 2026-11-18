@@ -1,0 +1,6 @@
+Place your actual desktop wallpaper in this folder as:
+ModMed.jpg
+
+The image is not included in this ZIP. Do not rename this text file to .jpg.
+To use another image filename, set -WallpaperImg on the installer command.
+Supported filename extensions: .jpg, .jpeg, .png, .bmp.
