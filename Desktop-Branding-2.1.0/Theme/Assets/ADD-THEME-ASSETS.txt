@@ -1,3 +1,0 @@
-Optional custom theme assets go here.
-Reference them as %BRANDINGTHEMEDIR%\Assets\YourFile.ext in your .theme file.
-See Theme/README.md. No actual custom images, cursors, sounds or icons are included.

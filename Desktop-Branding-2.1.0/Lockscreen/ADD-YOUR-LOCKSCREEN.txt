@@ -1,6 +1,0 @@
-Place your actual lock-screen image in this folder as:
-ModMedLock.jpg
-
-The image is not included in this ZIP. Do not rename this text file to .jpg.
-To use another image filename, set -LockscreenImg on the installer command.
-Supported filename extensions: .jpg, .jpeg, .png.
