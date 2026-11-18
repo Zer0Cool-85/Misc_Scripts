@@ -1,0 +1,31 @@
+{
+  "SchemaVersion": 1,
+  "ConfigurationId": "Example-All-Settings",
+  "Enforcement": {
+    "IntervalMinutes": 15,
+    "RunAtStartup": true,
+    "RunAtLogon": true,
+    "RunOnRegistryChange": true,
+    "ConfigureAuditPolicy": true
+  },
+  "Policies": {
+    "disableAutoUpdates": false,
+    "autoUpdaterEnforcementHours": 72,
+    "isDesktopExtensionEnabled": true,
+    "isDesktopExtensionDirectoryEnabled": true,
+    "isLocalDevMcpEnabled": false,
+    "isClaudeCodeForDesktopEnabled": true,
+    "secureVmFeaturesEnabled": true,
+    "forceLoginOrgUUID": [
+      "REPLACE-WITH-YOUR-CLAUDE-ORG-UUID"
+    ],
+    "allowedWorkspaceFolders": [
+      "C:\\CompanyData\\Claude",
+      "D:\\ApprovedWork"
+    ],
+    "effortLevel": "high",
+    "coworkEDRIntegration": "C:\\ProgramData\\Company\\CoworkEDR\\vendor-signed-package",
+    "coworkEDRIntegrationVendor": "replace-with-vendor-id"
+  },
+  "RemovePolicies": []
+}
