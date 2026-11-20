@@ -8,20 +8,23 @@
 param(
     [ValidateSet('Show','Activate','Cleanup')][string]$Mode = 'Show',
     [string]$ActivationUri,
-    [switch]$Preview
+    [switch]$Preview,
+    [string]$ExpectedSid,
+    [int]$ExpectedSessionId
 )
 $ErrorActionPreference = 'Stop'
 $script:AppId = 'DeviceRenameRemediation.Reboot'
 $script:Protocol = 'devicerename-reboot'
 $script:UserRoot = 'HKCU:\Software\DeviceRenameRemediation\Toast'
 $script:DisplayName = 'IT Device Setup'
+$script:ToastStage = 'starting user helper'
 
 function Write-ToastLog {
     param([string]$Message)
     try {
         $directory = Join-Path $env:LOCALAPPDATA 'DeviceRenameRemediation'
         if (-not (Test-Path -LiteralPath $directory)) { [void](New-Item -Path $directory -ItemType Directory) }
-        Add-Content -LiteralPath (Join-Path $directory 'Toast.log') -Encoding UTF8 -Value ("$([DateTime]::UtcNow.ToString('o')) $Message")
+        Add-Content -LiteralPath (Join-Path $directory 'Toast.log') -Encoding UTF8 -Value ("$([DateTime]::UtcNow.ToString('o')) build=1.2.3 pid=$PID mode=$Mode $Message")
     } catch { }
 }
 
@@ -143,6 +146,7 @@ namespace DeviceRenameToast {
 }
 
 function Register-ToastIdentity {
+    $script:ToastStage = 'register notification identity'
     Initialize-ShortcutInterop
     $powerShell = Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe'
     $scriptPath = $PSCommandPath
@@ -157,16 +161,24 @@ function Register-ToastIdentity {
     $identity = 'HKCU:\Software\Classes\AppUserModelId\' + $script:AppId
     if (-not (Test-Path -LiteralPath $identity)) { [void](New-Item -Path $identity -Force) }
     [void](New-ItemProperty -LiteralPath $identity -Name DisplayName -PropertyType String -Value $script:DisplayName -Force)
+    $script:ToastStage = 'create Start menu shortcut'
     $shortcutPath = Join-Path ([Environment]::GetFolderPath('Programs')) 'IT Device Restart.lnk'
     $shell = New-Object -ComObject WScript.Shell
-    $shortcut = $shell.CreateShortcut($shortcutPath)
+    if ($null -eq $shell) { throw 'WScript.Shell returned no COM object.' }
+    $shortcut = $null
     try {
+        $shortcut = $shell.CreateShortcut($shortcutPath)
+        if ($null -eq $shortcut) { throw "WScript.Shell returned no shortcut for $shortcutPath." }
         $shortcut.TargetPath = $powerShell
         $shortcut.Arguments = '-NoLogo -NoProfile -NonInteractive -WindowStyle Hidden -ExecutionPolicy Bypass -File "{0}" -Mode Show' -f $scriptPath
         $shortcut.Description = 'Show the pending computer rename restart reminder'
         $shortcut.IconLocation = "$env:WINDIR\System32\shell32.dll,238"
         $shortcut.Save()
-    } finally { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($shortcut); [void][Runtime.InteropServices.Marshal]::ReleaseComObject($shell) }
+    } finally {
+        if ($null -ne $shortcut) { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($shortcut) }
+        [void][Runtime.InteropServices.Marshal]::ReleaseComObject($shell)
+    }
+    $script:ToastStage = 'set shortcut notification identity'
     [DeviceRenameToast.ShortcutProperties]::Set($shortcutPath, $script:AppId, 'F4BD91B1-4ED5-4E18-9B2E-6F8F9BF78856')
 }
 
@@ -180,8 +192,24 @@ function Remove-RenameToast {
     try { Initialize-ToastRuntime; [Windows.UI.Notifications.ToastNotificationManager]::History.Clear($script:AppId) } catch { Write-ToastLog "Clear toast: $($_.Exception.Message)" }
 }
 
+function Send-RenameToast {
+    param($Notifier, $Toast)
+    if ($null -eq $Notifier) { throw "Windows returned no toast notifier for $script:AppId." }
+    if ($null -eq $Toast) { throw 'Windows returned no toast notification object.' }
+    $script:ToastStage = 'read notification setting'
+    $setting = $Notifier.Setting
+    if ($null -eq $setting) {
+        Write-ToastLog 'Notification setting unavailable. Submitting through the Windows notifier.'
+    } elseif ([string]$setting -notin 'Enabled','0') {
+        throw "Windows notification setting for $script:AppId is $setting."
+    }
+    $script:ToastStage = 'submit toast to Windows'
+    $Notifier.Show($Toast)
+}
+
 function Show-RenameToast {
     param([switch]$IsPreview)
+    $script:ToastStage = 'read computer name state'
     $state = Get-ToastNameState
     if (-not $state.Pending -and -not $IsPreview) {
         Remove-RenameToast
@@ -189,20 +217,25 @@ function Show-RenameToast {
         return
     }
     Register-ToastIdentity
+    $script:ToastStage = 'load Windows notification types'
     Initialize-ToastRuntime
     $token = [Guid]::NewGuid().ToString('N')
     $expires = [DateTime]::UtcNow.AddDays(1)
+    $script:ToastStage = 'save activation record'
     Save-ToastRecord ([pscustomobject]@{ Token=$token; Active=$state.Active; Target=$state.Target; Preview=[bool]$IsPreview; Consumed=$false; ExpiresTicks=$expires.Ticks.ToString() })
-    $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
+    $script:ToastStage = 'build toast XML'
+    $xml = [Windows.Data.Xml.Dom.XmlDocument]::new()
+    if ($null -eq $xml) { throw 'Windows returned no XML document.' }
     $xml.LoadXml((New-RenameToastXml -Token $token -IsPreview:$IsPreview))
     $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
+    if ($null -eq $toast) { throw 'Windows returned no toast notification object.' }
     $toast.Tag = 'rename'
     $toast.Group = 'device-setup'
     $toast.ExpirationTime = [DateTimeOffset]$expires
     $toast.ExpiresOnReboot = $true
+    $script:ToastStage = 'create Windows notifier'
     $notifier = [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($script:AppId)
-    if ($notifier.Setting.ToString() -ne 'Enabled') { throw "Toast notifications unavailable: $($notifier.Setting)." }
-    $notifier.Show($toast)
+    Send-RenameToast -Notifier $notifier -Toast $toast
     Write-ToastLog "Toast submitted; preview=$([bool]$IsPreview); target=$($state.Target)."
 }
 
@@ -249,9 +282,16 @@ try {
     if (-not [Environment]::Is64BitProcess) { throw 'Use 64-bit Windows PowerShell.' }
     $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
     if ($sid -eq 'S-1-5-18' -or [Diagnostics.Process]::GetCurrentProcess().SessionId -eq 0) { throw 'An interactive user session is required.' }
-    $mutex = New-Object Threading.Mutex($false, ('Local\DeviceRenameToast-' + $sid))
+    if (($ExpectedSid -and $ExpectedSid -ne $sid) -or
+        ($ExpectedSessionId -and $ExpectedSessionId -ne [Diagnostics.Process]::GetCurrentProcess().SessionId)) {
+        throw 'The scheduled reminder reached a different user or session.'
+    }
+    Write-ToastLog "Started session=$([Diagnostics.Process]::GetCurrentProcess().SessionId) preview=$([bool]$Preview)."
+    $script:ToastStage = 'acquire reminder mutex'
+    $mutex = [Threading.Mutex]::new($false, ('Local\DeviceRenameToast-' + $sid))
     try { $owned = $mutex.WaitOne(5000) } catch [Threading.AbandonedMutexException] { $owned = $true }
     if (-not $owned) { throw 'Another reminder action is still running.' }
+    $script:ToastStage = $Mode
     switch ($Mode) {
         'Show' { Show-RenameToast -IsPreview:$Preview }
         'Activate' { Invoke-ToastActivation -Uri $ActivationUri }
@@ -259,7 +299,11 @@ try {
     }
     exit 0
 } catch {
-    Write-ToastLog "FAILED: $($_.Exception.Message)"
+    $failure = $_
+    $where = $failure.InvocationInfo
+    Write-ToastLog ("FAILED stage=[{0}] file=[{1}] line={2} errorId=[{3}] message=[{4}] stack=[{5}]" -f
+        $script:ToastStage, $where.ScriptName, $where.ScriptLineNumber, $failure.FullyQualifiedErrorId,
+        $failure.Exception.Message, ($failure.ScriptStackTrace -replace '[\r\n]+', ' | '))
     exit 1
 } finally {
     if ($owned) { $mutex.ReleaseMutex() }

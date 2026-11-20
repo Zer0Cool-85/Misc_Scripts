@@ -62,6 +62,38 @@ foreach($uri in @('https://example.com','devicerename-reboot://restart/anything'
 }
 Assert-Equal (Get-ToastActivation "devicerename-reboot://open/$token").Action 'open' 'Open is separate from restart'
 
+# Exercise the actual submission branch with a recording notifier.
+$script:Sent = 0
+$script:Messages = @()
+function Write-ToastLog { param($Message) $script:Messages += $Message }
+$notifier = [pscustomobject]@{ Setting=$null }
+$notifier | Add-Member ScriptMethod Show { param($toast) $script:Sent++ }
+$dummyToast = [pscustomobject]@{}
+Send-RenameToast $notifier $dummyToast
+Assert-Equal $script:Sent 1 'Missing setting still attempts normal Show'
+Assert-Equal ($script:Messages[-1] -like '*setting unavailable*') $true 'Unavailable setting is logged'
+foreach ($setting in @('Enabled', 0)) {
+    $notifier.Setting = $setting
+    Send-RenameToast $notifier $dummyToast
+}
+Assert-Equal $script:Sent 3 'Named and numeric Enabled are accepted'
+foreach ($setting in @('DisabledByGroupPolicy','DisabledForApplication',1)) {
+    $notifier.Setting = $setting
+    $message = $null
+    try { Send-RenameToast $notifier $dummyToast } catch { $message = $_.Exception.Message }
+    Assert-Equal ($message -like "*is $setting.*") $true 'Blocked setting is reported'
+}
+Assert-Equal $script:Sent 3 'No Show call on a known block'
+$missing = $null
+try { Send-RenameToast $null $dummyToast } catch { $missing = $_.Exception.Message }
+Assert-Equal ($missing -like '*no toast notifier*') $true 'Missing notifier is identified explicitly'
+$notifier.Setting = $null
+$notifier | Add-Member ScriptMethod Show { param($toast) throw 'Simulated WinRT submission failure' } -Force
+$message = $null
+try { Send-RenameToast $notifier $dummyToast } catch { $message = $_.Exception.Message }
+Assert-Equal ($message -like '*Simulated WinRT submission failure*') $true 'Show failure is preserved'
+Assert-Equal $script:ToastStage 'submit toast to Windows' 'Submission failure retains stage'
+
 # Exercise the real action dispatcher with only its Windows boundaries mocked.
 $script:ShutdownCalls=0
 $script:ShutdownArguments=$null

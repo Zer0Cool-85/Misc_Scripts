@@ -54,11 +54,11 @@ namespace DeviceNaming {
 }
 '@
 
-# Override only Windows file materialization and account translation in a
+# Override only Windows file materialization and token reading in a
 # temporary test copy. Production scheduling/requirement logic stays intact.
 $testHooks = @'
 function Get-RebootToastPayloadPath { return 'C:\Program Files\DeviceRenameRemediation\User-RebootToast.ps1' }
-function Resolve-NotificationUserSid { param([string]$Account) return 'S-1-12-1-111-222-333-444' }
+function Resolve-NotificationUserSid { param([int]$SessionId) return 'S-1-12-1-111-222-333-444' }
 '@
 $testDirectory = Join-Path ([IO.Path]::GetTempPath()) ('RenameLogic-' + [Guid]::NewGuid().ToString('N'))
 [void](New-Item -Path $testDirectory -ItemType Directory)
@@ -69,6 +69,24 @@ foreach ($file in Get-ChildItem -Path (Join-Path $testDirectory 'Intune') -Filte
     $text = [IO.File]::ReadAllText($file.FullName)
     $text = $text.Replace('# MAIN:', ($testHooks + "`n# MAIN:"))
     [IO.File]::WriteAllText($file.FullName, $text, (New-Object Text.UTF8Encoding($true)))
+}
+foreach ($file in @($testCommon) + @(Get-ChildItem (Join-Path $testDirectory 'Intune') -Filter '*.ps1' | ForEach-Object FullName)) {
+    $text = [IO.File]::ReadAllText($file)
+    $text = $text.Replace("New-Object -ComObject 'Schedule.Service'", "New-TestScheduleService")
+    [IO.File]::WriteAllText($file,$text,(New-Object Text.UTF8Encoding($true)))
+}
+function New-TestScheduleService {
+    $fake = [pscustomobject]@{}
+    $fake | Add-Member ScriptMethod Connect { }
+    $fake | Add-Member ScriptMethod GetFolder { param($path) return $this }
+    $fake | Add-Member ScriptMethod GetTask { param($name) return $this }
+    $fake | Add-Member ScriptMethod RunEx {
+        param($parameters,$flags,$sessionId,$user)
+        if ($global:RenameTestFixture.FailRun) { throw 'Simulated scheduler dispatch failure' }
+        $global:RenameTestFixture.Run = @($flags,$sessionId,($null -eq $user))
+        return [pscustomobject]@{InstanceGuid=[guid]::NewGuid().ToString()}
+    }
+    return $fake
 }
 $kit = $testDirectory
 $env:WINDIR = 'C:\Windows'
@@ -91,9 +109,13 @@ function New-ScheduledTaskAction {
     param($Execute, $Argument)
     [pscustomobject]@{ Execute=$Execute; Argument=$Argument }
 }
+function Get-ScheduledTaskInfo {
+    [CmdletBinding()]param($TaskPath,$TaskName)
+    [pscustomobject]@{LastTaskResult=$global:RenameTestFixture.LastTaskResult}
+}
 function New-ScheduledTaskPrincipal {
-    param($UserId, $LogonType, $RunLevel)
-    [pscustomobject]@{ UserId=$UserId; LogonType=$LogonType; RunLevel=$RunLevel }
+    param($GroupId, $RunLevel)
+    [pscustomobject]@{ GroupId=$GroupId; RunLevel=$RunLevel }
 }
 function New-ScheduledTaskTrigger {
     param([switch]$Once, $At)
@@ -178,7 +200,7 @@ function Invoke-Subject {
     return [pscustomobject]@{ Code=$LASTEXITCODE; Output=($output -join '|') }
 }
 
-foreach ($name in @('DESKTOP-A1B2C3D','LAPTOP-7X8Y9Z0','desktop-abc1234','laptop-a','LAPTOP-12345678','DESKTOP-LT','LAPTOP-PC')) {
+foreach ($name in @('DESKTOP-ABC123','DESKTOP-A1B2C3D','LAPTOP-7X8Y9Z0','desktop-abc1234','laptop-a','LAPTOP-12345678','DESKTOP-LT','LAPTOP-PC')) {
     Assert-Equal (Test-GenericWindowsComputerName $name) $true "Generic input $name"
 }
 foreach ($name in @('', 'DESKTOP-', 'LAPTOP-', 'DESKTOP-ABC-123', 'LAPTOP-ABC_123', 'XDESKTOP-123', 'JDOE-LT', 'JDOE-LT-R7', 'FINANCE-PC', 'DESKTOP-12345678', "DESKTOP-123`n")) {
@@ -212,7 +234,7 @@ Assert-Equal (New-CompliantComputerName 'JDOE' LT -NoRandomSuffix) 'JDOE-LT' 'No
 $requirement = 'Intune/Requirement-RenameComputer.ps1'
 $detection = 'Intune/Detect-RenameComputer.ps1'
 $installer = 'Source/Install-RenameComputer.ps1'
-foreach ($name in @('DESKTOP-A1B2C3D','LAPTOP-7X8Y9Z0','desktop-abc1234','DESKTOP-LT','LAPTOP-PC')) {
+foreach ($name in @('DESKTOP-ABC123','DESKTOP-A1B2C3D','LAPTOP-7X8Y9Z0','desktop-abc1234','DESKTOP-LT','LAPTOP-PC')) {
     Reset-Fixture
     $global:RenameTestFixture.Active = $name
     $global:RenameTestFixture.Configured = $name
@@ -284,12 +306,36 @@ Assert-Equal ([DeviceNaming.SessionDiscovery]::Calls) 1 'Detection shares once-o
 Assert-Equal $global:RenameTestFixture.Renames 0 'No rename over pending target'
 $notificationKey = 'HKLM:\SOFTWARE\DeviceRenameRemediation\Notifications'
 Assert-Equal ($global:RenameTestFixture.Registry[$notificationKey].ContainsKey('User_S-1-12-1-111-222-333-444')) $true 'First run persists notification history'
-Assert-Equal $global:RenameTestFixture.Tasks[0].Principal.UserId 'S-1-12-1-111-222-333-444' 'Task uses actual user SID'
-Assert-Equal $global:RenameTestFixture.Tasks[0].Principal.LogonType 'Interactive' 'Task needs interactive logon, no password'
+$history = $global:RenameTestFixture.Registry[$notificationKey]
+$userValue = 'User_S-1-12-1-111-222-333-444'
+$old = $history[$userValue] | ConvertFrom-Json
+$old.PSObject.Properties.Remove('PayloadSha256')
+$history[$userValue] = $old | ConvertTo-Json -Compress
+$global:RenameTestFixture.LastTaskResult = 0
+$r = Invoke-Subject $requirement
+Assert-Equal ([DeviceNaming.SessionDiscovery]::Calls) 1 'Previous successful helper preserves Snooze'
+$global:RenameTestFixture.LastTaskResult = 1
+$r = Invoke-Subject $detection
+Assert-Equal ([DeviceNaming.SessionDiscovery]::Calls) 2 'Previous helper exit 1 retries with current payload'
+$r = Invoke-Subject $requirement
+Assert-Equal ([DeviceNaming.SessionDiscovery]::Calls) 2 'Automatic upgrade retry only once'
+Assert-Equal $global:RenameTestFixture.Tasks[0].Principal.GroupId 'S-1-5-32-545' 'Scheduler principal uses built-in Users'
 Assert-Equal $global:RenameTestFixture.Tasks[0].Principal.RunLevel 'Limited' 'Task is not elevated'
-Assert-Equal $global:RenameTestFixture.Tasks[0].Trigger.Once $true 'Only one scheduled trigger'
-Assert-Equal $global:RenameTestFixture.Tasks[0].Settings.DeleteExpiredTaskAfter.TotalHours 1.0 'Expired task cleanup configured'
-Assert-Equal ($global:RenameTestFixture.Tasks[0].Action.Argument -like '*-Mode Show') $true 'Task displays toast instead of restarting'
+Assert-Equal ($null -eq $global:RenameTestFixture.Tasks[0].Trigger) $true 'Demand-only task has no autonomous triggers'
+Assert-Equal ($global:RenameTestFixture.Run -join ',') '4,1,True' 'RunEx uses only selected session and no username'
+Assert-Equal ($global:RenameTestFixture.Tasks[0].Action.Argument -like '*-Mode Show -ExpectedSid S-1-12-1-111-222-333-444 -ExpectedSessionId 1') $true 'User payload receives expected session and SID'
+
+Reset-Fixture
+$global:RenameTestFixture.Configured = 'JDOE-LT-AA'
+$global:RenameTestFixture.FailRun = $true
+$r = Invoke-Subject $requirement
+Assert-Equal $r.Output '0' 'Dispatch error still defers a pending rename'
+Assert-Equal $global:RenameTestFixture.Registry[$notificationKey].Count 0 'Dispatch failure leaves no history'
+$r = Invoke-Subject 'Source/Schedule-PendingRenameToast.ps1' @{ForceReminder=$true}
+Assert-Equal $r.Code 1 'Manual requeue reports a dispatch failure'
+$global:RenameTestFixture.FailRun = $false
+$r = Invoke-Subject $detection
+Assert-Equal $global:RenameTestFixture.Registry[$notificationKey].Count 1 'Detection retries and records successful dispatch'
 
 Reset-Fixture
 $global:RenameTestFixture.Configured = 'JDOE-LT-AA'

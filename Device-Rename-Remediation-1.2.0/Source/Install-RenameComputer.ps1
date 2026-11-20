@@ -18,7 +18,7 @@ try {
     . (Join-Path $PSScriptRoot 'Naming.Common.ps1')
     if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProcess) { throw 'Use Install.cmd to launch 64-bit Windows PowerShell.' }
     $state = Get-ComputerNameState
-    Write-NamingLog "Active=$($state.ActiveName); configured=$($state.ConfiguredName); pending=$($state.PendingRename)."
+    Write-NamingLog (Format-RenameNameState -NameState $state)
     if ($state.PendingRename) {
         if ($AuditOnly) { Write-Output "Pending rename: $($state.ActiveName) -> $($state.ConfiguredName). No changes or popup in audit mode."; exit 0 }
         Show-PendingRenameReminder -NameState $state

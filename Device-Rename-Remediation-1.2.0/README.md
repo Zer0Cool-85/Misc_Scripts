@@ -1,10 +1,55 @@
-# Device rename remediation 1.2.0 — generic Windows names only
+# Device rename remediation 1.2.3 — generic Windows names only
 
 This update permits rename remediation only when no computer rename is pending and the active name matches **DESKTOP- or LAPTOP- followed by one or more ASCII letters/digits**. Matching is case-insensitive and the total name is limited to 15 characters. A nonmatching custom name is left alone even if it does not follow the organization's naming convention.
 
-The one-time user task and toast from 1.1.0 are retained: **Snooze** (15 minutes, 1 hour, or 4 hours) and **Restart now**. Pending-rename checks still run first, including on custom-named PCs. The toast helper and its history version are unchanged so this update does not reset an existing snoozed reminder.
+Version 1.2.3 handles a missing notification setting in the user helper. A missing notifier produces an explicit error. A missing setting on a valid notifier permits one normal Windows submission. A reported disabled setting is logged and ends the attempt. The helper records the build, process ID, mode, failure stage, file, line, and PowerShell error ID in the user's Toast.log. A submitted toast can still be suppressed by Windows.
+
+For an already pending rename, extract this version on the pilot PC and run the forced reminder command in **Pilot and troubleshooting**. A previous release recorded a launch even if the user helper subsequently failed. During normal evaluation, this version retries a previous payload once if Task Scheduler recorded exit code 1 for that user's task and the same name transition. A successful or snoozed reminder keeps its history.
+
+Version 1.2.2 addresses two failures visible in a mixed deployment. An installer logging `Could not send/store a reminder ... Property Session1 does not exist` is using the older reminder implementation. An entry from detection ending in `(18,8):UserId:` points to Task Scheduler rejecting the personal task principal. The rename can already be staged when either notification fails.
+
+The task now runs on demand in the selected interactive session. The toast offers **Snooze** (15 minutes, 1 hour, or 4 hours) and **Restart now**. Existing notification history still suppresses duplicate reminders for the same pending rename. For a pilot with the rename already staged, go straight to **Pilot and troubleshooting** to requeue the reminder.
 
 This ZIP contains source files, not a prebuilt `.intunewin`. Generated-name rules, requirement output, audit mode and rename receipts are retained. The generic-name gate is shared by the requirement and installer.
+
+## Reproduce a requirement result on a pilot PC
+
+Extract the ZIP and run the following in 64-bit Windows PowerShell from its root while the intended console user is signed in.
+
+```powershell
+.\Tools\Test-RenameRequirement.ps1
+```
+
+The probe reads the live active and configured names, prints the active name's exact UTF-16 code units, reports the pending flag, evaluates eligibility, and prints the SHA-256 of the local standalone requirement. It does not create a task, touch the receipt, or stage a rename. Blank account and AD fields mean the decision returned before querying CIM. For an installer preview, run `Source\Install.cmd -AuditOnly`.
+
+For `DESKTOP-ABC123`, expect length 14, hyphen `U+002D`, and `generic=True`. With the same configured name, an eligible console account, and no AD domain join, expect requirement integer 1. If the configured value alone is generic, the pending check takes precedence. After uploading 1.2.3, correlate the latest UTC timestamp and component in the log with the app GUID in AppActionProcessor.log or AppWorkload.log. Both rule uploads and the installer content are independent.
+
+```powershell
+$logs = Join-Path $env:ProgramData 'Microsoft\IntuneManagementExtension\Logs'
+Get-Content (Join-Path $logs 'DeviceRenameRemediation.log') -Tail 30
+```
+
+In 1.2.3 a fresh requirement or installer evaluation logs `build=1.2.3` together with the registry inputs and match result. The trace labels `processName` with the COMPUTERNAME environment value inherited by that process. The registry active name is used for the decision. An old timestamp indicates an earlier evaluation. A new requirement decision without the build trace warrants checking which standalone rule was uploaded.
+
+## Retry one Required Win32 app on the lab PC
+
+Start with **Company Portal > Settings > Sync**, then check the app GUID and timestamp in AppWorkload.log. A check-in requests policy and evaluation. A valid detection, unmet requirement, pending rename, or existing retry delay can still prevent an install. Check the pilot probe first. To repeat a completed rename, restore a generic-name VM checkpoint or rename the pilot back and reboot before testing.
+
+To inspect local app-specific cache records use an elevated 64-bit Windows PowerShell and the **Win32 app object's GUID** from the Intune app URL. Run the Apply command between installations on a pilot PC.
+
+```powershell
+$appId = Read-Host 'Paste the Intune Win32 app GUID'
+.\Tools\Reset-IntuneWin32AppTestState.ps1 -AppId $appId
+.\Tools\Reset-IntuneWin32AppTestState.ps1 -AppId $appId -Apply
+```
+
+The first command with the script previews the entries. Apply briefly stops the device-wide IME service, rescans, backs up matching records under the invoking account's LocalAppData\IntunePilotBackups, removes them, and starts IME to check in. Eligible Required apps may install during that check-in. All GUID-named assignment contexts are examined by default. Use `-ContextId` with a GUID from the preview to narrow the operation.
+
+The tool targets exact app GUID records (including numeric revision suffixes) and individually attributable GRS values or child keys under Win32Apps in the 64-bit registry. Shared GRS buckets, other apps, assignments, actual detection artifacts, rename receipts, and toast history stay in place. Unrecognized agent layouts and shared cooldowns can still require waiting. With no matching records, the tool reports that result and leaves the service running as found. A backup manifest accompanies the exported key subtrees and individual saved registry values.
+
+If a fresh Required assignment is needed immediately, create a separate pilot-only Win32 app object, upload the same content and rules, and target only the pilot PC. Use a single active rename assignment on that PC. An Available assignment to your test user is handy for testing the installer and toast interactively. Final validation should use Required to reproduce automatic execution and timing.
+
+[Microsoft IME check-in guidance](https://learn.microsoft.com/en-us/intune/device-management/tools/management-extension-windows) · [Microsoft Win32 troubleshooting logs](https://learn.microsoft.com/en-us/intune/app-management/deployment/troubleshoot-win32) · [Community investigation of app-specific retry state](https://call4cloud.nl/retry-failed-win32app-installation/)
 
 ## Upgrade the existing Intune app
 
@@ -49,9 +94,9 @@ The installer independently enforces this gate. If a different custom name appea
 
 ## Task and toast lifecycle
 
-- SYSTEM discovers active users, resolves their SIDs, and stages the helper at `C:\Program Files\DeviceRenameRemediation\User-RebootToast.ps1`.
-- It creates `DeviceRename-RebootToast-<SID>` in the Task Scheduler root with the user's SID, **Interactive** logon and **Limited** run level. No password or elevation is used.
-- The task triggers **once**, about 15 seconds later. Its run window ends after 10 minutes; Task Scheduler is configured to delete the expired task one hour later. Battery operation is allowed, with a two-minute execution limit.
+- Under SYSTEM the scheduler obtains the SID directly from the active session token. The elevated pilot command uses the owner SID of Explorer in that session. The SID identifies the reminder recipient and its history.
+- SYSTEM or the elevated diagnostic registers `DeviceRename-RebootToast-<SID>` with the well-known local Users group as principal and limited privileges. It starts the task once through Task Scheduler's `RunEx` method with the target session ID. The helper checks its actual SID and session before showing the toast.
+- There are no time or logon triggers. The task definition stays available for inspection and reuse until package uninstall. Battery operation is allowed and execution is limited to two minutes.
 - The user helper creates its per-user notification identity, protocol handler, and **IT Device Restart** Start menu shortcut. It submits a native toast and exits; no process waits for a click.
 - **Windows handles Snooze.** No recurring task is created. Repeated Intune evaluations do not replace the snoozed toast.
 - The initial launch is recorded once per user, active/target name pair and helper version. Dismissing the toast does not schedule another initial reminder. A new rename or explicit forced reminder can queue a new task.
@@ -163,6 +208,8 @@ On a PC with a pending rename, queue a fresh reminder as **SYSTEM or an administ
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Source\Schedule-PendingRenameToast.ps1 -ForceReminder
 ```
 
+Look for a fresh `build=1.2.3` entry followed by `Dispatched` in the machine log. A registration or dispatch error identifies the failed step, returns exit 1 from the manual command, and leaves the attempt eligible for a retry. The Intune requirement still blocks a second rename. From the target user's own PowerShell, check for `Toast submitted` in their log. The forced reminder is live. Choose **Snooze** to keep the rename pending for more tests.
+
 | Evidence | Location |
 | --- | --- |
 | SYSTEM log | `C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\DeviceRenameRemediation.log` |
@@ -172,13 +219,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Source\Schedule-Pendin
 | User token | `HKCU\Software\DeviceRenameRemediation\Toast`, value Current |
 | Helper | `C:\Program Files\DeviceRenameRemediation\User-RebootToast.ps1` |
 
-Check task Last Run Result and the user log. If first launch failed or the user signed out before the trigger, correct the issue and use `-ForceReminder`; this is deliberately not a recurring retry service. Notification suppression can still hide a successfully submitted toast.
+Check task Last Run Result and the user log. If first launch failed or the user signed out during dispatch, correct the issue and use `-ForceReminder`; this is deliberately not a recurring retry service. Notification suppression can still hide a successfully submitted toast.
 
 Windows pilot checklist:
 
 1. Pending rename queues a task for the intended SID; requirement remains output `0` / exit `0`.
 2. First run succeeds with no saved notification-history value.
-3. Task uses Interactive/Limited, and both toast buttons appear.
+3. Task shows the built-in Users group, limited run level, and no triggers. The signed-in user sees both toast buttons.
 4. Snooze returns at the selected interval after the launch task exits.
 5. Repeated requirement/detection checks do not replace the snoozed toast.
 6. Preview Restart now is inert.
@@ -190,9 +237,10 @@ Run offline tests in separate processes:
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tests\Test-NamingLogic.ps1
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tests\Test-ToastActions.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Tests\Test-PilotCacheSelection.ps1
 ```
 
-Validation completed on PowerShell 7.4.6/Linux: **166 naming/requirement/task checks and 39 toast/action checks passed**. Tests exercise PowerShell parsing, C# compilation, naming/state transitions, missing-value handling, task definitions, toast XML, URI validation, preview safety and restart guards. Windows API calls, staging, Task Scheduler, display and shutdown are mocked. **A Windows PowerShell 5.1/Intune pilot remains required.**
+Validation completed on PowerShell 7.4.6/Linux: **the naming, requirement, toast/action and pilot cache selection suites passed**. Tests exercise PowerShell parsing, C# compilation, naming/state transitions, missing-value handling, task definitions, toast XML, URI validation, preview safety and restart guards. Windows API calls, staging, Task Scheduler, display and shutdown are mocked. **A Windows PowerShell 5.1/Intune pilot remains required.**
 
 ## Cleanup
 
@@ -208,6 +256,7 @@ Then `Uninstall.cmd` removes machine tasks, helper and HKLM state; logs remain. 
 
 - [Intune Win32 requirements/detection/return codes](https://learn.microsoft.com/en-us/intune/app-management/deployment/add-win32)
 - [Register-ScheduledTask](https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/register-scheduledtask)
+- [Launch a task in a specific interactive session](https://learn.microsoft.com/en-us/windows/win32/taskschd/registeredtask-runex)
 - [Task settings and expiration](https://learn.microsoft.com/en-us/powershell/module/scheduledtasks/new-scheduledtasksettingsset)
 - [Toast buttons and snooze](https://learn.microsoft.com/en-us/windows/apps/develop/notifications/app-notifications/app-notifications-content)
 - [Desktop toast AppUserModelID shortcut](https://learn.microsoft.com/en-us/windows/win32/shell/enable-desktop-toast-with-appusermodelid)
