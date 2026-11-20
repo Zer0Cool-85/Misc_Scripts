@@ -1,0 +1,108 @@
+--- AccentToggle-1/Uninstall-DesktopBranding.ps1
++++ AccentToggle-2/Uninstall-DesktopBranding.ps1
+@@ -155,17 +155,46 @@
+     }
+ }
+ 
++function Get-DesktopBrandingSession {
++    # Discover session numbers only; never query or translate an Entra account.
++    $sessions = @(Get-Process -Name explorer -ErrorAction SilentlyContinue |
++        Where-Object { $_.SessionId -gt 0 } |
++        Select-Object -ExpandProperty SessionId | Sort-Object -Unique)
++    if ($sessions.Count -eq 0) { return 0 }
++    if ($sessions.Count -gt 1) {
++        throw "Multiple Explorer sessions found ($($sessions -join ', ')); cannot safely choose a desktop."
++    }
++    return [int]$sessions[0]
++}
++
++function Start-DesktopBrandingTask {
++    param([string]$TaskName, [int]$SessionId)
++    if ($SessionId -le 0) { throw 'A positive desktop session ID is required.' }
++    $service = New-Object -ComObject 'Schedule.Service'
++    $service.Connect()
++    $registered = $service.GetFolder('\').GetTask($TaskName)
++    # TASK_RUN_USE_SESSION_ID = 4. A null user selects the existing session user.
++    $instance = $registered.RunEx($null, 4, $SessionId, $null)
++    if ($null -eq $instance) { throw "Task Scheduler returned no instance for $TaskName." }
++    Write-Log "Task $TaskName launched in session $SessionId; instance $($instance.InstanceGuid)."
++}
++
+ function Reset-ActiveUserTheme {
+-    $LoggedInUser = (Get-Process -Name explorer -IncludeUserName -ErrorAction SilentlyContinue | Select-Object -First 1).UserName
+-    if (-not $LoggedInUser) {
+-        Write-Log "No user currently logged in. Active user reset skipped."
++    $TargetSessionId = Get-DesktopBrandingSession
++    if ($TargetSessionId -eq 0) {
++        Write-Log "No Explorer desktop is present. Current-user step skipped."
+         return
+     }
+-
+-    Write-Log "Detected active user: $LoggedInUser. Checking if corporate theme is active..."
++    Write-Log "Preparing current-user helper for desktop session $TargetSessionId."
+     $tempUserScript = Join-Path -Path $env:Temp -ChildPath "Revert-UserTheme.ps1"
+ 
+     $UserScriptContent = @"
++`$ErrorActionPreference = 'Stop'
++try {
++if ((Get-Process -Id `$PID).SessionId -ne $TargetSessionId -or
++    [Security.Principal.WindowsIdentity]::GetCurrent().User.Value -in @('S-1-5-18','S-1-5-19','S-1-5-20')) {
++    throw 'Reset helper did not start in the requested interactive user session.'
++}
+ `$DefaultTheme   = '$script:DefaultTheme'
+ `$DefaultLockImg = '$script:DefaultLockImg'
+ `$RemovedThemeDir = '$script:ThemeDir'
+@@ -203,24 +232,42 @@
+         AwaitAction ([Windows.System.UserProfile.LockScreen]::SetImageFileAsync(`$ImageFile))
+     }
+ }
++} catch {
++    [Console]::Error.WriteLine(`$_.Exception.ToString())
++    exit 1
++}
++exit 0
+ "@
+-    $UserScriptContent | Set-Content -Path $tempUserScript -Force
++    $UserScriptContent | Set-Content -Path $tempUserScript -Encoding UTF8 -Force
+ 
+     # Clean up any stale install task if present
+     Unregister-ScheduledTask -TaskName "ApplyOrgThemeTemp" -Confirm:$false -ErrorAction SilentlyContinue
+ 
+     $TaskName = "RevertOrgThemeTemp"
+-    $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$tempUserScript`""
+-    $Principal = New-ScheduledTaskPrincipal -UserId $LoggedInUser -LogonType Interactive
+-    $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+-
+-    Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Settings $Settings -Force | Out-Null
+-    Start-ScheduledTask -TaskName $TaskName
+-
+-    $elapsed = 0
+-    while ((Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue).State -eq 'Running' -and $elapsed -lt 15) {
++    $Action = New-ScheduledTaskAction -Execute (Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe') -Argument "-NoProfile -STA -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$tempUserScript`""
++    # Only the built-in local Users group is resolved; no Entra account lookup.
++    $localUsers = ([Security.Principal.SecurityIdentifier]::new('S-1-5-32-545')).Translate(
++        [Security.Principal.NTAccount]
++    ).Value
++    Write-Log "Registering $TaskName with local group $localUsers; target session $TargetSessionId."
++    $Principal = New-ScheduledTaskPrincipal -GroupId $localUsers -RunLevel Limited
++    $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 3)
++
++    Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Settings $Settings -Force -ErrorAction Stop | Out-Null
++    $requestedAt = (Get-Date).AddSeconds(-1)
++    Start-DesktopBrandingTask -TaskName $TaskName -SessionId $TargetSessionId
++    $timer = [Diagnostics.Stopwatch]::StartNew()
++    do {
+         Start-Sleep -Seconds 1
+-        $elapsed++
++        $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
++        $taskInfo = Get-ScheduledTaskInfo -TaskName $TaskName -ErrorAction Stop
++        $finished = ($taskInfo.LastRunTime -ge $requestedAt -and $task.State -notin @('Running', 'Queued'))
++    } while (-not $finished -and $timer.Elapsed.TotalSeconds -lt 180)
++    if (-not $finished) {
++        throw "User task did not finish within 180 seconds. Task and helper retained for inspection: $TaskName"
++    }
++    if ($taskInfo.LastTaskResult -ne 0) {
++        throw "User task failed with result $($taskInfo.LastTaskResult). Task/helper retained; helper: $tempUserScript"
+     }
+ 
+     Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue

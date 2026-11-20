@@ -1,0 +1,233 @@
+--- Original/Install-DesktopBranding.ps1
++++ Updated/Install-DesktopBranding.ps1
+@@ -55,7 +55,7 @@
+     Intune Win32 App Deployment Settings:
+     - Install behavior:   System
+     - Install command:    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-DesktopBranding.ps1
+-    - Uninstall command:  powershell.exe -NoProfile -Command "Remove-Item 'C:\Windows\Resources\OEM Themes\*.theme','C:\Windows\Web\Wallpaper\Company' -Recurse -Force -ErrorAction SilentlyContinue"
++    - Uninstall command:  powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Uninstall-DesktopBranding.ps1
+     - Detection rule:     File/Folder exists -> Path: C:\Windows\Resources\OEM Themes | File or folder: Custom.theme
+ 
+     Log File Location:
+@@ -125,19 +125,21 @@
+     }
+ 
+     foreach ($ext in 'jpeg','jpg','png','bmp','gif') {
+-        if (Test-Path ".\Wallpaper\*.$ext") {
+-            Copy-Item -Path ".\Wallpaper\*.$ext" -Destination "$script:ImageDir\" -Force | Out-Null
+-        }
+-        if (Test-Path ".\Lockscreen\*.$ext") {
+-            Copy-Item -Path ".\Lockscreen\*.$ext" -Destination "$script:ImageDir\" -Force | Out-Null
+-        }
+-    }
+-
+-    if (Test-Path ".\Theme\*.theme") {
+-        Copy-Item -Path ".\Theme\*.theme" -Destination "$script:ThemeDir\" -Force | Out-Null
+-    }
+-
+-    $copiedTheme = Get-ChildItem -Path $script:ThemeDir -Filter "*.theme" | Select-Object -First 1
++        if (Test-Path (Join-Path $PSScriptRoot "Wallpaper\*.$ext")) {
++            Copy-Item -Path (Join-Path $PSScriptRoot "Wallpaper\*.$ext") -Destination "$script:ImageDir\" -Force | Out-Null
++        }
++        if (Test-Path (Join-Path $PSScriptRoot "Lockscreen\*.$ext")) {
++            Copy-Item -Path (Join-Path $PSScriptRoot "Lockscreen\*.$ext") -Destination "$script:ImageDir\" -Force | Out-Null
++        }
++    }
++
++    if (Test-Path (Join-Path $PSScriptRoot "Theme\*.theme")) {
++        Copy-Item -Path (Join-Path $PSScriptRoot "Theme\*.theme") -Destination "$script:ThemeDir\" -Force | Out-Null
++    }
++
++    $sourceThemes = @(Get-ChildItem -Path (Join-Path $PSScriptRoot 'Theme\*.theme') -ErrorAction Stop)
++    if ($sourceThemes.Count -ne 1) { throw 'Place exactly one .theme file in the package Theme folder.' }
++    $copiedTheme = Get-Item -LiteralPath (Join-Path $script:ThemeDir $sourceThemes[0].Name) -ErrorAction Stop
+     if (-not $copiedTheme) {
+         Write-Log "No .theme file found in $script:ThemeDir after copy." "WARN"
+         return $null
+@@ -311,14 +313,11 @@
+ `$ThemePath      = '$($ThemePath -replace "'", "''")'
+ `$LockScreenPath = '$($script:LockscreenPath -replace "'", "''")'
+ `$UserLog        = '$($tempUserLog -replace "'", "''")'
+-`$ColorRefUint   = [uint32]$($AccentData.ColorRefUint)
+-`$PaletteHex     = '$($AccentData.PaletteHex)'
+-`$AccentInt      = $($AccentData.AccentSignedInt)
+-`$StartInt       = $($AccentData.StartSignedInt)
+-`$DwmInt         = $($AccentData.DwmSignedInt)
++
+ "@
+ 
+     $UserScriptBody = @'
++$ErrorActionPreference = 'Stop'
+ 
+ function Write-UserLog($msg) {
+     $line = "[{0}] [USER] {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $msg
+@@ -332,64 +331,15 @@
+     if ($ThemePath -and (Test-Path $ThemePath)) {
+         Start-Process -FilePath $ThemePath
+         Start-Sleep -Seconds 5
+-        Stop-Process -Name 'SystemSettings' -Force -ErrorAction SilentlyContinue
++        # Leave the user's Settings window open; do not terminate their process.
+         Write-UserLog "Applied .theme file: $ThemePath"
+     }
+ 
+-    # 2. Disable AutoColorization and enable "Show accent color on Start and taskbar" (ColorPrevalence = 1)
+-    Set-ItemProperty -Path 'HKCU:\Control Panel\Desktop' -Name 'AutoColorization' -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
+-
+-    $personalizeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+-    if (-not (Test-Path $personalizeKey)) { New-Item -Path $personalizeKey -Force | Out-Null }
+-    New-ItemProperty -Path $personalizeKey -Name 'SystemUsesLightTheme' -Value 0 -PropertyType DWord -Force | Out-Null
+-    New-ItemProperty -Path $personalizeKey -Name 'ColorPrevalence' -Value 1 -PropertyType DWord -Force | Out-Null
+-    Write-UserLog "Enabled SystemUsesLightTheme=0 and Personalize\ColorPrevalence=1 (Start & taskbar accent color)."
+-
+-    # 3. Call Windows' native uxtheme.dll SetUserColorPreference API + broadcast ImmersiveColorSet
+-    Add-Type -TypeDefinition '
+-using System;
+-using System.Runtime.InteropServices;
+-
+-public class Win32AccentApi {
+-    [StructLayout(LayoutKind.Sequential)]
+-    public struct IMMERSIVE_COLOR_PREFERENCE {
+-        public uint color1;
+-        public uint color2;
+-        public uint color3;
+-        public uint colorSet;
+-    }
+-
+-    [DllImport("uxtheme.dll", EntryPoint = "#120", PreserveSig = true)]
+-    public static extern int GetUserColorPreference(ref IMMERSIVE_COLOR_PREFERENCE pcpPreference, [MarshalAs(UnmanagedType.Bool)] bool fForceReload);
+-
+-    [DllImport("uxtheme.dll", EntryPoint = "#122", PreserveSig = true)]
+-    public static extern int SetUserColorPreference(ref IMMERSIVE_COLOR_PREFERENCE cpcpPreference, [MarshalAs(UnmanagedType.Bool)] bool fForceCommit);
+-
+-    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+-    public static extern IntPtr SendNotifyMessage(IntPtr hWnd, uint Msg, UIntPtr wParam, string lParam);
+-
+-    public static int ApplyAccent(uint colorRef) {
+-        IMMERSIVE_COLOR_PREFERENCE pref = new IMMERSIVE_COLOR_PREFERENCE();
+-        GetUserColorPreference(ref pref, false);
+-        pref.color2 = colorRef & 0x00FFFFFF;
+-        int hr = SetUserColorPreference(ref pref, true);
+-        SendNotifyMessage((IntPtr)0xffff, 0x001A, UIntPtr.Zero, "ImmersiveColorSet");
+-        return hr;
+-    }
+-}
+-'
+-    $hr = [Win32AccentApi]::ApplyAccent($ColorRefUint)
+-    Write-UserLog "Called SetUserColorPreference (HRESULT=$hr) and broadcasted ImmersiveColorSet."
+-
+-    # 4. Ensure DWM ColorizationColor matches #3F177E
+-    $dwmKey = 'HKCU:\Software\Microsoft\Windows\DWM'
+-    if (-not (Test-Path $dwmKey)) { New-Item -Path $dwmKey -Force | Out-Null }
+-    New-ItemProperty -Path $dwmKey -Name 'ColorizationColor' -Value $DwmInt -PropertyType DWord -Force | Out-Null
+-    New-ItemProperty -Path $dwmKey -Name 'ColorizationAfterglow' -Value $DwmInt -PropertyType DWord -Force | Out-Null
+-    New-ItemProperty -Path $dwmKey -Name 'EnableWindowColorization' -Value 1 -PropertyType DWord -Force | Out-Null
+-    [Win32AccentApi]::SendNotifyMessage([IntPtr]0xffff, 0x001A, [UIntPtr]::Zero, 'ImmersiveColorSet') | Out-Null
+-
+-    # 5. Apply Lock Screen via WinRT API
++    # The .theme supplies the selected accent color. Do not call private
++    # uxtheme ordinal exports or recalculate the user's selected accent here.
++    # Enable Start/taskbar accent at the very end, after theme/lock-screen work.
++
++    # 2. Apply Lock Screen via WinRT API
+     if ($LockScreenPath -and (Test-Path $LockScreenPath)) {
+         Add-Type -AssemblyName System.Runtime.WindowsRuntime
+         $asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
+@@ -418,31 +368,70 @@
+         Write-UserLog "Applied lock screen image: $LockScreenPath"
+     }
+ 
++    # 3. Apply the activation preferences LAST, after the theme has been opened.
++    # These are editable HKCU preferences, not policy settings.
++    $personalizeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
++    New-Item -Path $personalizeKey -Force | Out-Null
++    New-ItemProperty -Path $personalizeKey -Name 'SystemUsesLightTheme' -Value 0 -PropertyType DWord -Force | Out-Null
++    New-ItemProperty -Path $personalizeKey -Name 'ColorPrevalence' -Value 1 -PropertyType DWord -Force | Out-Null
++    # AppsUseLightTheme and the chosen accent RGB are left to the supplied theme.
++
++    if (-not ('DesktopBrandingRefresh' -as [type])) {
++    Add-Type -TypeDefinition '
++using System;
++using System.Runtime.InteropServices;
++public static class DesktopBrandingRefresh {
++    [DllImport("user32.dll", CharSet = CharSet.Unicode, ExactSpelling = true, SetLastError = true)]
++    private static extern IntPtr SendMessageTimeoutW(
++        IntPtr hWnd, uint message, UIntPtr wParam, string lParam,
++        uint flags, uint timeout, out UIntPtr result);
++    public static void Notify() {
++        UIntPtr result;
++        SendMessageTimeoutW(new IntPtr(0xffff), 0x001A, UIntPtr.Zero,
++            "ImmersiveColorSet", 0x0002, 200, out result);
++    }
++}
++'
++    }
++    [DesktopBrandingRefresh]::Notify()
++    Start-Sleep -Seconds 2
++    $actual = Get-ItemProperty -LiteralPath $personalizeKey -ErrorAction Stop
++    Write-UserLog "Accent toggle readback: SystemUsesLightTheme=$($actual.SystemUsesLightTheme); ColorPrevalence=$($actual.ColorPrevalence)"
++    if ($actual.SystemUsesLightTheme -ne 0 -or $actual.ColorPrevalence -ne 1) {
++        throw 'Windows did not retain the Start/taskbar accent preferences.'
++    }
++    Write-UserLog 'Start/taskbar accent preferences saved and refresh requested. Visual rendering must be checked in the user session.'
+     Write-UserLog "User-context script completed."
++    exit 0
+ } catch {
+     Write-UserLog "ERROR: $($_.Exception.Message)"
+-} finally {
+-    Remove-Item -Path $PSCommandPath -Force -ErrorAction SilentlyContinue
++    exit 1
+ }
+ '@
+ 
+-    ($UserScriptHeader + $UserScriptBody) | Set-Content -Path $tempUserScript -Force
++    ($UserScriptHeader + $UserScriptBody) | Set-Content -Path $tempUserScript -Encoding UTF8 -Force
+ 
+     Write-Log "Triggering user-context Scheduled Task..."
+     $TaskName = "ApplyOrgThemeTemp"
+-    $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$tempUserScript`""
++    $Action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "-NoProfile -STA -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$tempUserScript`""
+     $Principal = New-ScheduledTaskPrincipal -UserId $TargetPrincipalId -LogonType Interactive
+     $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries
+ 
+-    Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Settings $Settings -Force | Out-Null
+-    Start-ScheduledTask -TaskName $TaskName
+-
+-    # Give Task Scheduler time to transition from Ready -> Running before polling
+-    Start-Sleep -Seconds 2
+-    $elapsed = 2
+-    while ((Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue).State -eq 'Running' -and $elapsed -lt 20) {
++    Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Settings $Settings -Force -ErrorAction Stop | Out-Null
++    $requestedAt = (Get-Date).AddSeconds(-1)
++    Start-ScheduledTask -TaskName $TaskName -ErrorAction Stop
++    $timer = [Diagnostics.Stopwatch]::StartNew()
++    do {
+         Start-Sleep -Seconds 1
+-        $elapsed++
++        $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
++        $taskInfo = Get-ScheduledTaskInfo -TaskName $TaskName -ErrorAction Stop
++        $finished = ($taskInfo.LastRunTime -ge $requestedAt -and $task.State -notin @('Running', 'Queued'))
++    } while (-not $finished -and $timer.Elapsed.TotalSeconds -lt 180)
++    if (-not $finished) {
++        throw "User task did not finish within 180 seconds. Task and helper retained for inspection: $TaskName"
++    }
++    if ($taskInfo.LastTaskResult -ne 0) {
++        throw "User task failed with result $($taskInfo.LastTaskResult). Task/helper retained; user log: $tempUserLog"
+     }
+ 
+     # Merge user-context log lines into main Intune log
+@@ -462,6 +451,7 @@
+ try {
+     Write-Log "=== Script started ==="
+     Assert-Admin
++    Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Company\DesktopBranding' -Name Revision -ErrorAction SilentlyContinue
+     $ThemeFileTarget = Copy-BrandingMaterial
+     $AccentData      = Get-ThemeAccentData -ThemePath $ThemeFileTarget
+     Set-FutureUserTheme -ThemePath $ThemeFileTarget -AccentData $AccentData
+@@ -472,6 +462,7 @@
+     if (-not (Test-Path $RegPath)) { New-Item -Path $RegPath -Force | Out-Null }
+     New-ItemProperty -Path $RegPath -Name "Version" -Value 1 -PropertyType DWord -Force | Out-Null
+     New-ItemProperty -Path $RegPath -Name "InstalledDate" -Value (Get-Date -Format "yyyy-MM-dd HH:mm:ss") -PropertyType String -Force | Out-Null
++    New-ItemProperty -Path $RegPath -Name "Revision" -Value 'AccentToggle-1' -PropertyType String -Force | Out-Null
+     Write-Log "=== Script completed successfully ==="
+ }
+ catch {

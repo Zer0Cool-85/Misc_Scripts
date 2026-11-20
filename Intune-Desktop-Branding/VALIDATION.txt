@@ -1,0 +1,15 @@
+2026-11-19: DesktopBranding ThemeApply-1
+Checked with PowerShell 7.4.6 on Linux:
+PASS all three scripts and both generated helpers parse (including quoted paths).
+PASS embedded wallpaper/notification C# compiles without invoking native APIs.
+PASS mocked install/uninstall session discovery, duplicate processes, no desktop,
+multiple desktops, session zero rejection, RunEx arguments and propagated failure.
+PASS theme key replacement/insertion, apostrophe and dollar in wallpaper path,
+slideshow removal, preservation of unrelated sections and wallpaper layout.
+PASS ARGB/ABGR conversions and 32-byte palette for purple, asymmetric RGB,
+black, white and gray. Invalid color and missing section rejected.
+Uninstall and standalone diagnostic unchanged from source SessionFix ZIP.
+No actual Windows APIs, registry, Task Scheduler, Windows PowerShell 5.1,
+WinRT, shell rendering, Intune, Autopilot or future-profile test available.
+Saved preference readback is not proof of visible rendering or full named-theme
+activation. The helper logs unconfirmed theme selection separately.
