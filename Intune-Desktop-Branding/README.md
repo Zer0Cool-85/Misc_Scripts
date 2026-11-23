@@ -16,16 +16,16 @@ Without an override, a missing or invalid theme color fails validation. Supply -
 Run as SYSTEM through an Intune Win32 app (Install behavior: System):
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-DesktopBranding.ps1 -CompanyFolder "ModMed" -WallpaperImg "ModMed.jpg" -LockscreenImg "ModMedLock.jpg"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-DesktopBranding.ps1 -CompanyFolder "Company" -WallpaperImg "Company.jpg" -LockscreenImg "CompanyLock.jpg"
 ```
 
 For Intune's 32-bit Win32 command host, use native Windows PowerShell:
 
 ```text
-%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-DesktopBranding.ps1 -CompanyFolder "ModMed" -WallpaperImg "ModMed.jpg" -LockscreenImg "ModMedLock.jpg"
+%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-DesktopBranding.ps1 -CompanyFolder "Company" -WallpaperImg "Company.jpg" -LockscreenImg "CompanyLock.jpg"
 ```
 
-For the ModMed purple, append `-AccentColor "#3F177E"` to the install command. Omit it to read the RGB from the supplied theme. The script logs the selected RGB before switching sessions. Keep your existing image and folder arguments when rebuilding. CompanyFolder (alias Location),
+For the Company purple, append `-AccentColor "#3F177E"` to the install command. Omit it to read the RGB from the supplied theme. The script logs the selected RGB before switching sessions. Keep your existing image and folder arguments when rebuilding. CompanyFolder (alias Location),
 WallpaperImg and LockscreenImg are supported. ThemeFile and PreserveThemeSettings
 are not parameters in this original baseline: place your chosen theme in Theme.
 Its original filename is preserved. Install/uninstall scripts must be packaged
@@ -98,7 +98,7 @@ persistent logon tasks must not compete with this original baseline.
 Package both scripts with the original asset folders. Use the installed CompanyFolder for removal.
 
 ```text
-%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Uninstall-DesktopBranding.ps1 -CompanyFolder "ModMed"
+%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Uninstall-DesktopBranding.ps1 -CompanyFolder "Company"
 ```
 
 The uninstaller derives file ownership from the packaged Theme, Wallpaper and
@@ -160,10 +160,10 @@ another manual application.
 separately. Build the deployment script on your packaging computer with your
 actual source assets. The source .theme must have an explicit [VisualStyles]
 ColorizationColor and a [Control Panel\Desktop] section. This example uses
-the existing ModMed filenames. Supply actual filenames as needed.
+the existing Company filenames. Supply actual filenames as needed.
 
 ```powershell
-.\Install-DesktopBrandingAutopilot.ps1 -Mode Build -ThemeFile .\Theme\Custom.theme -WallpaperFile .\Wallpaper\ModMed.jpg -LockscreenFile .\Lockscreen\ModMedLock.jpg -OutputScript .\ESP\Install-DesktopBrandingAutopilot.ps1
+.\Install-DesktopBrandingAutopilot.ps1 -Mode Build -ThemeFile .\Theme\Custom.theme -WallpaperFile .\Wallpaper\Company.jpg -LockscreenFile .\Lockscreen\CompanyLock.jpg -OutputScript .\ESP\Install-DesktopBrandingAutopilot.ps1
 ```
 
 Create a second .intunewin with only the generated script in its source folder.
