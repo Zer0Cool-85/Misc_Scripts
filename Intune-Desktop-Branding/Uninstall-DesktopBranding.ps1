@@ -1,160 +1,143 @@
-﻿<#
-.SYNOPSIS
-    Removes deployed corporate branding assets and reverts the Windows theme and lock screen to stock defaults.
-
-.DESCRIPTION
-    Designed to run in the SYSTEM context via an Intune Win32 app uninstall command.
-    Safely cleans up the corporate theme, wallpaper, and lock screen without disturbing pre-existing OEM themes
-    or overwriting personalization choices if the end user has already customized their own theme.
-
-    Execution workflow:
-    1. Identifies the deployed .theme file(s) and removes them from C:\Windows\Resources\OEM Themes\
-       (removing the folder only if empty so manufacturer OEM themes are preserved).
-    2. Removes the C:\Windows\Web\Wallpaper\<CompanyFolder>\ directory and all branding images inside it.
-    3. Mounts C:\Users\Default\NTUSER.DAT and resets CurrentTheme to the stock Windows theme (aero.theme).
-    4. Detects if a user is currently signed into an active desktop session; if their active theme is still
-       the removed corporate theme, reverts them to stock aero.theme and resets the lock screen to img100.jpg.
-
-.PARAMETER CompanyFolder
-    Optional. The subfolder name inside C:\Windows\Web\Wallpaper\ to remove.
-    Aliased as -Location. Defaults to "Company".
-
-.PARAMETER ThemeName
-    Optional. Specific .theme filename to delete from C:\Windows\Resources\OEM Themes\ (e.g., "Custom.theme").
-    If omitted, the script automatically checks the package's .\Theme\ subfolder to match the deployed filename(s).
-
-.EXAMPLE
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Uninstall-DesktopBranding.ps1
-
-    Removes C:\Windows\Web\Wallpaper\Company\, deletes the deployed .theme file from OEM Themes, resets
-    the default user hive, and reverts the active user if they are still using the corporate theme.
-
-.EXAMPLE
-    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Uninstall-DesktopBranding.ps1 -CompanyFolder "Company" -ThemeName "Autopilot.theme"
-
-    Explicitly targets Autopilot.theme for removal without relying on the package's .\Theme\ subfolder.
-
-.NOTES
-    Intune Win32 App Deployment Settings:
-    - Uninstall command: powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Uninstall-DesktopBranding.ps1
-
-    Log File Location:
-    %ProgramData%\Microsoft\IntuneManagementExtension\Logs\App-Uninstall-DesktopBranding.log
-#>
-
-[CmdletBinding(SupportsShouldProcess)]
+﻿<# Run the Company Portal uninstall as SYSTEM in native Windows PowerShell 5.1.
+   Supply the same CompanyFolder used during install. Existing ThemeApply-1
+   installations are supported using the original Theme, Wallpaper and Lockscreen
+   source folders. An explicit ThemeName/WallpaperImg/LockscreenImg also works. #>
+[CmdletBinding()]
 param(
-    [Alias("Location")]
-    [string]$CompanyFolder = "Company",
-    [string]$ThemeName
+    [Alias('Location')][string]$CompanyFolder='Company',
+    [string]$ThemeName,
+    [string]$WallpaperImg,
+    [string]$LockscreenImg,
+    [switch]$UserReset,
+    [int]$SessionId
 )
-
-# === GLOBAL VARIABLES ===
-$script:ThemeDir       = Join-Path -Path $env:SystemRoot -ChildPath "Resources\OEM Themes"
-$script:ImageDir       = Join-Path -Path $env:SystemRoot -ChildPath "Web\Wallpaper\$CompanyFolder"
-$script:DefaultTheme   = Join-Path -Path $env:SystemRoot -ChildPath "Resources\Themes\aero.theme"
-$script:DefaultLockImg = Join-Path -Path $env:SystemRoot -ChildPath "Web\Screen\img100.jpg"
-$script:LogFile        = "$env:ProgramData\Microsoft\IntuneManagementExtension\Logs\App-Uninstall-DesktopBranding.log"
-
-# Ensure log directory exists
-$logDir = Split-Path $script:LogFile
-if (-not (Test-Path $logDir)) {
-    New-Item -Path $logDir -ItemType Directory -Force | Out-Null
+$ErrorActionPreference='Stop'
+function Write-Log([string]$Message) {
+    $line = '{0:s} {1}' -f (Get-Date),$Message
+    Write-Host $line
+    Add-Content -LiteralPath $script:LogFile -Value $line
 }
-
-# ==================== LOGGING ====================
-function Write-Log {
-    param(
-        [Parameter(Mandatory)]
-        [string]$Message,
-        [ValidateSet("INFO", "WARN", "ERROR")]
-        [string]$Level = "INFO"
-    )
-    $timestamp = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
-    $logLine = "[$timestamp] [$Level] $Message"
-
-    switch ($Level) {
-        "INFO"  { Write-Host $logLine -ForegroundColor Gray }
-        "WARN"  { Write-Warning $Message }
-        "ERROR" { Write-Error $Message }
+function Assert-Leaf([string]$Name) {
+    if ([string]::IsNullOrWhiteSpace($Name) -or $Name -in @('.','..') -or
+        $Name -match '[\\/:*?"<>|\[\]]' -or $Name -match '[. ]$') { throw "Invalid file or folder name: $Name" }
+}
+function Get-ResetPlan {
+    Assert-Leaf $CompanyFolder
+    if (-not $ThemeName) {
+        $themes = @(Get-ChildItem -Path (Join-Path $PSScriptRoot 'Theme\*.theme') -File -ErrorAction SilentlyContinue)
+        if ($themes.Count -ne 1) { throw 'Supply -ThemeName or keep the original single .theme in the package Theme folder.' }
+        $ThemeName = $themes[0].Name
     }
-
-    try { Add-Content -Path $script:LogFile -Value $logLine }
-    catch { Write-Host "Failed to write to log file: $($_.Exception.Message)" }
-}
-
-# ==================== FUNCTIONS ====================
-function Assert-Admin {
-    $current = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object Security.Principal.WindowsPrincipal($current)
-    if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        Write-Log "Script must be run as Administrator." "ERROR"
-        throw "This script must be run from an elevated PowerShell session."
-    }
-    Write-Log "Confirmed running with Administrator privileges."
-}
-
-function Remove-BrandingMaterial {
-    Write-Log "Starting removal of branding files..."
-
-    # 1. Remove deployed .theme file(s) safely
-    if (Test-Path $script:ThemeDir) {
-        $themesToRemove = @()
-
-        if ($ThemeName) {
-            $themesToRemove += $ThemeName
-        } elseif (Test-Path ".\Theme\*.theme") {
-            $themesToRemove += (Get-ChildItem -Path ".\Theme\*.theme").Name
+    Assert-Leaf $ThemeName
+    if ([IO.Path]::GetExtension($ThemeName) -ine '.theme') { throw 'ThemeName must name a .theme file.' }
+    $images = @()
+    foreach ($source in @('Wallpaper','Lockscreen')) {
+        $explicit = if ($source -eq 'Wallpaper') { $WallpaperImg } else { $LockscreenImg }
+        $names = if ($explicit) { $explicit } else {
+            Get-ChildItem -LiteralPath (Join-Path $PSScriptRoot $source) -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.Extension -in '.jpg','.jpeg','.png','.bmp','.gif' } |
+                Select-Object -ExpandProperty Name
         }
-
-        if ($themesToRemove.Count -gt 0) {
-            foreach ($tName in $themesToRemove) {
-                $targetTheme = Join-Path -Path $script:ThemeDir -ChildPath $tName
-                if (Test-Path $targetTheme) {
-                    Remove-Item -Path $targetTheme -Force -ErrorAction SilentlyContinue
-                    Write-Log "Removed theme file: $targetTheme"
+        if (-not $names) { throw "Keep the original $source images in the package or specify the corresponding image filename." }
+        foreach ($name in $names) {
+            Assert-Leaf $name
+            $images += Join-Path $imageDir $name
+        }
+    }
+    [pscustomobject]@{ Theme=(Join-Path $themeDir $ThemeName); Images=@($images | Sort-Object -Unique) }
+}
+function Reset-User([object]$Plan) {
+    if ($SessionId -le 0 -or (Get-Process -Id $PID).SessionId -ne $SessionId -or
+        [Security.Principal.WindowsIdentity]::GetCurrent().User.Value -in 'S-1-5-18','S-1-5-19','S-1-5-20') { throw 'Wrong desktop session for reset.' }
+    $current=[Environment]::ExpandEnvironmentVariables([string](Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes' -ErrorAction SilentlyContinue).CurrentTheme)
+    $paper=[Environment]::ExpandEnvironmentVariables([string](Get-ItemProperty 'HKCU:\Control Panel\Desktop' -ErrorAction SilentlyContinue).Wallpaper)
+    $ownedPaper=$paper -in $Plan.Images
+    $ownedTheme=$current -ieq $Plan.Theme
+    Write-Log "Matched deployed theme=$ownedTheme, wallpaper=$ownedPaper."
+    $stock=Join-Path $env:SystemRoot 'Resources\Themes\aero.theme'
+    $stockPaper=Join-Path $env:SystemRoot 'Web\Wallpaper\Windows\img0.jpg'
+    if ($ownedTheme -and $ownedPaper) {
+        if (-not (Test-Path -LiteralPath $stock -PathType Leaf)) { throw "Stock theme unavailable: $stock" }
+        Start-Process -FilePath $stock
+        Start-Sleep -Seconds 3
+    }
+    if ($ownedPaper) {
+        if (-not (Test-Path -LiteralPath $stockPaper -PathType Leaf)) { throw "Stock wallpaper unavailable: $stockPaper" }
+        Add-Type -TypeDefinition @'
+using System.Runtime.InteropServices;
+public static class DesktopBrandingReset {
+    [DllImport("user32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+    public static extern bool SystemParametersInfoW(uint action, uint param, string path, uint flags);
+}
+'@
+        if (-not [DesktopBrandingReset]::SystemParametersInfoW(20,0,$stockPaper,3)) { throw 'Windows could not reset the wallpaper.' }
+    }
+    # OriginalImageFile may be a cache URI or unavailable for Spotlight/stream images.
+    $lockUri=$null
+    try { $lockUri=[Windows.System.UserProfile.LockScreen,Windows.System.UserProfile,ContentType=WindowsRuntime]::OriginalImageFile }
+    catch { Write-Log "Current lock image could not be identified: $($_.Exception.Message)" }
+    $ownedLock=$false
+    if ($lockUri -and $lockUri.IsFile) {
+        $ownedLock=$lockUri.LocalPath -in $Plan.Images
+        if (-not $ownedLock) {
+            try {
+                if (Test-Path -LiteralPath $lockUri.LocalPath -PathType Leaf) {
+                    $currentHash=(Get-FileHash -LiteralPath $lockUri.LocalPath).Hash
+                    foreach ($image in $Plan.Images) {
+                        if ((Test-Path -LiteralPath $image -PathType Leaf) -and
+                            (Get-FileHash -LiteralPath $image).Hash -eq $currentHash) { $ownedLock=$true; break }
+                    }
                 }
-            }
-        } else {
-            Write-Log "No specific .theme filename matched; skipping theme file deletion to protect OEM themes." "WARN"
-        }
-
-        # Clean up any leftover helper script if an install was previously interrupted
-        $leftoverHelper = Join-Path -Path $script:ThemeDir -ChildPath "Apply-UserTheme.ps1"
-        if (Test-Path $leftoverHelper) {
-            Remove-Item -Path $leftoverHelper -Force -ErrorAction SilentlyContinue
-        }
-
-        # Remove OEM Themes folder only if it is completely empty
-        if ((Get-ChildItem -Path $script:ThemeDir -Force | Measure-Object).Count -eq 0) {
-            Remove-Item -Path $script:ThemeDir -Force -ErrorAction SilentlyContinue
-            Write-Log "Removed empty directory: $script:ThemeDir"
+            } catch { Write-Log "Cannot compare cached lock image: $($_.Exception.Message)" }
         }
     }
-
-    # 2. Remove wallpaper/lockscreen folder
-    if (Test-Path $script:ImageDir) {
-        Remove-Item -Path $script:ImageDir -Recurse -Force -ErrorAction SilentlyContinue
-        Write-Log "Removed image directory: $script:ImageDir"
-    } else {
-        Write-Log "Image directory not found (already removed): $script:ImageDir"
+    if ($ownedLock) {
+        $stockLock=Join-Path $env:SystemRoot 'Web\Screen\img100.jpg'
+        if (-not (Test-Path -LiteralPath $stockLock -PathType Leaf)) { throw "Stock lock image unavailable: $stockLock" }
+        Add-Type -AssemblyName System.Runtime.WindowsRuntime
+        $methods=[System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 }
+        $getFile=@($methods | Where-Object { $_.GetParameters()[0].ParameterType.Name -ceq 'IAsyncOperation`1' })[0]
+        $action=@($methods | Where-Object { $_.GetParameters()[0].ParameterType.Name -ceq 'IAsyncAction' })[0]
+        $type=[Windows.Storage.StorageFile,Windows.Storage,ContentType=WindowsRuntime]
+        $read=$getFile.MakeGenericMethod($type).Invoke($null,@($type::GetFileFromPathAsync($stockLock)))
+        $read.Wait()
+        $set=$action.Invoke($null,@([Windows.System.UserProfile.LockScreen]::SetImageFileAsync($read.Result)))
+        $set.Wait()
+        Write-Log 'Reset the identified corporate lock image.'
+    } else { Write-Log 'Kept the current lock image because its source did not match a deployed file.' }
+}
+function Get-DesktopBrandingThemeValue {
+    param([string]$Text, [string]$Section, [string]$Name)
+    $inside = $false; $value = $null
+    foreach ($line in ($Text -split '\r?\n')) {
+        if ($line -match '^\s*\[([^]]+)\]\s*$') { $inside = ($Matches[1] -ieq $Section); continue }
+        if ($inside -and $line -match ('^\s*' + [regex]::Escape($Name) + '\s*=\s*(.*?)\s*$')) { $value = $Matches[1] }
     }
+    return $value
 }
 
-function Reset-FutureUserTheme {
-    Write-Log "Resetting default theme for future user profiles to aero.theme..."
+function Invoke-DefaultProfileEdit {
+    param([scriptblock]$Edit)
+    $profileList = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList'
+    $defaultPath = [Environment]::ExpandEnvironmentVariables($profileList.Default)
+    $hive = Join-Path $defaultPath 'NTUSER.DAT'
+    $mount = 'DesktopBranding_' + [Guid]::NewGuid().ToString('N')
+    $reg = Join-Path $env:SystemRoot 'System32\reg.exe'
+    $output = & $reg load "HKU\$mount" $hive 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "Cannot load $hive ($LASTEXITCODE): $output" }
     try {
-        reg load HKU\DefaultUser "C:\Users\Default\NTUSER.DAT" | Out-Null
-        reg add "HKU\DefaultUser\Software\Microsoft\Windows\CurrentVersion\Themes" /v "CurrentTheme" /t REG_SZ /d "$script:DefaultTheme" /f | Out-Null
-        [gc]::Collect()
-        Start-Sleep -Milliseconds 500
-        reg unload HKU\DefaultUser | Out-Null
-        Write-Log "DefaultUser registry hive reset successfully."
-    } catch {
-        Write-Log "Failed to reset DefaultUser registry: $($_.Exception.Message)" "ERROR"
+        $root = [Microsoft.Win32.Registry]::Users.OpenSubKey($mount, $true)
+        if (-not $root) { throw "Cannot open loaded hive $mount" }
+        try { & $Edit $root } finally { $root.Close() }
+    } finally {
+        for ($i=0; $i -lt 3; $i++) {
+            $output = & $reg unload "HKU\$mount" 2>&1
+            if ($LASTEXITCODE -eq 0) { break }
+            Start-Sleep -Milliseconds 500
+        }
+        if ($LASTEXITCODE -ne 0) { throw "Cannot unload HKU\$mount ($LASTEXITCODE): $output" }
     }
 }
-
 function Get-DesktopBrandingSession {
     # Discover session numbers only; never query or translate an Entra account.
     $sessions = @(Get-Process -Name explorer -ErrorAction SilentlyContinue |
@@ -179,114 +162,99 @@ function Start-DesktopBrandingTask {
     Write-Log "Task $TaskName launched in session $SessionId; instance $($instance.InstanceGuid)."
 }
 
-function Reset-ActiveUserTheme {
-    $TargetSessionId = Get-DesktopBrandingSession
-    if ($TargetSessionId -eq 0) {
-        Write-Log "No Explorer desktop is present. Current-user step skipped."
-        return
-    }
-    Write-Log "Preparing current-user helper for desktop session $TargetSessionId."
-    $tempUserScript = Join-Path -Path $env:Temp -ChildPath "Revert-UserTheme.ps1"
-
-    $UserScriptContent = @"
-`$ErrorActionPreference = 'Stop'
-try {
-if ((Get-Process -Id `$PID).SessionId -ne $TargetSessionId -or
-    [Security.Principal.WindowsIdentity]::GetCurrent().User.Value -in @('S-1-5-18','S-1-5-19','S-1-5-20')) {
-    throw 'Reset helper did not start in the requested interactive user session.'
-}
-`$DefaultTheme   = '$script:DefaultTheme'
-`$DefaultLockImg = '$script:DefaultLockImg'
-`$RemovedThemeDir = '$script:ThemeDir'
-
-`$currentTheme = (Get-ItemProperty -Path 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes' -Name 'CurrentTheme' -ErrorAction SilentlyContinue).CurrentTheme
-
-# Only revert if the user is still using the removed corporate theme (preserve user customizations)
-if (`$currentTheme -and (`$currentTheme -like "`$RemovedThemeDir*" -or -not (Test-Path `$currentTheme))) {
-    if (Test-Path `$DefaultTheme) {
-        Start-Process -FilePath `$DefaultTheme
-        Start-Sleep -Seconds 3
-        Stop-Process -Name 'SystemSettings' -Force -ErrorAction SilentlyContinue
-    }
-
-    if (Test-Path `$DefaultLockImg) {
-        Add-Type -AssemblyName System.Runtime.WindowsRuntime
-        `$asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { `$_.Name -eq 'AsTask' -and `$_.GetParameters().Count -eq 1 -and `$_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation``1' })[0]
-
-        function Await(`$WinRtTask, `$ResultType) {
-            `$asTask = `$asTaskGeneric.MakeGenericMethod(`$ResultType)
-            `$netTask = `$asTask.Invoke(`$null, @(`$WinRtTask))
-            `$netTask.Wait(-1) | Out-Null
-            return `$netTask.Result
-        }
-        function AwaitAction(`$WinRtAction) {
-            `$asTask = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { `$_.Name -eq 'AsTask' -and `$_.GetParameters().Count -eq 1 -and -not `$_.IsGenericMethod })[0]
-            `$netTask = `$asTask.Invoke(`$null, @(`$WinRtAction))
-            `$netTask.Wait(-1) | Out-Null
-        }
-
-        [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRuntime] | Out-Null
-        [Windows.System.UserProfile.LockScreen, Windows.System.UserProfile, ContentType = WindowsRuntime] | Out-Null
-
-        `$ImageFile = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync(`$DefaultLockImg)) ([Windows.Storage.StorageFile])
-        AwaitAction ([Windows.System.UserProfile.LockScreen]::SetImageFileAsync(`$ImageFile))
-    }
-}
-} catch {
-    [Console]::Error.WriteLine(`$_.Exception.ToString())
-    exit 1
-}
-exit 0
-"@
-    $UserScriptContent | Set-Content -Path $tempUserScript -Encoding UTF8 -Force
-
-    # Clean up any stale install task if present
-    Unregister-ScheduledTask -TaskName "ApplyOrgThemeTemp" -Confirm:$false -ErrorAction SilentlyContinue
-
-    $TaskName = "RevertOrgThemeTemp"
-    $Action = New-ScheduledTaskAction -Execute (Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe') -Argument "-NoProfile -STA -WindowStyle Hidden -ExecutionPolicy Bypass -File `"$tempUserScript`""
-    # Only the built-in local Users group is resolved; no Entra account lookup.
-    $localUsers = ([Security.Principal.SecurityIdentifier]::new('S-1-5-32-545')).Translate(
-        [Security.Principal.NTAccount]
-    ).Value
-    Write-Log "Registering $TaskName with local group $localUsers; target session $TargetSessionId."
-    $Principal = New-ScheduledTaskPrincipal -GroupId $localUsers -RunLevel Limited
-    $Settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 3)
-
-    Register-ScheduledTask -TaskName $TaskName -Action $Action -Principal $Principal -Settings $Settings -Force -ErrorAction Stop | Out-Null
-    $requestedAt = (Get-Date).AddSeconds(-1)
-    Start-DesktopBrandingTask -TaskName $TaskName -SessionId $TargetSessionId
-    $timer = [Diagnostics.Stopwatch]::StartNew()
+function Invoke-UserResetTask([int]$Target,[object]$Plan) {
+    # Windows Program Files grants standard users read/execute in newly created folders.
+    $work=Join-Path $env:ProgramFiles ('DesktopBranding\Reset-' + [Guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $work -Force | Out-Null
+    $worker=Join-Path $work 'Reset.ps1'
+    Copy-Item -LiteralPath $PSCommandPath -Destination $worker
+    $Plan | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $work 'Plan.json') -Encoding UTF8
+    $name='RevertOrgThemeTemp'
+    $localUsers=([Security.Principal.SecurityIdentifier]::new('S-1-5-32-545')).Translate([Security.Principal.NTAccount]).Value
+    $principal=New-ScheduledTaskPrincipal -GroupId $localUsers -RunLevel Limited
+    $exe=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    $argsText='-NoProfile -NonInteractive -STA -WindowStyle Hidden -ExecutionPolicy Bypass -File "{0}" -UserReset -SessionId {1}' -f $worker,$Target
+    $action=New-ScheduledTaskAction -Execute $exe -Argument $argsText
+    $settings=New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -ExecutionTimeLimit (New-TimeSpan -Minutes 3)
+    Register-ScheduledTask -TaskName $name -Action $action -Principal $principal -Settings $settings -Force | Out-Null
+    $requested=(Get-Date).AddSeconds(-1)
+    Start-DesktopBrandingTask -TaskName $name -SessionId $Target
+    $timer=[Diagnostics.Stopwatch]::StartNew()
     do {
         Start-Sleep -Seconds 1
-        $task = Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
-        $taskInfo = Get-ScheduledTaskInfo -TaskName $TaskName -ErrorAction Stop
-        $finished = ($taskInfo.LastRunTime -ge $requestedAt -and $task.State -notin @('Running', 'Queued'))
-    } while (-not $finished -and $timer.Elapsed.TotalSeconds -lt 180)
-    if (-not $finished) {
-        throw "User task did not finish within 180 seconds. Task and helper retained for inspection: $TaskName"
+        $info=Get-ScheduledTaskInfo -TaskName $name
+        $state=(Get-ScheduledTask -TaskName $name).State
+        $done=$info.LastRunTime -ge $requested -and $state -notin 'Running','Queued'
+    } until ($done -or $timer.Elapsed.TotalSeconds -ge 180)
+    if (-not $done -or $info.LastTaskResult -ne 0) {
+        throw "Reset task finished=$done result=$($info.LastTaskResult), session=$Target. See the user's %LOCALAPPDATA%\DesktopBranding\Uninstall.log. Helper: $worker"
     }
-    if ($taskInfo.LastTaskResult -ne 0) {
-        throw "User task failed with result $($taskInfo.LastTaskResult). Task/helper retained; helper: $tempUserScript"
-    }
-
-    Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
-    Remove-Item -Path $tempUserScript -Force -ErrorAction SilentlyContinue
-    Write-Log "Active user check and cleanup completed."
+    Unregister-ScheduledTask -TaskName $name -Confirm:$false
+    Remove-Item -LiteralPath $work -Recurse -Force
 }
-
-# ==================== MAIN ====================
 try {
-    Write-Log "=== Uninstall script started ==="
-    Assert-Admin
-    Remove-BrandingMaterial
-    Reset-FutureUserTheme
-    Reset-ActiveUserTheme
-    # Remove Intune detection registry key
-    Remove-Item -Path "HKLM:\SOFTWARE\Company\DesktopBranding" -Recurse -Force -ErrorAction SilentlyContinue
-    Write-Log "=== Uninstall script completed successfully ==="
-}
-catch {
-    Write-Log "Fatal error: $($_.Exception.Message)" "ERROR"
+    if ($UserReset) {
+        $dir=Join-Path $env:LOCALAPPDATA 'DesktopBranding'
+        New-Item -Path $dir -ItemType Directory -Force | Out-Null
+        $script:LogFile=Join-Path $dir 'Uninstall.log'
+        Reset-User (Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot 'Plan.json') | ConvertFrom-Json)
+        Write-Log 'Completed current-user reset.'
+        exit 0
+    }
+    if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProcess) { throw 'Run the uninstaller in native Windows PowerShell (Sysnative from a 32-bit host).' }
+    $script:LogFile=Join-Path $env:ProgramData 'Microsoft\IntuneManagementExtension\Logs\App-Uninstall-DesktopBranding.log'
+    New-Item -Path (Split-Path $script:LogFile) -ItemType Directory -Force | Out-Null
+    $key='HKLM:\SOFTWARE\Company\DesktopBranding'
+    Assert-Leaf $CompanyFolder
+    $imageDir=Join-Path $env:SystemRoot "Web\Wallpaper\$CompanyFolder"
+    $themeDir=Join-Path $env:SystemRoot 'Resources\OEM Themes'
+    $plan=Get-ResetPlan
+    # Recover the installed image folder from the deployed ThemeApply-1 copy on older deployments.
+    if (Test-Path -LiteralPath $plan.Theme -PathType Leaf) {
+        $themeText=Get-Content -LiteralPath $plan.Theme -Raw
+        $wallpaper=Get-DesktopBrandingThemeValue $themeText 'Control Panel\Desktop' Wallpaper
+        if ($wallpaper) {
+            $wallpaper=[Environment]::ExpandEnvironmentVariables($wallpaper)
+            if ([IO.Path]::IsPathRooted($wallpaper)) {
+                $stagedDir=[IO.Path]::GetDirectoryName([IO.Path]::GetFullPath($wallpaper))
+                $wallRoot=Join-Path $env:SystemRoot 'Web\Wallpaper'
+                if ([IO.Path]::GetDirectoryName($stagedDir) -ieq $wallRoot -and $stagedDir -ine $imageDir) {
+                    if ($PSBoundParameters.ContainsKey('CompanyFolder')) { throw "Installed theme references $stagedDir but parameters select $imageDir." }
+                    $CompanyFolder=[IO.Path]::GetFileName($stagedDir)
+                    Assert-Leaf $CompanyFolder
+                    $imageDir=$stagedDir
+                    $plan=Get-ResetPlan
+                }
+            }
+        }
+    }
+    Write-Log "Uninstalling $($plan.Theme), images: $($plan.Images -join ', ')"
+    $target=Get-DesktopBrandingSession
+    if ($target -gt 0) { Invoke-UserResetTask $target $plan }
+    else { Write-Log 'No Explorer session. Cleaning device files and profile defaults.' }
+    Invoke-DefaultProfileEdit {
+        param($root)
+        $themes=$root.OpenSubKey('Software\Microsoft\Windows\CurrentVersion\Themes',$true)
+        if ($themes) {
+            try {
+                if ([Environment]::ExpandEnvironmentVariables([string]$themes.GetValue('CurrentTheme')) -ieq $plan.Theme) {
+                    $themes.SetValue('CurrentTheme',(Join-Path $env:SystemRoot 'Resources\Themes\aero.theme'))
+                }
+            } finally { $themes.Close() }
+        }
+    }
+    foreach ($file in @($plan.Theme) + @($plan.Images)) {
+        if (Test-Path -LiteralPath $file -PathType Leaf) { Remove-Item -LiteralPath $file -Force }
+    }
+    if ((Test-Path -LiteralPath $imageDir) -and @(Get-ChildItem -LiteralPath $imageDir -Force).Count -eq 0) {
+        Remove-Item -LiteralPath $imageDir
+    }
+    if (Test-Path -LiteralPath $key) { Remove-Item -LiteralPath $key -Recurse -Force }
+    Write-Log 'Uninstall completed. Company Portal detection marker removed.'
+    exit 0
+} catch {
+    $detail="Uninstall failed at line $($_.InvocationInfo.ScriptLineNumber): $($_.Exception.Message)"
+    if ($script:LogFile) { try { Write-Log $detail } catch {} }
+    [Console]::Error.WriteLine($detail)
     exit 1
 }

@@ -13,3 +13,20 @@ No actual Windows APIs, registry, Task Scheduler, Windows PowerShell 5.1,
 WinRT, shell rendering, Intune, Autopilot or future-profile test available.
 Saved preference readback is not proof of visible rendering or full named-theme
 activation. The helper logs unconfirmed theme selection separately.
+
+2026-11-20: Company Portal uninstall repair and separate Autopilot ESP script.
+Company Portal install script is byte-for-byte identical to ThemeApply-1.
+PowerShell fixture tests built a single script with a custom theme and two
+distinct JPEG images, parsed the generated file, compiled native signatures,
+and matched both staged image hashes to the originals. Mocked Windows OOBE and
+registry exercised late-stage rejection, RunOnce registration and duplicate stage.
+A simulated uninstall failure retained the named assets and detection marker.
+Retry and repeated uninstall succeeded from an unrelated working directory and
+preserved other files. Native Windows/ESP, live registry, Task Scheduler,
+visual personalization and WinRT still require an endpoint pilot.
+
+2026-11-20: Company Portal ThemeApply-2. Verified PowerShell parsing,
+generated user helper, C# compilation and RGB/palette conversion. Mocked
+matching accent, delayed change on retry and persistently blue effective
+accent. Confirmed failure messages merge before exit-status handling.
+Live Windows Shell/WinRT and the reported endpoint failure remain unverified.

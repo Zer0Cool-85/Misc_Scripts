@@ -8,7 +8,7 @@ function Write-UserLog($msg) { Write-Host $msg }
     # 3. Apply the activation preferences LAST, after the theme has been opened.
     # These are editable HKCU preferences, not policy settings.
     $personalizeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
-    New-Item -Path $personalizeKey -Force | Out-Null
+    if (-not (Test-Path -LiteralPath $personalizeKey)) { New-Item -Path $personalizeKey -Force | Out-Null }
     New-ItemProperty -Path $personalizeKey -Name 'SystemUsesLightTheme' -Value 0 -PropertyType DWord -Force | Out-Null
     New-ItemProperty -Path $personalizeKey -Name 'ColorPrevalence' -Value 1 -PropertyType DWord -Force | Out-Null
     # AppsUseLightTheme and the chosen accent RGB are left to the supplied theme.

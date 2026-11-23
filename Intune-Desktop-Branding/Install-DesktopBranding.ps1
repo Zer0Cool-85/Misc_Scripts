@@ -23,6 +23,9 @@
     Optional. The filename of the desktop wallpaper image located in the package's .\Wallpaper\ subfolder.
     Defaults to "Company.jpg".
 
+.PARAMETER AccentColor
+    Optional RGB override such as "#3F177E" for the staged theme and profile defaults.
+
 .PARAMETER LockscreenImg
     Optional. The filename of the lock screen image located in the package's .\Lockscreen\ subfolder.
     Defaults to "CompanyLock.jpg".
@@ -56,7 +59,7 @@
     - Install behavior:   System
     - Install command:    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-DesktopBranding.ps1
     - Uninstall command:  powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Uninstall-DesktopBranding.ps1
-    - Detection rule:     64-bit HKLM\SOFTWARE\Company\DesktopBranding: Revision equals ThemeApply-1
+    - Detection rule:     64-bit HKLM\SOFTWARE\Company\DesktopBranding: Revision equals ThemeApply-2
 
     Log File Location:
     %ProgramData%\Microsoft\IntuneManagementExtension\Logs\Install-DesktopBranding.log
@@ -67,7 +70,8 @@ param(
     [Alias("Location")]
     [string]$CompanyFolder = "Company",
     [string]$WallpaperImg = "Company.jpg",
-    [string]$LockscreenImg = "CompanyLock.jpg"
+    [string]$LockscreenImg = "CompanyLock.jpg",
+    [ValidatePattern('^(#?[0-9a-fA-F]{6})$')][string]$AccentColor
 )
 
 # === GLOBAL VARIABLES ===
@@ -349,8 +353,16 @@ function Invoke-ActiveUserTheme {
     }
     Write-Log "Preparing current-user helper for desktop session $TargetSessionId."
     $tempUserScript = Join-Path -Path $script:ThemeDir -ChildPath "Apply-UserTheme.ps1"
-    $tempUserLog    = Join-Path -Path $env:ProgramData -ChildPath "Apply-UserTheme.log"
-    if (Test-Path $tempUserLog) { Remove-Item -Path $tempUserLog -Force -ErrorAction SilentlyContinue }
+    # Create a per-attempt log under the protected OEM folder. Grant interactive users
+    # write access only to this log file. Task status comes from Task Scheduler.
+    $tempUserLog = Join-Path $script:ThemeDir ("DesktopBranding-" + [guid]::NewGuid().ToString('N') + ".log")
+    New-Item -Path $tempUserLog -ItemType File -ErrorAction Stop | Out-Null
+    $acl = Get-Acl -LiteralPath $tempUserLog
+    $interactive = [Security.Principal.SecurityIdentifier]::new('S-1-5-4')
+    $rule = [Security.AccessControl.FileSystemAccessRule]::new($interactive, 'Read, Write, Synchronize', 'Allow')
+    $acl.AddAccessRule($rule)
+    Set-Acl -LiteralPath $tempUserLog -AclObject $acl -ErrorAction Stop
+    Write-Log "Current-user log: $tempUserLog"
 
     $UserScriptHeader = @"
 `$ExpectedSessionId = $TargetSessionId
@@ -368,6 +380,7 @@ function Invoke-ActiveUserTheme {
 "@
 
     $UserScriptBody = @'
+$step = 'session check'
 $ErrorActionPreference = 'Stop'
 
 function Write-UserLog($msg) {
@@ -382,6 +395,7 @@ try {
     }
     Write-UserLog "User-context script started in session $ExpectedSessionId."
 
+    $step = 'activate theme'
     # Opening the file is only a request; do not equate process launch with application.
     if (-not (Test-Path -LiteralPath $ThemePath -PathType Leaf)) { throw "Missing theme: $ThemePath" }
     Start-Process -FilePath $ThemePath -ErrorAction Stop
@@ -398,43 +412,7 @@ try {
         Write-UserLog 'WARNING: Windows did not confirm the source theme path. Wallpaper and accent will be applied explicitly; other theme components are not verified.'
     }
 
-    # 2. Apply Lock Screen via WinRT API
-    if ($LockScreenPath -and (Test-Path $LockScreenPath)) {
-        Add-Type -AssemblyName System.Runtime.WindowsRuntime
-        $asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
-            $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1'
-        })[0]
-
-        function Await($WinRtTask, $ResultType) {
-            $asTask = $asTaskGeneric.MakeGenericMethod($ResultType)
-            $netTask = $asTask.Invoke($null, @($WinRtTask))
-            $netTask.Wait(-1) | Out-Null
-            return $netTask.Result
-        }
-        function AwaitAction($WinRtAction) {
-            $asTask = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
-                $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and -not $_.IsGenericMethod
-            })[0]
-            $netTask = $asTask.Invoke($null, @($WinRtAction))
-            $netTask.Wait(-1) | Out-Null
-        }
-
-        [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRuntime] | Out-Null
-        [Windows.System.UserProfile.LockScreen, Windows.System.UserProfile, ContentType = WindowsRuntime] | Out-Null
-
-        $ImageFile = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($LockScreenPath)) ([Windows.Storage.StorageFile])
-        AwaitAction ([Windows.System.UserProfile.LockScreen]::SetImageFileAsync($ImageFile))
-        Write-UserLog "Applied lock screen image: $LockScreenPath"
-    }
-
-    # 3. Apply the activation preferences LAST, after the theme has been opened.
-    # These are editable HKCU preferences, not policy settings.
-    $personalizeKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
-    New-Item -Path $personalizeKey -Force | Out-Null
-    New-ItemProperty -Path $personalizeKey -Name 'SystemUsesLightTheme' -Value 0 -PropertyType DWord -Force | Out-Null
-    New-ItemProperty -Path $personalizeKey -Name 'ColorPrevalence' -Value 1 -PropertyType DWord -Force | Out-Null
-    # App mode remains controlled by the supplied theme; set the selected RGB explicitly below.
-
+    $step = 'apply wallpaper'
     if (-not ('DesktopBrandingRefresh' -as [type])) {
     Add-Type -TypeDefinition '
 using System;
@@ -458,51 +436,119 @@ public static class DesktopBrandingRefresh {
     # Replace the old theme's wallpaper and selected accent, not just its toggle.
     if (-not (Test-Path -LiteralPath $WallpaperPath -PathType Leaf)) { throw "Missing wallpaper: $WallpaperPath" }
     $desktopKey = 'HKCU:\Control Panel\Desktop'
-    New-Item -Path $desktopKey -Force | Out-Null
+    if (-not (Test-Path -LiteralPath $desktopKey)) { New-Item -Path $desktopKey -Force | Out-Null }
     New-ItemProperty -Path $desktopKey -Name WallpaperStyle -Value $WallpaperStyle -PropertyType String -Force | Out-Null
     New-ItemProperty -Path $desktopKey -Name TileWallpaper -Value $TileWallpaper -PropertyType String -Force | Out-Null
     New-ItemProperty -Path $desktopKey -Name AutoColorization -Value 0 -PropertyType DWord -Force | Out-Null
     $wallpapersKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Wallpapers'
-    New-Item -Path $wallpapersKey -Force | Out-Null
+    if (-not (Test-Path -LiteralPath $wallpapersKey)) { New-Item -Path $wallpapersKey -Force | Out-Null }
     New-ItemProperty -Path $wallpapersKey -Name BackgroundType -Value 0 -PropertyType DWord -Force | Out-Null
     if (-not [DesktopBrandingRefresh]::SystemParametersInfoW(0x0014, 0, $WallpaperPath, 0x0003)) {
         throw "Wallpaper API failed; Win32 error $([Runtime.InteropServices.Marshal]::GetLastWin32Error())."
     }
     Write-UserLog "Wallpaper applied through Windows API: $WallpaperPath"
-    $palette = New-Object byte[] ($PaletteHex.Length / 2)
+    $step = 'apply accent'
+    $palette = [byte[]]::new(32)
     for ($i = 0; $i -lt $palette.Length; $i++) { $palette[$i] = [Convert]::ToByte($PaletteHex.Substring($i * 2, 2), 16) }
-    $accentKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Accent'
-    $dwmKey = 'HKCU:\Software\Microsoft\Windows\DWM'
-    New-Item -Path $accentKey -Force | Out-Null
-    New-Item -Path $dwmKey -Force | Out-Null
-    New-ItemProperty -Path $accentKey -Name AccentPalette -Value $palette -PropertyType Binary -Force | Out-Null
-    New-ItemProperty -Path $accentKey -Name AccentColorMenu -Value $AccentInt -PropertyType DWord -Force | Out-Null
-    New-ItemProperty -Path $accentKey -Name StartColorMenu -Value $StartInt -PropertyType DWord -Force | Out-Null
-    New-ItemProperty -Path $dwmKey -Name AccentColor -Value $AccentInt -PropertyType DWord -Force | Out-Null
-    New-ItemProperty -Path $dwmKey -Name ColorizationColor -Value $DwmInt -PropertyType DWord -Force | Out-Null
-    New-ItemProperty -Path $dwmKey -Name ColorizationAfterglow -Value $DwmInt -PropertyType DWord -Force | Out-Null
-    [DesktopBrandingRefresh]::Notify()
-    Start-Sleep -Seconds 2
-    $actual = Get-ItemProperty -LiteralPath $personalizeKey -ErrorAction Stop
-    Write-UserLog "Accent toggle readback: SystemUsesLightTheme=$($actual.SystemUsesLightTheme); ColorPrevalence=$($actual.ColorPrevalence)"
-    if ($actual.SystemUsesLightTheme -ne 0 -or $actual.ColorPrevalence -ne 1) {
-        throw 'Windows did not retain the Start/taskbar accent preferences.'
+    $expectedRgb = '#' + $PaletteHex.Substring(24, 6).ToUpperInvariant()
+    Write-UserLog "Requested accent $expectedRgb from $ThemePath"
+
+    function Get-ReportedAccent {
+        $settings = [Windows.UI.ViewManagement.UISettings,Windows.UI.ViewManagement,ContentType=WindowsRuntime]::new()
+        $type = [Windows.UI.ViewManagement.UIColorType,Windows.UI.ViewManagement,ContentType=WindowsRuntime]
+        $color = $settings.GetColorValue($type::Accent)
+        return '#{0:X2}{1:X2}{2:X2}' -f $color.R,$color.G,$color.B
     }
-    $wallpaperReadback = (Get-ItemProperty -LiteralPath $desktopKey -ErrorAction Stop).Wallpaper
-    $accentReadback = Get-ItemProperty -LiteralPath $accentKey -ErrorAction Stop
-    $dwmReadback = Get-ItemProperty -LiteralPath $dwmKey -ErrorAction Stop
-    if ($wallpaperReadback -ine $WallpaperPath -or $accentReadback.AccentColorMenu -ne $AccentInt -or
-        $accentReadback.StartColorMenu -ne $StartInt -or $dwmReadback.AccentColor -ne $AccentInt -or
-        $dwmReadback.ColorizationColor -ne $DwmInt -or
-        [BitConverter]::ToString([byte[]]$accentReadback.AccentPalette) -ne [BitConverter]::ToString($palette)) {
-        throw 'Wallpaper/accent readback differs from the deployed branding. Check user policy or concurrent theme changes.'
+    function Set-AccentValues($subkey, $values) {
+        $key = [Microsoft.Win32.Registry]::CurrentUser.CreateSubKey($subkey)
+        try {
+            foreach ($name in $values.Keys) {
+                if ($values[$name] -is [byte[]]) {
+                    $key.SetValue($name,$values[$name],[Microsoft.Win32.RegistryValueKind]::Binary)
+                } else {
+                    $key.SetValue($name,[int]$values[$name],[Microsoft.Win32.RegistryValueKind]::DWord)
+                }
+            }
+        } finally { $key.Close() }
     }
-    Write-UserLog "Verified wallpaper: $wallpaperReadback; selected accent DWORD: $AccentInt"
-    Write-UserLog 'Start/taskbar accent preferences saved and refresh requested. Visual rendering must be checked in the user session.'
+    $personalize = 'Software\Microsoft\Windows\CurrentVersion\Themes\Personalize'
+    $accent = 'Software\Microsoft\Windows\CurrentVersion\Explorer\Accent'
+    $dwm = 'Software\Microsoft\Windows\DWM'
+    # Give an asynchronous theme change one opportunity to settle and retry within this install.
+    for ($pass = 1; $pass -le 2; $pass++) {
+        Set-AccentValues 'Control Panel\Desktop' @{AutoColorization=0}
+        Set-AccentValues $dwm @{AccentColor=$AccentInt; ColorizationColor=$DwmInt; ColorizationAfterglow=$DwmInt}
+        Set-AccentValues $accent @{AccentColorMenu=$AccentInt; StartColorMenu=$StartInt; AccentPalette=$palette}
+        Set-AccentValues $personalize @{SystemUsesLightTheme=0; ColorPrevalence=1}
+        [DesktopBrandingRefresh]::Notify()
+        $step = 'verify accent'
+        $matchesInARow = 0
+        for ($sample = 0; $sample -lt 5; $sample++) {
+            Start-Sleep -Seconds 1
+            $state = Get-ItemProperty -LiteralPath ("HKCU:\" + $personalize)
+            $saved = Get-ItemProperty -LiteralPath ("HKCU:\" + $accent)
+            $dwmState = Get-ItemProperty -LiteralPath ("HKCU:\" + $dwm)
+            $reportedRgb = Get-ReportedAccent
+            $paletteOk = ($null -ne $saved.AccentPalette) -and
+                ([BitConverter]::ToString($saved.AccentPalette) -eq [BitConverter]::ToString($palette))
+            $savedOk = $paletteOk -and $saved.AccentColorMenu -eq $AccentInt -and $saved.StartColorMenu -eq $StartInt -and
+                $dwmState.AccentColor -eq $AccentInt -and $dwmState.ColorizationColor -eq $DwmInt -and
+                $state.SystemUsesLightTheme -eq 0 -and $state.ColorPrevalence -eq 1
+            if ($savedOk -and $reportedRgb -eq $expectedRgb) { $matchesInARow++ } else { $matchesInARow = 0 }
+            if ($matchesInARow -ge 2) { break }
+        }
+        Write-UserLog "Accent pass $pass requested=$expectedRgb Windows=$reportedRgb registryMatches=$savedOk paletteMatches=$paletteOk AccentColorMenu=$($saved.AccentColorMenu) StartColorMenu=$($saved.StartColorMenu) ColorizationColor=$($dwmState.ColorizationColor) toggle=$($state.ColorPrevalence) WindowsLightMode=$($state.SystemUsesLightTheme)"
+        if ($matchesInARow -ge 2) { break }
+        $step = 'retry accent'
+    }
+    if ($matchesInARow -lt 2) { throw "Accent verification failed: requested=$expectedRgb Windows=$reportedRgb registryMatches=$savedOk." }
+    $step = 'verify wallpaper'
+    $desktopState = Get-ItemProperty -LiteralPath $desktopKey
+    $wallpaperReadback = [Environment]::ExpandEnvironmentVariables([string]$desktopState.Wallpaper)
+    if ($wallpaperReadback -ine $WallpaperPath) {
+        # Explorer can store the transcoded copy. Check the source recorded in the cache.
+        $source = ''
+        if ($desktopState.TranscodedImageCache -is [byte[]] -and $desktopState.TranscodedImageCache.Length -gt 24) {
+            $bytes = $desktopState.TranscodedImageCache
+            $source = [Text.Encoding]::Unicode.GetString($bytes,24,$bytes.Length-24).Split([char]0)[0]
+        }
+        if ($source -ine $WallpaperPath) { throw "Wallpaper verification failed: requested=$WallpaperPath saved=$wallpaperReadback cacheSource=$source" }
+    }
+    # 2. Apply Lock Screen via WinRT API
+    $step = 'apply lock screen'
+    if (-not (Test-Path -LiteralPath $LockScreenPath -PathType Leaf)) { throw "Missing lock screen: $LockScreenPath" }
+    & {
+        Add-Type -AssemblyName System.Runtime.WindowsRuntime
+        $asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
+            $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1'
+        })[0]
+
+        function Await($WinRtTask, $ResultType) {
+            $asTask = $asTaskGeneric.MakeGenericMethod($ResultType)
+            $netTask = $asTask.Invoke($null, @($WinRtTask))
+            $netTask.Wait(-1) | Out-Null
+            return $netTask.Result
+        }
+        function AwaitAction($WinRtAction) {
+            $asTask = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object {
+                $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -ceq 'IAsyncAction'
+            })[0]
+            $netTask = $asTask.Invoke($null, @($WinRtAction))
+            $netTask.Wait(-1) | Out-Null
+        }
+
+        [Windows.Storage.StorageFile, Windows.Storage, ContentType = WindowsRuntime] | Out-Null
+        [Windows.System.UserProfile.LockScreen, Windows.System.UserProfile, ContentType = WindowsRuntime] | Out-Null
+
+        $ImageFile = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($LockScreenPath)) ([Windows.Storage.StorageFile])
+        AwaitAction ([Windows.System.UserProfile.LockScreen]::SetImageFileAsync($ImageFile))
+        Write-UserLog "Applied lock screen image: $LockScreenPath"
+    }
+
     Write-UserLog "User-context script completed."
     exit 0
 } catch {
-    Write-UserLog "ERROR: $($_.Exception.Message)"
+    Write-UserLog "ERROR [$step] line $($_.InvocationInfo.ScriptLineNumber) $($_.FullyQualifiedErrorId): $($_.Exception.GetBaseException().Message)"
     exit 1
 }
 '@
@@ -530,21 +576,15 @@ public static class DesktopBrandingRefresh {
         $taskInfo = Get-ScheduledTaskInfo -TaskName $TaskName -ErrorAction Stop
         $finished = ($taskInfo.LastRunTime -ge $requestedAt -and $task.State -notin @('Running', 'Queued'))
     } while (-not $finished -and $timer.Elapsed.TotalSeconds -lt 180)
-    if (-not $finished) {
-        throw "User task did not finish within 180 seconds. Task and helper retained for inspection: $TaskName"
+    # Merge before reporting any task failure. Keep the original on failure.
+    if (Test-Path -LiteralPath $tempUserLog) {
+        Get-Content -LiteralPath $tempUserLog -Tail 80 | Add-Content -LiteralPath $script:LogFile
     }
+    if (-not $finished) { throw "User task timed out. Task/helper retained; user log: $tempUserLog" }
     if ($taskInfo.LastTaskResult -ne 0) {
         throw "User task failed with result $($taskInfo.LastTaskResult). Task/helper retained; user log: $tempUserLog"
     }
-
-    # Merge user-context log lines into main Intune log
-    if (Test-Path $tempUserLog) {
-        Get-Content -Path $tempUserLog | Add-Content -Path $script:LogFile
-        Remove-Item -Path $tempUserLog -Force -ErrorAction SilentlyContinue
-    } else {
-        Write-Log "User-context log was not created; verify Scheduled Task execution for session $TargetSessionId." "WARN"
-    }
-
+    Remove-Item -LiteralPath $tempUserLog -Force -ErrorAction SilentlyContinue
     Unregister-ScheduledTask -TaskName $TaskName -Confirm:$false -ErrorAction SilentlyContinue
     Remove-Item -Path $tempUserScript -Force -ErrorAction SilentlyContinue
     Write-Log "Active user theme, accent color, and lock screen step finished."
@@ -556,8 +596,14 @@ try {
     Assert-Admin
     Remove-ItemProperty -Path 'HKLM:\SOFTWARE\Company\DesktopBranding' -Name Revision -ErrorAction SilentlyContinue
     $ThemeFileTarget = Copy-BrandingMaterial
-    $AccentData      = Get-ThemeAccentData -ThemePath $ThemeFileTarget
     $themeText = Get-Content -LiteralPath $ThemeFileTarget -Raw -ErrorAction Stop
+    if ($AccentColor) {
+        $old = Get-DesktopBrandingThemeValue $themeText VisualStyles ColorizationColor
+        $alpha = if ($old -match '^0x([0-9a-f]{2})[0-9a-f]{6}$') { $Matches[1] } else { 'FF' }
+        $rgb = $AccentColor.TrimStart('#').ToUpperInvariant()
+        $themeText = Set-DesktopBrandingThemeValue $themeText VisualStyles ColorizationColor ("0x$alpha$rgb")
+        Write-Log "Using accent override #$rgb in the deployed theme."
+    }
     $script:WallpaperStyle = Get-DesktopBrandingThemeValue $themeText 'Control Panel\Desktop' 'WallpaperStyle'
     $script:TileWallpaper = Get-DesktopBrandingThemeValue $themeText 'Control Panel\Desktop' 'TileWallpaper'
     if ($script:WallpaperStyle -notin @('0','2','6','10','22')) { $script:WallpaperStyle = '10' }
@@ -569,15 +615,16 @@ try {
     $themeText = [regex]::Replace($themeText, '(?ims)^\s*\[Slideshow\][^\r\n]*\r?\n.*?(?=^\s*\[|\z)', '')
     Set-Content -LiteralPath $ThemeFileTarget -Value $themeText -Encoding Unicode -ErrorAction Stop
     Write-Log "Prepared deployed theme: $ThemeFileTarget; wallpaper: $script:WallpaperPath"
+    $AccentData = Get-ThemeAccentData -ThemePath $ThemeFileTarget
     Set-FutureUserTheme -ThemePath $ThemeFileTarget -AccentData $AccentData
     Invoke-ActiveUserTheme -ThemePath $ThemeFileTarget -AccentData $AccentData
 
     # Write Intune detection registry key
     $RegPath = "HKLM:\SOFTWARE\Company\DesktopBranding"
-    if (-not (Test-Path $RegPath)) { New-Item -Path $RegPath -Force | Out-Null }
+    if (-not (Test-Path $RegPath)) { New-Item -Path $RegPath -Force -ErrorAction Stop | Out-Null }
     New-ItemProperty -Path $RegPath -Name "Version" -Value 1 -PropertyType DWord -Force | Out-Null
     New-ItemProperty -Path $RegPath -Name "InstalledDate" -Value (Get-Date -Format "yyyy-MM-dd HH:mm:ss") -PropertyType String -Force | Out-Null
-    New-ItemProperty -Path $RegPath -Name "Revision" -Value 'ThemeApply-1' -PropertyType String -Force | Out-Null
+    New-ItemProperty -Path $RegPath -Name "Revision" -Value 'ThemeApply-2' -PropertyType String -Force -ErrorAction Stop | Out-Null
     Write-Log "=== Script completed successfully ==="
 }
 catch {
